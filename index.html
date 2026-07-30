@@ -105,19 +105,42 @@
     border-radius: var(--radius);
     padding: 12px 12px;
     margin-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    align-items: flex-start;
   }
 
-  .card-main { flex: 1; min-width: 0; }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
 
   .card-name {
     font-weight: 700;
     font-size: 1.02rem;
-    margin-bottom: 6px;
     word-break: break-word;
+    min-width: 0;
+  }
+
+  .toggle-btn {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    border-radius: 50%;
+    background: var(--panel2);
+    border: none;
+    color: var(--text2);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform .15s, color .15s;
+  }
+
+  .toggle-btn.expanded {
+    transform: rotate(180deg);
+    color: var(--accent);
   }
 
   .phone-row {
@@ -136,17 +159,24 @@
   }
 
   .card-note {
-    margin-top: 6px;
+    margin-top: 8px;
     font-size: 0.85rem;
     color: var(--text3);
     word-break: break-word;
   }
 
+  .card-details {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .card-details[hidden] { display: none; }
+
   .quelle-chips {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-bottom: 8px;
   }
 
   .quelle-chip {
@@ -167,11 +197,17 @@
     font-size: 0.78rem;
   }
 
-  .card-actions {
+  .detail-actions {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex-shrink: 0;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .detail-actions button {
+    flex: 1;
+    font-size: 0.85rem;
+    padding: 9px 10px;
+    min-height: 40px;
   }
 
   .icon-btn {
@@ -634,7 +670,10 @@
     );
   }
 
+  var expandedIds = new Set();
+
   function contactCardHtml(c) {
+    var expanded = expandedIds.has(c.id);
     var phonesHtml = c.phones.map(function (p) {
       return (
         '<div class="phone-row">' +
@@ -645,18 +684,24 @@
       );
     }).join("");
 
+    var detailsHtml =
+      '<div class="card-details"' + (expanded ? "" : " hidden") + ">" +
+      quellenChipsHtml(c) +
+      (c.note ? '<div class="card-note">' + escHtml(c.note) + "</div>" : "") +
+      '<div class="detail-actions">' +
+      '<button class="btn-secondary edit-btn" data-id="' + c.id + '">✏️ Bearbeiten</button>' +
+      '<button class="btn-danger delete-btn" data-id="' + c.id + '">🗑️ Löschen</button>' +
+      "</div>" +
+      "</div>";
+
     return (
       '<article class="card" data-id="' + c.id + '">' +
-      '<div class="card-main">' +
+      '<div class="card-top">' +
       '<div class="card-name">' + escHtml(c.name) + "</div>" +
-      quellenChipsHtml(c) +
+      '<button class="toggle-btn' + (expanded ? " expanded" : "") + '" data-id="' + c.id + '" title="Details ein-/ausblenden">⌄</button>' +
+      "</div>" +
       phonesHtml +
-      (c.note ? '<div class="card-note">' + escHtml(c.note) + "</div>" : "") +
-      "</div>" +
-      '<div class="card-actions">' +
-      '<button class="icon-btn edit-btn" data-id="' + c.id + '" title="Bearbeiten">✏️</button>' +
-      '<button class="icon-btn delete-btn" data-id="' + c.id + '" title="Löschen">🗑️</button>' +
-      "</div>" +
+      detailsHtml +
       "</article>"
     );
   }
@@ -678,20 +723,28 @@
       return false;
     });
 
-    var groups = {};
-    filtered.forEach(function (c) {
-      var g = primaryDienststelle(c);
-      if (!groups[g]) groups[g] = [];
-      groups[g].push(c);
-    });
-
-    var groupNames = Object.keys(groups).sort(function (a, b) { return a.localeCompare(b, "de"); });
-    groupNames.forEach(function (g) {
-      groups[g].sort(function (a, b) { return a.name.localeCompare(b.name, "de"); });
-    });
-
     var html;
-    if (groupNames.length) {
+    if (!filtered.length) {
+      html = term
+        ? '<p class="empty-state">Keine Treffer für „' + escHtml(state.search) + '“.</p>'
+        : '<p class="empty-state">Noch keine Kontakte.<br>Tippe auf + zum Hinzufügen oder importiere eine PDF-Liste unter Einstellungen.</p>';
+    } else if (term) {
+      // Suchergebnisse: flach, rein alphabetisch, keine Gruppierung nach Dienststelle
+      var flat = filtered.slice().sort(function (a, b) { return a.name.localeCompare(b.name, "de"); });
+      html = flat.map(contactCardHtml).join("");
+    } else {
+      var groups = {};
+      filtered.forEach(function (c) {
+        var g = primaryDienststelle(c);
+        if (!groups[g]) groups[g] = [];
+        groups[g].push(c);
+      });
+
+      var groupNames = Object.keys(groups).sort(function (a, b) { return a.localeCompare(b, "de"); });
+      groupNames.forEach(function (g) {
+        groups[g].sort(function (a, b) { return a.name.localeCompare(b.name, "de"); });
+      });
+
       html = groupNames.map(function (g) {
         return (
           '<section class="group">' +
@@ -700,10 +753,6 @@
           "</section>"
         );
       }).join("");
-    } else if (term) {
-      html = '<p class="empty-state">Keine Treffer für „' + escHtml(state.search) + '“.</p>';
-    } else {
-      html = '<p class="empty-state">Noch keine Kontakte.<br>Tippe auf + zum Hinzufügen oder importiere eine PDF-Liste unter Einstellungen.</p>';
     }
 
     document.getElementById("listContainer").innerHTML = html;
@@ -824,15 +873,21 @@
   });
 
   document.getElementById("listContainer").addEventListener("click", function (e) {
+    var toggleBtn = e.target.closest(".toggle-btn");
     var editBtn = e.target.closest(".edit-btn");
     var delBtn = e.target.closest(".delete-btn");
-    if (editBtn) {
+    if (toggleBtn) {
+      var id = toggleBtn.dataset.id;
+      if (expandedIds.has(id)) expandedIds.delete(id); else expandedIds.add(id);
+      renderList();
+    } else if (editBtn) {
       var c = state.contacts.find(function (x) { return x.id === editBtn.dataset.id; });
       if (c) openDialog(c);
     } else if (delBtn) {
       var c2 = state.contacts.find(function (x) { return x.id === delBtn.dataset.id; });
       if (c2 && confirm('"' + c2.name + '" wirklich löschen?')) {
         state.contacts = state.contacts.filter(function (x) { return x.id !== c2.id; });
+        expandedIds.delete(c2.id);
         saveContacts();
         renderList();
         showToast("Kontakt gelöscht.");
