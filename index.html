@@ -142,6 +142,31 @@
     word-break: break-word;
   }
 
+  .quelle-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .quelle-chip {
+    background: var(--panel2);
+    border-radius: var(--radius-sm);
+    padding: 4px 9px;
+    font-size: 0.85rem;
+    color: var(--text);
+  }
+
+  .quelle-chip strong {
+    font-weight: 700;
+    color: var(--accent-hover);
+  }
+
+  .quelle-datum {
+    color: var(--text3);
+    font-size: 0.78rem;
+  }
+
   .card-actions {
     display: flex;
     flex-direction: column;
@@ -421,9 +446,9 @@
     <div id="einstellungenView" hidden>
       <section class="settings-section">
         <h2>Kontakte importieren</h2>
-        <p>PDF-Telefonliste hochladen oder hierher ziehen. Neue Kontakte werden anhand des Namens mit bestehenden zusammengeführt. Die Verarbeitung erfolgt vollständig im Browser – nichts wird hochgeladen.</p>
-        <div id="dropZone">PDF hierher ziehen oder tippen zum Auswählen</div>
-        <input type="file" id="fileInput" accept="application/pdf" hidden>
+        <p>Eine oder mehrere PDF-Telefonlisten hochladen oder hierher ziehen. Neue Kontakte werden anhand des Namens mit bestehenden zusammengeführt, Qualifikationszusätze in Klammern und E-Mail-Adressen werden beim Import verworfen. Dienststelle und Erstellungsdatum je Liste werden automatisch erkannt. Die Verarbeitung erfolgt vollständig im Browser – nichts wird hochgeladen.</p>
+        <div id="dropZone">PDF(s) hierher ziehen oder tippen zum Auswählen</div>
+        <input type="file" id="fileInput" accept="application/pdf" multiple hidden>
       </section>
 
       <section class="settings-section">
@@ -587,6 +612,28 @@
 
   // ---------- Rendering ----------
 
+  function quellenChipsHtml(c) {
+    var chips = [];
+    if (c.dienststelle && c.dienststelle.trim()) {
+      chips.push({ name: c.dienststelle.trim(), datum: "" });
+    }
+    (c.quellen || []).forEach(function (q) {
+      chips.push({ name: q.dienststelle, datum: q.datum || "" });
+    });
+    if (!chips.length) return "";
+    return (
+      '<div class="quelle-chips">' +
+      chips.map(function (q) {
+        return (
+          '<span class="quelle-chip"><strong>' + escHtml(q.name) + "</strong>" +
+          (q.datum ? '<span class="quelle-datum"> · ' + escHtml(q.datum) + "</span>" : "") +
+          "</span>"
+        );
+      }).join("") +
+      "</div>"
+    );
+  }
+
   function contactCardHtml(c) {
     var phonesHtml = c.phones.map(function (p) {
       return (
@@ -602,6 +649,7 @@
       '<article class="card" data-id="' + c.id + '">' +
       '<div class="card-main">' +
       '<div class="card-name">' + escHtml(c.name) + "</div>" +
+      quellenChipsHtml(c) +
       phonesHtml +
       (c.note ? '<div class="card-note">' + escHtml(c.note) + "</div>" : "") +
       "</div>" +
@@ -613,19 +661,26 @@
     );
   }
 
+  function primaryDienststelle(c) {
+    if (c.dienststelle && c.dienststelle.trim()) return c.dienststelle.trim();
+    if (c.quellen && c.quellen.length) return c.quellen[0].dienststelle;
+    return "Ohne Zuordnung";
+  }
+
   function renderList() {
     var term = state.search.trim().toLowerCase();
     var filtered = state.contacts.filter(function (c) {
       if (!term) return true;
       if (c.name.toLowerCase().indexOf(term) !== -1) return true;
       if ((c.dienststelle || "").toLowerCase().indexOf(term) !== -1) return true;
+      if ((c.quellen || []).some(function (q) { return q.dienststelle.toLowerCase().indexOf(term) !== -1; })) return true;
       if (c.phones.some(function (p) { return p.toLowerCase().indexOf(term) !== -1; })) return true;
       return false;
     });
 
     var groups = {};
     filtered.forEach(function (c) {
-      var g = c.dienststelle && c.dienststelle.trim() ? c.dienststelle.trim() : "Ohne Zuordnung";
+      var g = primaryDienststelle(c);
       if (!groups[g]) groups[g] = [];
       groups[g].push(c);
     });
@@ -816,7 +871,7 @@
   dropZone.addEventListener("click", function () { fileInput.click(); });
 
   fileInput.addEventListener("change", function (e) {
-    if (e.target.files && e.target.files[0]) handlePdfFile(e.target.files[0]);
+    if (e.target.files && e.target.files.length) handlePdfFiles(e.target.files);
     e.target.value = "";
   });
 
@@ -835,8 +890,7 @@
   });
 
   dropZone.addEventListener("drop", function (e) {
-    var file = e.dataTransfer.files && e.dataTransfer.files[0];
-    if (file) handlePdfFile(file);
+    if (e.dataTransfer.files && e.dataTransfer.files.length) handlePdfFiles(e.dataTransfer.files);
   });
 
   function initPdfWorker() {
@@ -886,7 +940,33 @@
     return rows;
   }
 
-  function parseImportedRows(rows) {
+  function formatFileDate(ms) {
+    var d = new Date(ms);
+    function pad(n) { return String(n).padStart(2, "0"); }
+    return pad(d.getDate()) + "." + pad(d.getMonth() + 1) + "." + d.getFullYear() + " um " + pad(d.getHours()) + ":" + pad(d.getMinutes()) + " Uhr";
+  }
+
+  function extractHeaderInfo(rows, fallbackName, fallbackDate) {
+    var dienststelle = "";
+    var datum = "";
+    rows.forEach(function (raw) {
+      var line = raw.replace(/\s+/g, " ").trim();
+      if (!dienststelle) {
+        var m1 = line.match(/^TELEFON\s+(.+)$/i);
+        if (m1) dienststelle = m1[1].trim();
+      }
+      if (!datum) {
+        var m2 = line.match(/Online erstellt am\s+(.+?)\.\s*Seite/i);
+        if (m2) datum = m2[1].trim();
+      }
+    });
+    return {
+      dienststelle: dienststelle || fallbackName,
+      datum: datum || fallbackDate
+    };
+  }
+
+  function parseImportedRows(rows, quelle) {
     var emailRe = /[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9.-]+/g;
     var phoneRe = /(\+?\d[\d \-\/]{4,}\d)/g;
     var contacts = [];
@@ -894,19 +974,21 @@
     rows.forEach(function (raw) {
       var line = raw.replace(/\s+/g, " ").trim();
       if (!line) return;
+      if (/^TELEFON\b/i.test(line)) return; // list header/title line
+      if (/^Online erstellt am/i.test(line)) return; // footer line
+      if (/^Name\s+Mobil/i.test(line)) return; // column header line
 
-      var emails = line.match(emailRe) || [];
+      // E-Mail-Adressen werden beim Import vollständig ignoriert
       var rest = line.replace(emailRe, " ");
 
       var phoneMatches = rest.match(phoneRe) || [];
       var phones = phoneMatches.map(function (p) { return p.replace(/[\s\-\/]/g, ""); });
 
-      if (!phones.length && !emails.length) return; // header/footer/title lines
+      if (!phones.length) return; // keine Telefonnummer -> keine Kontaktzeile
 
       rest = rest.replace(phoneRe, " ").replace(/\s+/g, " ").trim();
 
-      var tagMatch = rest.match(/\(([^)]+)\)/);
-      var tags = tagMatch ? tagMatch[1].trim() : "";
+      // Qualifikationszusätze in Klammern, z.B. "Name (RS, SEF)", werden verworfen
       var name = rest.replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim();
 
       if (!name) return;
@@ -914,9 +996,9 @@
       contacts.push({
         id: uuid(),
         name: name,
-        dienststelle: tags || "Ohne Zuordnung",
+        quellen: quelle.dienststelle ? [{ dienststelle: quelle.dienststelle, datum: quelle.datum }] : [],
         phones: Array.from(new Set(phones)),
-        note: emails.length ? "E-Mail: " + emails.join(", ") : ""
+        note: ""
       });
     });
 
@@ -932,12 +1014,11 @@
       if (byName.has(key)) {
         var ex = byName.get(key);
         ex.phones = Array.from(new Set(ex.phones.concat(nc.phones)));
-        if (nc.dienststelle && nc.dienststelle !== "Ohne Zuordnung") {
-          ex.dienststelle = nc.dienststelle;
-        }
-        if (nc.note && (!ex.note || ex.note.indexOf(nc.note) === -1)) {
-          ex.note = ex.note ? ex.note + " | " + nc.note : nc.note;
-        }
+        if (!ex.quellen) ex.quellen = [];
+        nc.quellen.forEach(function (q) {
+          var exists = ex.quellen.some(function (eq) { return eq.dienststelle === q.dienststelle && eq.datum === q.datum; });
+          if (!exists) ex.quellen.push(q);
+        });
       } else {
         state.contacts.push(nc);
         byName.set(key, nc);
@@ -948,31 +1029,49 @@
     return newCount;
   }
 
-  async function handlePdfFile(file) {
+  async function handlePdfFiles(fileList) {
     if (!window.pdfjsLib) {
       showToast("PDF-Modul nicht verfügbar.");
       return;
     }
-    showToast("PDF wird gelesen…");
-    try {
-      var buf = await file.arrayBuffer();
-      var pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
-      var rows = await extractPdfRows(pdf);
-      var imported = parseImportedRows(rows);
+    var files = Array.from(fileList);
+    if (!files.length) return;
 
-      if (!imported.length) {
-        showToast("Keine Kontakte in der PDF erkannt.");
-        return;
+    showToast(files.length > 1 ? "PDFs werden gelesen…" : "PDF wird gelesen…");
+
+    var totalImported = 0, totalNew = 0, failed = 0;
+
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      try {
+        var buf = await file.arrayBuffer();
+        var pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+        var rows = await extractPdfRows(pdf);
+        var fallbackName = file.name.replace(/\.pdf$/i, "");
+        var quelle = extractHeaderInfo(rows, fallbackName, formatFileDate(file.lastModified));
+        var imported = parseImportedRows(rows, quelle);
+
+        if (imported.length) {
+          totalNew += mergeContacts(imported);
+          totalImported += imported.length;
+        }
+      } catch (err) {
+        console.error(err);
+        failed++;
       }
-
-      var newCount = mergeContacts(imported);
-      saveContacts();
-      renderList();
-      showToast(imported.length + " Einträge verarbeitet – " + newCount + " neu, " + (imported.length - newCount) + " zusammengeführt.");
-    } catch (err) {
-      console.error(err);
-      showToast("PDF konnte nicht gelesen werden.");
     }
+
+    saveContacts();
+    renderList();
+
+    if (!totalImported && !failed) {
+      showToast("Keine Kontakte erkannt.");
+      return;
+    }
+
+    var msg = totalImported + " Einträge verarbeitet – " + totalNew + " neu, " + (totalImported - totalNew) + " zusammengeführt.";
+    if (failed) msg += " (" + failed + " Datei(en) fehlgeschlagen)";
+    showToast(msg);
   }
 
   // ---------- Init ----------
