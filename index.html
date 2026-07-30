@@ -107,41 +107,21 @@
     margin-bottom: 8px;
   }
 
-  .card-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
-  }
-
   .card-name {
     font-weight: 700;
     font-size: 1.02rem;
     word-break: break-word;
-    min-width: 0;
+    margin-bottom: 4px;
   }
 
-  .toggle-btn {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-    min-height: 34px;
-    border-radius: 50%;
-    background: var(--panel2);
-    border: none;
-    color: var(--text2);
-    font-size: 1rem;
-    line-height: 1;
+  .toggle-name {
     cursor: pointer;
-    flex-shrink: 0;
-    transition: transform .15s, color .15s;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
   }
 
-  .toggle-btn.expanded {
-    transform: rotate(180deg);
-    color: var(--accent);
-  }
+  .toggle-name:active { color: var(--accent); }
 
   .phone-row {
     display: flex;
@@ -696,10 +676,7 @@
 
     return (
       '<article class="card" data-id="' + c.id + '">' +
-      '<div class="card-top">' +
-      '<div class="card-name">' + escHtml(c.name) + "</div>" +
-      '<button class="toggle-btn' + (expanded ? " expanded" : "") + '" data-id="' + c.id + '" title="Details ein-/ausblenden">⌄</button>' +
-      "</div>" +
+      '<div class="card-name toggle-name" data-id="' + c.id + '">' + escHtml(c.name) + "</div>" +
       phonesHtml +
       detailsHtml +
       "</article>"
@@ -873,11 +850,11 @@
   });
 
   document.getElementById("listContainer").addEventListener("click", function (e) {
-    var toggleBtn = e.target.closest(".toggle-btn");
+    var nameEl = e.target.closest(".toggle-name");
     var editBtn = e.target.closest(".edit-btn");
     var delBtn = e.target.closest(".delete-btn");
-    if (toggleBtn) {
-      var id = toggleBtn.dataset.id;
+    if (nameEl) {
+      var id = nameEl.dataset.id;
       if (expandedIds.has(id)) expandedIds.delete(id); else expandedIds.add(id);
       renderList();
     } else if (editBtn) {
