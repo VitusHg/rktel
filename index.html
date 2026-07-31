@@ -290,7 +290,7 @@
     line-height: 1.5;
   }
 
-  #dropZone {
+  .drop-zone {
     border: 2px dashed var(--border2);
     border-radius: var(--radius);
     padding: 22px 12px;
@@ -301,10 +301,83 @@
     cursor: pointer;
   }
 
-  #dropZone.dragover {
+  .drop-zone.dragover {
     border-color: var(--accent);
     color: var(--text);
     background: var(--panel2);
+  }
+
+  /* Dienst / Startseite */
+  #dienstView { padding: 14px 14px 4px; }
+
+  .duty-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+
+  .duty-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--accent-hover);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .duty-summary { font-size: 1.15rem; font-weight: 700; margin-bottom: 4px; }
+  .duty-location { color: var(--text2); font-size: 0.9rem; margin-bottom: 2px; }
+  .duty-time { color: var(--text2); font-size: 0.9rem; margin-bottom: 14px; }
+
+  .duty-colleagues {
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .colleague-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .colleague-name {
+    font-size: 0.95rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .colleague-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .quick-add-btn {
+    background: var(--panel2);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 7px 11px;
+    font-size: 0.8rem;
+    color: var(--text2);
+    cursor: pointer;
+    flex-shrink: 0;
+    min-height: 34px;
+  }
+
+  .empty-hint { color: var(--text3); font-size: 0.88rem; margin: 0; }
+
+  .dienst-config-toggle {
+    text-align: center;
+    color: var(--text3);
+    font-size: 0.8rem;
+    padding: 12px 8px;
+    cursor: pointer;
   }
 
   .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -455,7 +528,27 @@
   </header>
 
   <main id="mainContent">
-    <div id="kontakteView">
+    <div id="dienstView">
+      <div id="dienstResult"></div>
+
+      <div id="dienstConfigToggle" class="dienst-config-toggle">⚙️ Dienstplan-Link verwalten</div>
+
+      <section class="settings-section" id="dienstConfig" hidden>
+        <h2>Dienstplan-Link</h2>
+        <p>ICS-Link deines Dienstplans (RK Dienstplanung). Der Abruf erfolgt direkt im Browser vom angegebenen Server – es ist kein weiterer Dienst beteiligt, nichts wird an uns übertragen.</p>
+        <input class="field-input" id="icsUrlInput" placeholder="https://dienstplan.st.roteskreuz.at/…/Private.ics">
+        <div class="btn-row" style="margin-top:10px;">
+          <button id="icsSaveBtn" class="btn-primary">Speichern &amp; abrufen</button>
+          <button id="icsRefreshBtn" class="btn-secondary">Aktualisieren</button>
+        </div>
+        <p class="about-line" style="margin-top:12px;">Falls der direkte Abruf vom Server blockiert wird (CORS), die ICS-Datei stattdessen manuell herunterladen und hier hochladen:</p>
+        <div id="icsDropZone" class="drop-zone">ICS-Datei hierher ziehen oder tippen zum Auswählen</div>
+        <input type="file" id="icsFileInput" accept=".ics,text/calendar" hidden>
+        <p class="about-line" id="icsStatusLine"></p>
+      </section>
+    </div>
+
+    <div id="kontakteView" hidden>
       <div id="listContainer"></div>
     </div>
 
@@ -463,7 +556,7 @@
       <section class="settings-section">
         <h2>Kontakte importieren</h2>
         <p>Eine oder mehrere PDF-Telefonlisten hochladen oder hierher ziehen. Neue Kontakte werden anhand des Namens mit bestehenden zusammengeführt, Qualifikationszusätze in Klammern und E-Mail-Adressen werden beim Import verworfen. Dienststelle und Erstellungsdatum je Liste werden automatisch erkannt. Die Verarbeitung erfolgt vollständig im Browser – nichts wird hochgeladen.</p>
-        <div id="dropZone">PDF(s) hierher ziehen oder tippen zum Auswählen</div>
+        <div id="dropZone" class="drop-zone">PDF(s) hierher ziehen oder tippen zum Auswählen</div>
         <input type="file" id="fileInput" accept="application/pdf" multiple hidden>
       </section>
 
@@ -487,7 +580,11 @@
   <button id="fabAdd" class="fab" title="Kontakt hinzufügen">+</button>
 
   <nav id="bottomNav">
-    <button data-tab="kontakte" class="active">
+    <button data-tab="dienst" class="active">
+      <span class="nav-icon">🚑</span>
+      <span>Dienst</span>
+    </button>
+    <button data-tab="kontakte">
       <span class="nav-icon">📇</span>
       <span>Kontakte</span>
     </button>
@@ -742,8 +839,9 @@
   function setActiveTab(tab) {
     state.activeTab = tab;
     var isKontakte = tab === "kontakte";
+    document.getElementById("dienstView").hidden = tab !== "dienst";
     document.getElementById("kontakteView").hidden = !isKontakte;
-    document.getElementById("einstellungenView").hidden = isKontakte;
+    document.getElementById("einstellungenView").hidden = tab !== "einstellungen";
     document.getElementById("topbar").style.display = isKontakte ? "" : "none";
     document.getElementById("fabAdd").style.display = isKontakte ? "" : "none";
     document.querySelectorAll("#bottomNav button").forEach(function (btn) {
@@ -799,10 +897,10 @@
 
   document.getElementById("addPhoneBtn").addEventListener("click", function () { addPhoneRow(""); });
 
-  function openDialog(contact) {
+  function openDialog(contact, prefillName) {
     editingId = contact ? contact.id : null;
     document.getElementById("sheetTitle").textContent = contact ? "Kontakt bearbeiten" : "Kontakt hinzufügen";
-    document.getElementById("fieldName").value = contact ? contact.name : "";
+    document.getElementById("fieldName").value = contact ? contact.name : (prefillName || "");
     document.getElementById("fieldDienststelle").value = contact ? contact.dienststelle || "" : "";
     document.getElementById("fieldNote").value = contact ? contact.note || "" : "";
     phoneFieldsEl.innerHTML = "";
@@ -845,6 +943,7 @@
 
     saveContacts();
     renderList();
+    renderDienstView();
     closeDialog();
     showToast("Gespeichert.");
   });
@@ -867,6 +966,7 @@
         expandedIds.delete(c2.id);
         saveContacts();
         renderList();
+        renderDienstView();
         showToast("Kontakt gelöscht.");
       }
     }
@@ -1095,6 +1195,7 @@
 
     saveContacts();
     renderList();
+    renderDienstView();
 
     if (!totalImported && !failed) {
       showToast("Keine Kontakte erkannt.");
@@ -1106,11 +1207,303 @@
     showToast(msg);
   }
 
+  // ---------- Dienstplan ----------
+
+  var DIENSTPLAN_URL_KEY = "dienstplanUrlV1";
+  var DIENSTPLAN_ICS_KEY = "dienstplanIcsV1";
+  var DIENSTPLAN_META_KEY = "dienstplanMetaV1";
+
+  function loadDienstplan() {
+    state.icsUrl = localStorage.getItem(DIENSTPLAN_URL_KEY) || "";
+    state.icsText = localStorage.getItem(DIENSTPLAN_ICS_KEY) || "";
+    try {
+      state.icsMeta = JSON.parse(localStorage.getItem(DIENSTPLAN_META_KEY) || "null");
+    } catch (e) {
+      state.icsMeta = null;
+    }
+  }
+
+  function unfoldIcsLines(text) {
+    var rawLines = text.split(/\r\n|\n|\r/);
+    var lines = [];
+    rawLines.forEach(function (l) {
+      if ((l.charAt(0) === " " || l.charAt(0) === "\t") && lines.length) {
+        lines[lines.length - 1] += l.slice(1);
+      } else {
+        lines.push(l);
+      }
+    });
+    return lines;
+  }
+
+  function unescapeIcsText(s) {
+    return String(s || "")
+      .replace(/\\n/gi, "\n")
+      .replace(/\\,/g, ",")
+      .replace(/\\;/g, ";")
+      .replace(/\\\\/g, "\\");
+  }
+
+  function parseIcsDate(value) {
+    var m = value.match(/^(\d{4})(\d{2})(\d{2})(T(\d{2})(\d{2})(\d{2})(Z)?)?$/);
+    if (!m) return null;
+    var y = +m[1], mo = +m[2], d = +m[3];
+    if (!m[4]) return new Date(y, mo - 1, d);
+    var h = +m[5], mi = +m[6], s = +m[7];
+    if (m[8] === "Z") return new Date(Date.UTC(y, mo - 1, d, h, mi, s));
+    return new Date(y, mo - 1, d, h, mi, s);
+  }
+
+  function parseIcs(text) {
+    var lines = unfoldIcsLines(text);
+    var events = [];
+    var cur = null;
+
+    lines.forEach(function (line) {
+      if (line.indexOf("BEGIN:VEVENT") === 0) { cur = {}; return; }
+      if (line.indexOf("END:VEVENT") === 0) { if (cur) events.push(cur); cur = null; return; }
+      if (!cur) return;
+
+      var idx = line.indexOf(":");
+      if (idx === -1) return;
+      var namepart = line.slice(0, idx);
+      var value = line.slice(idx + 1);
+      var prop = namepart.split(";")[0].toUpperCase();
+
+      if (prop === "DTSTART") cur.start = parseIcsDate(value);
+      else if (prop === "DTEND") cur.end = parseIcsDate(value);
+      else if (prop === "SUMMARY") cur.summary = unescapeIcsText(value);
+      else if (prop === "LOCATION") cur.location = unescapeIcsText(value);
+      else if (prop === "DESCRIPTION") cur.description = unescapeIcsText(value);
+      else if (prop === "UID") cur.uid = value;
+    });
+
+    return events
+      .filter(function (e) { return e.start; })
+      .map(function (e) {
+        var colleagues = (e.description || "")
+          .split(",")
+          .map(function (s) { return s.trim(); })
+          .filter(Boolean);
+        return {
+          uid: e.uid || "",
+          summary: e.summary || "",
+          location: e.location || "",
+          start: e.start,
+          end: e.end || e.start,
+          colleagues: colleagues
+        };
+      })
+      .sort(function (a, b) { return a.start - b.start; });
+  }
+
+  function findCurrentAndNextDuty(events) {
+    var now = new Date();
+    var current = null, next = null;
+    events.forEach(function (e) {
+      if (e.start <= now && now < e.end) current = e;
+      if (!next && e.start > now) next = e;
+    });
+    return { current: current, next: next };
+  }
+
+  function normalizeNameTokens(name) {
+    return String(name || "")
+      .toLowerCase()
+      .replace(/[-']/g, " ")
+      .split(/\s+/)
+      .filter(Boolean);
+  }
+
+  function findContactForName(name) {
+    var tokens = new Set(normalizeNameTokens(name));
+    if (!tokens.size) return null;
+    var best = null;
+    state.contacts.forEach(function (c) {
+      if (best) return;
+      var cTokens = new Set(normalizeNameTokens(c.name));
+      if (!cTokens.size) return;
+      var inter = 0;
+      cTokens.forEach(function (t) { if (tokens.has(t)) inter++; });
+      var minSize = Math.min(tokens.size, cTokens.size);
+      if (minSize > 0 && inter === minSize) best = c;
+    });
+    return best;
+  }
+
+  function formatDateTime(d) {
+    var days = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+    function pad(n) { return String(n).padStart(2, "0"); }
+    return days[d.getDay()] + ", " + pad(d.getDate()) + "." + pad(d.getMonth() + 1) + "." + d.getFullYear() + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  function colleagueHtml(name) {
+    var contact = findContactForName(name);
+    if (!contact) {
+      return (
+        '<div class="colleague-row">' +
+        '<span class="colleague-name">' + escHtml(name) + "</span>" +
+        '<button class="quick-add-btn" data-name="' + escHtml(name) + '">+ Kontakt</button>' +
+        "</div>"
+      );
+    }
+    var phonesHtml = contact.phones.map(function (p) {
+      return (
+        '<a class="icon-btn" href="' + telHref(p) + '" title="Anrufen">📞</a>' +
+        '<a class="icon-btn" href="https://wa.me/' + waNumber(p) + '" target="_blank" rel="noopener" title="WhatsApp">💬</a>'
+      );
+    }).join("");
+    return (
+      '<div class="colleague-row">' +
+      '<span class="colleague-name">' + escHtml(contact.name) + "</span>" +
+      '<div class="colleague-actions">' + phonesHtml + "</div>" +
+      "</div>"
+    );
+  }
+
+  function dutyCardHtml(duty, label) {
+    var colleaguesHtml = duty.colleagues.length
+      ? duty.colleagues.map(colleagueHtml).join("")
+      : '<p class="empty-hint">Keine Kollegen eingetragen.</p>';
+    return (
+      '<section class="duty-card">' +
+      '<div class="duty-label">' + escHtml(label) + "</div>" +
+      '<div class="duty-summary">' + escHtml(duty.summary || "Dienst") + "</div>" +
+      (duty.location ? '<div class="duty-location">📍 ' + escHtml(duty.location) + "</div>" : "") +
+      '<div class="duty-time">' + formatDateTime(duty.start) + " – " + formatDateTime(duty.end) + "</div>" +
+      '<div class="duty-colleagues">' + colleaguesHtml + "</div>" +
+      "</section>"
+    );
+  }
+
+  function renderDienstStatusLine() {
+    var line = document.getElementById("icsStatusLine");
+    if (!line) return;
+    if (state.icsMeta && state.icsMeta.updatedAt) {
+      var src = state.icsMeta.source === "upload" ? "Datei-Upload" : "automatischer Abruf";
+      line.textContent = "Zuletzt aktualisiert: " + formatDateTime(new Date(state.icsMeta.updatedAt)) + " (" + src + ")";
+    } else {
+      line.textContent = "";
+    }
+  }
+
+  function renderDienstView() {
+    var container = document.getElementById("dienstResult");
+    if (!state.icsText) {
+      container.innerHTML = '<p class="empty-state">Noch kein Dienstplan verknüpft.<br>Trage unten deinen ICS-Link ein oder lade eine ICS-Datei hoch.</p>';
+    } else {
+      var events;
+      try {
+        events = parseIcs(state.icsText);
+      } catch (e) {
+        console.error(e);
+        events = [];
+      }
+      var found = findCurrentAndNextDuty(events);
+      var html = "";
+      if (found.current) html += dutyCardHtml(found.current, "Aktueller Dienst");
+      if (found.next) html += dutyCardHtml(found.next, "Nächster Dienst");
+      container.innerHTML = html || '<p class="empty-state">Keine anstehenden Dienste im Kalender gefunden.</p>';
+    }
+    renderDienstStatusLine();
+  }
+
+  async function refreshDienstplanFromUrl(url, opts) {
+    opts = opts || {};
+    try {
+      var resp = await fetch(url, { cache: "no-store" });
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      var text = await resp.text();
+      if (!/BEGIN:VCALENDAR/i.test(text)) throw new Error("invalid-ics");
+      state.icsText = text;
+      state.icsMeta = { updatedAt: new Date().toISOString(), source: "url" };
+      localStorage.setItem(DIENSTPLAN_ICS_KEY, text);
+      localStorage.setItem(DIENSTPLAN_META_KEY, JSON.stringify(state.icsMeta));
+      renderDienstView();
+      if (!opts.silent) {
+        document.getElementById("dienstConfig").hidden = true;
+        showToast("Dienstplan aktualisiert.");
+      }
+    } catch (err) {
+      console.error(err);
+      if (!opts.silent) {
+        showToast("Abruf fehlgeschlagen (evtl. blockiert der Server direkte Browser-Anfragen). Bitte ICS-Datei hochladen.");
+      }
+    }
+  }
+
+  document.getElementById("dienstConfigToggle").addEventListener("click", function () {
+    var el = document.getElementById("dienstConfig");
+    el.hidden = !el.hidden;
+  });
+
+  document.getElementById("icsSaveBtn").addEventListener("click", function () {
+    var url = document.getElementById("icsUrlInput").value.trim();
+    if (!url) { showToast("Bitte einen Link eingeben."); return; }
+    state.icsUrl = url;
+    localStorage.setItem(DIENSTPLAN_URL_KEY, url);
+    refreshDienstplanFromUrl(url);
+  });
+
+  document.getElementById("icsRefreshBtn").addEventListener("click", function () {
+    if (!state.icsUrl) { showToast("Kein Link gespeichert."); return; }
+    refreshDienstplanFromUrl(state.icsUrl);
+  });
+
+  async function handleIcsFile(file) {
+    try {
+      var text = await file.text();
+      if (!/BEGIN:VCALENDAR/i.test(text)) { showToast("Das ist keine gültige ICS-Datei."); return; }
+      state.icsText = text;
+      state.icsMeta = { updatedAt: new Date().toISOString(), source: "upload" };
+      localStorage.setItem(DIENSTPLAN_ICS_KEY, text);
+      localStorage.setItem(DIENSTPLAN_META_KEY, JSON.stringify(state.icsMeta));
+      renderDienstView();
+      document.getElementById("dienstConfig").hidden = true;
+      showToast("Dienstplan aus Datei geladen.");
+    } catch (err) {
+      console.error(err);
+      showToast("Datei konnte nicht gelesen werden.");
+    }
+  }
+
+  var icsFileInput = document.getElementById("icsFileInput");
+  var icsDropZone = document.getElementById("icsDropZone");
+
+  icsDropZone.addEventListener("click", function () { icsFileInput.click(); });
+
+  icsFileInput.addEventListener("change", function (e) {
+    if (e.target.files && e.target.files[0]) handleIcsFile(e.target.files[0]);
+    e.target.value = "";
+  });
+
+  ["dragenter", "dragover"].forEach(function (evt) {
+    icsDropZone.addEventListener(evt, function (e) { e.preventDefault(); icsDropZone.classList.add("dragover"); });
+  });
+  ["dragleave", "drop"].forEach(function (evt) {
+    icsDropZone.addEventListener(evt, function (e) { e.preventDefault(); icsDropZone.classList.remove("dragover"); });
+  });
+  icsDropZone.addEventListener("drop", function (e) {
+    var file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file) handleIcsFile(file);
+  });
+
+  document.getElementById("dienstResult").addEventListener("click", function (e) {
+    var btn = e.target.closest(".quick-add-btn");
+    if (btn) openDialog(null, btn.dataset.name);
+  });
+
   // ---------- Init ----------
 
   loadContacts();
   renderList();
-  setActiveTab("kontakte");
+  loadDienstplan();
+  document.getElementById("icsUrlInput").value = state.icsUrl;
+  document.getElementById("dienstConfig").hidden = !!state.icsText;
+  renderDienstView();
+  setActiveTab("dienst");
+
+  if (state.icsUrl) refreshDienstplanFromUrl(state.icsUrl, { silent: true });
 
   if (window.pdfjsLib) initPdfWorker();
 
