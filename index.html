@@ -78,6 +78,44 @@
   #searchInput::placeholder { color: var(--text3); }
   #searchInput:focus { outline: none; border-color: var(--accent); }
 
+  /* Kurzwahl Einsatzmittel */
+  #quickDialBar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  #quickDialBar[hidden] { display: none; }
+
+  .quickdial-label {
+    font-size: 0.78rem;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+
+  .quickdial-suffix {
+    flex: 1;
+    min-width: 0;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--panel);
+    color: var(--text);
+    font-size: 1rem;
+    min-height: 40px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .quickdial-suffix::placeholder { color: var(--text3); }
+  .quickdial-suffix:focus { outline: none; border-color: var(--accent); }
+
+  .quickdial-call.disabled {
+    opacity: .35;
+    pointer-events: none;
+  }
+
   /* Main content */
   #mainContent {
     flex: 1 1 auto;
@@ -452,6 +490,11 @@
   <header id="topbar">
     <h1>Telefonbuch</h1>
     <input id="searchInput" type="search" inputmode="search" placeholder="Suche nach Name, Nummer, Dienststelle…" autocomplete="off">
+    <div id="quickDialBar" hidden>
+      <span class="quickdial-label">Kurzwahl</span>
+      <input id="quickDialSuffix" class="quickdial-suffix" type="text" inputmode="numeric" maxlength="8" placeholder="Einsatzmittel-Nr." autocomplete="off">
+      <a id="quickDialCallBtn" class="icon-btn quickdial-call disabled" title="Anrufen">📞</a>
+    </div>
   </header>
 
   <main id="mainContent">
@@ -460,6 +503,12 @@
     </div>
 
     <div id="einstellungenView" hidden>
+      <section class="settings-section">
+        <h2>Kurzwahl Einsatzmittel</h2>
+        <p>Basisnummer der Diensthandys der Einsatzmittel hinterlegen. Auf der Kontakte-Seite wird sie mit der eingegebenen Einsatzmittel-Nummer zur vollständigen Rufnummer kombiniert, z. B. Basisnummer + 1823.</p>
+        <input class="field-input" id="quickDialBaseInput" type="tel" inputmode="tel" placeholder="z. B. +43664XXXXXXX" autocomplete="off">
+      </section>
+
       <section class="settings-section">
         <h2>Kontakte importieren</h2>
         <p>Eine oder mehrere PDF-Telefonlisten hochladen oder hierher ziehen. Neue Kontakte werden anhand des Namens mit bestehenden zusammengeführt, Qualifikationszusätze in Klammern und E-Mail-Adressen werden beim Import verworfen. Dienststelle und Erstellungsdatum je Liste werden automatisch erkannt. Die Verarbeitung erfolgt vollständig im Browser – nichts wird hochgeladen.</p>
@@ -581,11 +630,14 @@
   "use strict";
 
   var STORAGE_KEY = "telefonbuchV1";
+  var QUICKDIAL_BASE_KEY = "telefonbuchKurzwahlBasisV1";
+  var QUICKDIAL_SUFFIX_KEY = "telefonbuchKurzwahlSuffixV1";
 
   var state = {
     contacts: [],
     search: "",
-    activeTab: "kontakte"
+    activeTab: "kontakte",
+    quickDialBase: ""
   };
 
   function loadContacts() {
@@ -599,6 +651,18 @@
 
   function saveContacts() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.contacts));
+  }
+
+  function loadQuickDialBase() {
+    try {
+      state.quickDialBase = localStorage.getItem(QUICKDIAL_BASE_KEY) || "";
+    } catch (e) {
+      state.quickDialBase = "";
+    }
+  }
+
+  function saveQuickDialBase() {
+    localStorage.setItem(QUICKDIAL_BASE_KEY, state.quickDialBase);
   }
 
   function escHtml(str) {
@@ -754,6 +818,40 @@
   document.getElementById("bottomNav").addEventListener("click", function (e) {
     var btn = e.target.closest("button[data-tab]");
     if (btn) setActiveTab(btn.dataset.tab);
+  });
+
+  // ---------- Kurzwahl Einsatzmittel ----------
+
+  var quickDialBarEl = document.getElementById("quickDialBar");
+  var quickDialSuffixEl = document.getElementById("quickDialSuffix");
+  var quickDialCallBtn = document.getElementById("quickDialCallBtn");
+
+  function updateQuickDialCallBtn() {
+    var suffix = quickDialSuffixEl.value.trim();
+    if (suffix) {
+      quickDialCallBtn.href = telHref(state.quickDialBase + suffix);
+      quickDialCallBtn.classList.remove("disabled");
+    } else {
+      quickDialCallBtn.removeAttribute("href");
+      quickDialCallBtn.classList.add("disabled");
+    }
+  }
+
+  function renderQuickDialBar() {
+    quickDialBarEl.hidden = !state.quickDialBase;
+    updateQuickDialCallBtn();
+  }
+
+  quickDialSuffixEl.addEventListener("input", function () {
+    localStorage.setItem(QUICKDIAL_SUFFIX_KEY, quickDialSuffixEl.value.trim());
+    updateQuickDialCallBtn();
+  });
+
+  document.getElementById("quickDialBaseInput").addEventListener("change", function (e) {
+    state.quickDialBase = e.target.value.trim();
+    saveQuickDialBase();
+    renderQuickDialBar();
+    showToast("Gespeichert.");
   });
 
   // ---------- Search ----------
@@ -1111,6 +1209,11 @@
   loadContacts();
   renderList();
   setActiveTab("kontakte");
+
+  loadQuickDialBase();
+  document.getElementById("quickDialBaseInput").value = state.quickDialBase;
+  quickDialSuffixEl.value = localStorage.getItem(QUICKDIAL_SUFFIX_KEY) || "";
+  renderQuickDialBar();
 
   if (window.pdfjsLib) initPdfWorker();
 
