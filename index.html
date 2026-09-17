@@ -78,21 +78,37 @@
   #searchInput::placeholder { color: var(--text3); }
   #searchInput:focus { outline: none; border-color: var(--accent); }
 
-  /* Kurzwahl Einsatzmittel */
-  #quickDialBar {
+  /* Kurzwahl + Favoriten (oberhalb der Suche, scrollt mit der Liste) */
+  #kontaktePreList { padding: 10px 10px 0; }
+
+  #topArea {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
-    margin-top: 8px;
+    margin-bottom: 10px;
   }
 
-  #quickDialBar[hidden] { display: none; }
+  #topArea[hidden] { display: none; }
 
-  .quickdial-label {
-    font-size: 0.78rem;
+  .qd-card {
+    background: var(--panel);
+    border: 1.5px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+  }
+
+  .qd-card[hidden] { display: none; }
+
+  .qd-card-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
     color: var(--text2);
-    white-space: nowrap;
+    margin-bottom: 6px;
   }
+
+  .quickdial-row { display: flex; align-items: center; gap: 8px; }
 
   .quickdial-suffix {
     flex: 1;
@@ -100,7 +116,7 @@
     padding: 9px 12px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border2);
-    background: var(--panel);
+    background: var(--card);
     color: var(--text);
     font-size: 1rem;
     min-height: 40px;
@@ -116,6 +132,60 @@
     pointer-events: none;
   }
 
+  .favoriten-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 178px;
+    overflow-y: auto;
+  }
+
+  .favoriten-list:empty { display: none; }
+
+  .favorit-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+  }
+
+  .favorit-info { flex: 1; min-width: 0; }
+
+  .favorit-name {
+    font-weight: 700;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .favorit-phone { color: var(--text2); font-size: 0.8rem; }
+
+  .favorit-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .icon-btn-sm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: var(--radius-sm);
+    background: var(--panel2);
+    border: none;
+    text-decoration: none;
+    font-size: 0.95rem;
+    cursor: pointer;
+    color: var(--text);
+  }
+
+  .icon-btn-sm:active { background: var(--border2); }
+
   /* Main content */
   #mainContent {
     flex: 1 1 auto;
@@ -125,17 +195,6 @@
   }
 
   #listContainer { padding: 8px 10px 4px; }
-
-  .group { margin-bottom: 10px; }
-
-  .group-header {
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    color: var(--text2);
-    margin: 14px 6px 6px;
-    font-weight: 700;
-  }
 
   .card {
     background: var(--card);
@@ -328,6 +387,19 @@
     line-height: 1.5;
   }
 
+  .settings-hint {
+    font-size: 0.78rem;
+    color: var(--text3);
+    margin: -4px 0 12px;
+    line-height: 1.5;
+  }
+
+  .settings-separator {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 14px 0;
+  }
+
   #dropZone {
     border: 2px dashed var(--border2);
     border-radius: var(--radius);
@@ -427,6 +499,21 @@
 
   .field-textarea { resize: vertical; min-height: 60px; }
 
+  .field-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 16px 0 4px;
+    font-size: 0.88rem;
+    color: var(--text);
+  }
+
+  .field-checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--accent);
+  }
+
   .phone-input-row {
     display: flex;
     gap: 8px;
@@ -489,35 +576,42 @@
 <div id="app">
   <header id="topbar">
     <h1>Telefonbuch</h1>
-    <input id="searchInput" type="search" inputmode="search" placeholder="Suche nach Name, Nummer, Dienststelle…" autocomplete="off">
-    <div id="quickDialBar" hidden>
-      <span class="quickdial-label">Kurzwahl</span>
-      <input id="quickDialSuffix" class="quickdial-suffix" type="text" inputmode="numeric" maxlength="8" placeholder="Einsatzmittel-Nr." autocomplete="off">
-      <a id="quickDialCallBtn" class="icon-btn quickdial-call disabled" title="Anrufen">📞</a>
-    </div>
   </header>
 
   <main id="mainContent">
     <div id="kontakteView">
+      <div id="kontaktePreList">
+        <div id="topArea" hidden>
+          <div id="quickDialCard" class="qd-card" hidden>
+            <div class="qd-card-label">Kurzwahl Einsatzmittel</div>
+            <div class="quickdial-row">
+              <input id="quickDialSuffix" class="quickdial-suffix" type="text" inputmode="numeric" maxlength="8" placeholder="Einsatzmittel-Nr." autocomplete="off">
+              <a id="quickDialCallBtn" class="icon-btn quickdial-call disabled" title="Anrufen">📞</a>
+            </div>
+          </div>
+          <div id="favoritenList" class="favoriten-list"></div>
+        </div>
+        <input id="searchInput" type="search" inputmode="search" placeholder="Suche nach Name, Nummer, Dienststelle…" autocomplete="off">
+      </div>
       <div id="listContainer"></div>
     </div>
 
     <div id="einstellungenView" hidden>
       <section class="settings-section">
-        <h2>Kurzwahl Einsatzmittel</h2>
-        <p>Basisnummer der Diensthandys der Einsatzmittel hinterlegen. Auf der Kontakte-Seite wird sie mit der eingegebenen Einsatzmittel-Nummer zur vollständigen Rufnummer kombiniert, z. B. Basisnummer + 1823.</p>
+        <h2>📞 Telefonbuch</h2>
+        <label class="field-label" for="quickDialBaseInput">Basisnummer Einsatzmittel (Kurzwahl)</label>
         <input class="field-input" id="quickDialBaseInput" type="tel" inputmode="tel" placeholder="z. B. +43664XXXXXXX" autocomplete="off">
-      </section>
+        <p class="settings-hint">Auf der Kontakte-Seite wird die Basisnummer mit der eingegebenen Einsatzmittel-Nummer zur vollständigen Rufnummer kombiniert, z. B. Basisnummer + 1823.</p>
 
-      <section class="settings-section">
-        <h2>Kontakte importieren</h2>
+        <div class="settings-separator"></div>
+
         <p>Eine oder mehrere PDF-Telefonlisten hochladen oder hierher ziehen. Neue Kontakte werden anhand des Namens mit bestehenden zusammengeführt, Qualifikationszusätze in Klammern und E-Mail-Adressen werden beim Import verworfen. Dienststelle und Erstellungsdatum je Liste werden automatisch erkannt. Die Verarbeitung erfolgt vollständig im Browser – nichts wird hochgeladen.</p>
         <div id="dropZone">PDF(s) hierher ziehen oder tippen zum Auswählen</div>
         <input type="file" id="fileInput" accept="application/pdf" multiple hidden>
       </section>
 
       <section class="settings-section">
-        <h2>Daten</h2>
+        <h2>💾 Daten</h2>
         <p>Alle Kontakte werden ausschließlich lokal in diesem Browser gespeichert (localStorage). Es findet keine Übertragung an einen Server statt.</p>
         <div class="btn-row">
           <button id="exportBtn" class="btn-secondary">JSON exportieren</button>
@@ -537,7 +631,7 @@
 
   <nav id="bottomNav">
     <button data-tab="kontakte" class="active">
-      <span class="nav-icon">📇</span>
+      <span class="nav-icon">📞</span>
       <span>Kontakte</span>
     </button>
     <button data-tab="einstellungen">
@@ -564,6 +658,11 @@
 
       <label class="field-label" for="fieldNote">Notiz</label>
       <textarea class="field-textarea" id="fieldNote"></textarea>
+
+      <label class="field-checkbox-label" for="fieldPinned">
+        <input type="checkbox" id="fieldPinned">
+        📌 Anpinnen (erscheint oben auf der Kontakte-Seite)
+      </label>
 
       <div class="sheet-actions">
         <button type="button" id="cancelBtn" class="btn-secondary">Abbrechen</button>
@@ -740,20 +839,16 @@
 
     return (
       '<article class="card" data-id="' + c.id + '">' +
-      '<div class="card-name toggle-name" data-id="' + c.id + '">' + escHtml(c.name) + "</div>" +
+      '<div class="card-name toggle-name" data-id="' + c.id + '">' + (c.pinned ? "📌 " : "") + escHtml(c.name) + "</div>" +
       phonesHtml +
       detailsHtml +
       "</article>"
     );
   }
 
-  function primaryDienststelle(c) {
-    if (c.dienststelle && c.dienststelle.trim()) return c.dienststelle.trim();
-    if (c.quellen && c.quellen.length) return c.quellen[0].dienststelle;
-    return "Ohne Zuordnung";
-  }
-
   function renderList() {
+    renderTopArea();
+
     var term = state.search.trim().toLowerCase();
     var filtered = state.contacts.filter(function (c) {
       if (!term) return true;
@@ -769,31 +864,10 @@
       html = term
         ? '<p class="empty-state">Keine Treffer für „' + escHtml(state.search) + '“.</p>'
         : '<p class="empty-state">Noch keine Kontakte.<br>Tippe auf + zum Hinzufügen oder importiere eine PDF-Liste unter Einstellungen.</p>';
-    } else if (term) {
-      // Suchergebnisse: flach, rein alphabetisch, keine Gruppierung nach Dienststelle
+    } else {
+      // Immer flach und rein alphabetisch, keine Gruppierung nach Dienststelle
       var flat = filtered.slice().sort(function (a, b) { return a.name.localeCompare(b.name, "de"); });
       html = flat.map(contactCardHtml).join("");
-    } else {
-      var groups = {};
-      filtered.forEach(function (c) {
-        var g = primaryDienststelle(c);
-        if (!groups[g]) groups[g] = [];
-        groups[g].push(c);
-      });
-
-      var groupNames = Object.keys(groups).sort(function (a, b) { return a.localeCompare(b, "de"); });
-      groupNames.forEach(function (g) {
-        groups[g].sort(function (a, b) { return a.name.localeCompare(b.name, "de"); });
-      });
-
-      html = groupNames.map(function (g) {
-        return (
-          '<section class="group">' +
-          '<h2 class="group-header">' + escHtml(g) + " (" + groups[g].length + ")</h2>" +
-          groups[g].map(contactCardHtml).join("") +
-          "</section>"
-        );
-      }).join("");
     }
 
     document.getElementById("listContainer").innerHTML = html;
@@ -820,15 +894,17 @@
     if (btn) setActiveTab(btn.dataset.tab);
   });
 
-  // ---------- Kurzwahl Einsatzmittel ----------
+  // ---------- Kurzwahl Einsatzmittel + Favoriten ----------
 
-  var quickDialBarEl = document.getElementById("quickDialBar");
+  var topAreaEl = document.getElementById("topArea");
+  var quickDialCardEl = document.getElementById("quickDialCard");
   var quickDialSuffixEl = document.getElementById("quickDialSuffix");
   var quickDialCallBtn = document.getElementById("quickDialCallBtn");
+  var favoritenListEl = document.getElementById("favoritenList");
 
   function updateQuickDialCallBtn() {
     var suffix = quickDialSuffixEl.value.trim();
-    if (suffix) {
+    if (suffix && state.quickDialBase) {
       quickDialCallBtn.href = telHref(state.quickDialBase + suffix);
       quickDialCallBtn.classList.remove("disabled");
     } else {
@@ -837,9 +913,33 @@
     }
   }
 
-  function renderQuickDialBar() {
-    quickDialBarEl.hidden = !state.quickDialBase;
+  function favoritRowHtml(c) {
+    var phone = (c.phones && c.phones[0]) || "";
+    return (
+      '<div class="favorit-row">' +
+      '<div class="favorit-info">' +
+      '<div class="favorit-name">' + escHtml(c.name) + "</div>" +
+      (phone ? '<div class="favorit-phone">' + escHtml(phone) + "</div>" : "") +
+      "</div>" +
+      (phone ?
+        '<div class="favorit-actions">' +
+        '<a class="icon-btn-sm" href="' + telHref(phone) + '" title="Anrufen">📞</a>' +
+        '<a class="icon-btn-sm" href="https://wa.me/' + waNumber(phone) + '" target="_blank" rel="noopener" title="WhatsApp">💬</a>' +
+        "</div>" : "") +
+      "</div>"
+    );
+  }
+
+  function renderTopArea() {
+    quickDialCardEl.hidden = !state.quickDialBase;
     updateQuickDialCallBtn();
+
+    var pinned = state.contacts.filter(function (c) { return c.pinned; })
+      .slice()
+      .sort(function (a, b) { return a.name.localeCompare(b.name, "de"); });
+    favoritenListEl.innerHTML = pinned.map(favoritRowHtml).join("");
+
+    topAreaEl.hidden = !(state.quickDialBase || pinned.length);
   }
 
   quickDialSuffixEl.addEventListener("input", function () {
@@ -850,7 +950,7 @@
   document.getElementById("quickDialBaseInput").addEventListener("change", function (e) {
     state.quickDialBase = e.target.value.trim();
     saveQuickDialBase();
-    renderQuickDialBar();
+    renderTopArea();
     showToast("Gespeichert.");
   });
 
@@ -903,6 +1003,7 @@
     document.getElementById("fieldName").value = contact ? contact.name : "";
     document.getElementById("fieldDienststelle").value = contact ? contact.dienststelle || "" : "";
     document.getElementById("fieldNote").value = contact ? contact.note || "" : "";
+    document.getElementById("fieldPinned").checked = contact ? !!contact.pinned : false;
     phoneFieldsEl.innerHTML = "";
     var phones = contact && contact.phones && contact.phones.length ? contact.phones : [""];
     phones.forEach(function (p) { addPhoneRow(p); });
@@ -925,6 +1026,7 @@
     if (!name) return;
     var dienststelle = document.getElementById("fieldDienststelle").value.trim();
     var note = document.getElementById("fieldNote").value.trim();
+    var pinned = document.getElementById("fieldPinned").checked;
     var phones = Array.prototype.map.call(phoneFieldsEl.querySelectorAll(".phone-input"), function (i) {
       return i.value.trim();
     }).filter(Boolean);
@@ -935,10 +1037,11 @@
         existing.name = name;
         existing.dienststelle = dienststelle;
         existing.note = note;
+        existing.pinned = pinned;
         existing.phones = phones;
       }
     } else {
-      state.contacts.push({ id: uuid(), name: name, dienststelle: dienststelle, phones: phones, note: note });
+      state.contacts.push({ id: uuid(), name: name, dienststelle: dienststelle, phones: phones, note: note, pinned: pinned });
     }
 
     saveContacts();
@@ -1207,13 +1310,12 @@
   // ---------- Init ----------
 
   loadContacts();
-  renderList();
-  setActiveTab("kontakte");
-
   loadQuickDialBase();
   document.getElementById("quickDialBaseInput").value = state.quickDialBase;
   quickDialSuffixEl.value = localStorage.getItem(QUICKDIAL_SUFFIX_KEY) || "";
-  renderQuickDialBar();
+
+  renderList();
+  setActiveTab("kontakte");
 
   if (window.pdfjsLib) initPdfWorker();
 
