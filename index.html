@@ -3,14 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<title>Telefonbuch</title>
-<meta name="description" content="Lokales Telefonbuch – alle Daten bleiben auf diesem Gerät.">
+<title>RKTel</title>
+<meta name="description" content="RKTel – lokales Telefonbuch für Einsatzmittel. Alle Daten bleiben auf diesem Gerät.">
 <meta name="theme-color" content="#c62828">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Telefon">
+<meta name="apple-mobile-web-app-title" content="RKTel">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23c62828'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle'%3E%F0%9F%93%9E%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
   :root {
@@ -27,7 +28,6 @@
   html, body {
     margin: 0;
     padding: 0;
-    height: 100%;
     background: var(--bg);
     color: var(--text);
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -39,11 +39,13 @@
     color: inherit;
   }
 
+  /* Kein eigener Scroll-Container: die Seite selbst scrollt (nicht #mainContent),
+     damit iOS' "Statusleiste antippen -> nach oben scrollen"-Geste funktioniert. */
   #app {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   /* Topbar */
@@ -78,13 +80,13 @@
   #searchInput::placeholder { color: var(--text3); }
   #searchInput:focus { outline: none; border-color: var(--accent); }
 
-  /* Kurzwahl + Favoriten (oberhalb der Suche, scrollt mit der Liste) */
-  #kontaktePreList { padding: 10px 10px 0; }
-
+  /* Kurzwahl + Favoriten: nur oben auf der Seite sichtbar, scrollt mit der Liste weg.
+     Die Suche bleibt dagegen im #topbar fix (siehe dort). */
   #topArea {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    padding: 10px 10px 0;
     margin-bottom: 10px;
   }
 
@@ -132,11 +134,13 @@
     pointer-events: none;
   }
 
+  /* Favoriten nebeneinander (Grid), ca. 2-3 pro Reihe; bei mehr Einträgen
+     vertikal scrollbar statt in die Höhe zu wachsen. */
   .favoriten-list {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
     gap: 6px;
-    max-height: 178px;
+    max-height: 190px;
     overflow-y: auto;
   }
 
@@ -144,42 +148,46 @@
 
   .favorit-row {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    padding: 8px 10px;
+    padding: 8px 9px;
   }
-
-  .favorit-info { flex: 1; min-width: 0; }
 
   .favorit-name {
     font-weight: 700;
-    font-size: 0.92rem;
+    font-size: 0.82rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .favorit-phone { color: var(--text2); font-size: 0.8rem; }
+  .favorit-phone {
+    color: var(--text2);
+    font-size: 0.72rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-  .favorit-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .favorit-actions { display: flex; gap: 5px; margin-top: 2px; }
 
   .icon-btn-sm {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
     border-radius: var(--radius-sm);
     background: var(--panel2);
     border: none;
     text-decoration: none;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     cursor: pointer;
     color: var(--text);
   }
@@ -189,8 +197,6 @@
   /* Main content */
   #mainContent {
     flex: 1 1 auto;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
     padding-bottom: 90px;
   }
 
@@ -439,6 +445,7 @@
   .btn-danger:active { background: var(--accent); color: #fff; }
 
   .about-line { font-size: 0.8rem; color: var(--text3); margin-top: 4px; }
+  .about-line a { color: var(--accent-hover); }
 
   /* Bottom sheet dialog */
   .sheet-overlay {
@@ -575,23 +582,21 @@
 
 <div id="app">
   <header id="topbar">
-    <h1>Telefonbuch</h1>
+    <h1>RKTel</h1>
+    <input id="searchInput" type="search" inputmode="search" placeholder="Suche nach Name, Nummer, Dienststelle…" autocomplete="off">
   </header>
 
   <main id="mainContent">
     <div id="kontakteView">
-      <div id="kontaktePreList">
-        <div id="topArea" hidden>
-          <div id="quickDialCard" class="qd-card" hidden>
-            <div class="qd-card-label">Kurzwahl Einsatzmittel</div>
-            <div class="quickdial-row">
-              <input id="quickDialSuffix" class="quickdial-suffix" type="text" inputmode="numeric" maxlength="8" placeholder="Einsatzmittel-Nr." autocomplete="off">
-              <a id="quickDialCallBtn" class="icon-btn quickdial-call disabled" title="Anrufen">📞</a>
-            </div>
+      <div id="topArea" hidden>
+        <div id="quickDialCard" class="qd-card" hidden>
+          <div class="qd-card-label">Kurzwahl Einsatzmittel</div>
+          <div class="quickdial-row">
+            <input id="quickDialSuffix" class="quickdial-suffix" type="text" inputmode="numeric" maxlength="8" placeholder="Einsatzmittel-Nr." autocomplete="off">
+            <a id="quickDialCallBtn" class="icon-btn quickdial-call disabled" title="Anrufen">📞</a>
           </div>
-          <div id="favoritenList" class="favoriten-list"></div>
         </div>
-        <input id="searchInput" type="search" inputmode="search" placeholder="Suche nach Name, Nummer, Dienststelle…" autocomplete="off">
+        <div id="favoritenList" class="favoriten-list"></div>
       </div>
       <div id="listContainer"></div>
     </div>
@@ -622,7 +627,8 @@
       <section class="settings-section">
         <h2>Über</h2>
         <p class="about-line" id="contactCountLine"></p>
-        <p class="about-line">Telefonbuch · Progressive Web App</p>
+        <p class="about-line">RKTel · Progressive Web App</p>
+        <p class="about-line">Mehr zu Datenimport &amp; Datenhaltung im <a href="https://github.com/VitusHg/rktel#readme" target="_blank" rel="noopener">README auf GitHub</a>.</p>
       </section>
     </div>
   </main>
@@ -917,10 +923,8 @@
     var phone = (c.phones && c.phones[0]) || "";
     return (
       '<div class="favorit-row">' +
-      '<div class="favorit-info">' +
       '<div class="favorit-name">' + escHtml(c.name) + "</div>" +
       (phone ? '<div class="favorit-phone">' + escHtml(phone) + "</div>" : "") +
-      "</div>" +
       (phone ?
         '<div class="favorit-actions">' +
         '<a class="icon-btn-sm" href="' + telHref(phone) + '" title="Anrufen">📞</a>' +

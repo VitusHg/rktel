@@ -1,7 +1,7 @@
 {
-  "name": "Telefonbuch",
-  "short_name": "Telefon",
-  "description": "Lokales Telefonbuch – alle Daten bleiben auf diesem Gerät.",
+  "name": "RKTel",
+  "short_name": "RKTel",
+  "description": "RKTel – lokales Telefonbuch für Einsatzmittel. Alle Daten bleiben auf diesem Gerät.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
