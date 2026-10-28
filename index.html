@@ -664,11 +664,40 @@
 
   .dp-card .card-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 0; }
 
-  .dp-loc {
+  .dp-loc, .dp-note {
     margin-top: 4px;
     font-size: 0.85rem;
     color: var(--text2);
     word-break: break-word;
+  }
+
+  .dp-note { white-space: pre-line; color: var(--text3); }
+
+  .dp-colleagues {
+    margin-top: 10px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+  }
+
+  .dp-colleague {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+  }
+
+  .dp-colleague-text { flex: 1; min-width: 0; }
+
+  .dp-colleague-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    word-break: break-word;
+  }
+
+  .dp-colleague-sub {
+    font-size: 0.78rem;
+    color: var(--text3);
+    overflow-wrap: anywhere;
   }
 
   @media (min-width: 720px) {
@@ -1540,7 +1569,39 @@
     });
   }
 
-  function dpCardHtml(o, now) {
+  function dpColleaguesHtml(o, matchContacts) {
+    var names = o.colleagues || [];
+    if (!names.length) return "";
+    var rows = [];
+    names.forEach(function (name) {
+      var matches = matchContacts(name);
+      if (!matches.length) {
+        rows.push(
+          '<div class="dp-colleague"><div class="dp-colleague-text">' +
+          '<div class="dp-colleague-name">' + escHtml(name) + "</div>" +
+          '<div class="dp-colleague-sub">Nicht im Telefonbuch</div>' +
+          "</div></div>"
+        );
+        return;
+      }
+      matches.slice(0, 3).forEach(function (c) {
+        var phone = c.phones[0];
+        var sub = phone + (matches.length > 1 ? " · " + c.name : "");
+        rows.push(
+          '<div class="dp-colleague"><div class="dp-colleague-text">' +
+          '<div class="dp-colleague-name">' + escHtml(name) + "</div>" +
+          '<div class="dp-colleague-sub">' + escHtml(sub) + "</div>" +
+          "</div>" +
+          '<a class="icon-btn" href="' + telHref(phone) + '" title="' + escHtml(name) + ' anrufen">📞</a>' +
+          '<a class="icon-btn" href="https://wa.me/' + waNumber(phone) + '" target="_blank" rel="noopener" title="WhatsApp an ' + escHtml(name) + '">💬</a>' +
+          "</div>"
+        );
+      });
+    });
+    return '<div class="dp-colleagues">' + rows.join("") + "</div>";
+  }
+
+  function dpCardHtml(o, now, matchContacts) {
     var f = DP.formatOccurrence(o, now);
     var cls = "card dp-card" + (f.running ? " dp-running" : "") + (o.cancelled ? " dp-cancelled" : "");
     var badge = o.cancelled ? "Abgesagt" : f.relative;
@@ -1552,6 +1613,8 @@
       '<div class="dp-time">' + escHtml(f.timeLabel) + "</div>" +
       '<div class="card-name">' + escHtml(o.title) + "</div>" +
       (o.location ? '<div class="dp-loc">📍 ' + escHtml(o.location) + "</div>" : "") +
+      (o.note ? '<div class="dp-note">' + escHtml(o.note) + "</div>" : "") +
+      dpColleaguesHtml(o, matchContacts) +
       "</article>"
     );
   }
@@ -1594,8 +1657,9 @@
     var now = Date.now();
     if (dp.cache) {
       var upcoming = dpUpcoming();
+      var matchContacts = DP.createContactMatcher(state.contacts);
       listHtml = upcoming.length
-        ? upcoming.map(function (o) { return dpCardHtml(o, now); }).join("")
+        ? upcoming.map(function (o) { return dpCardHtml(o, now, matchContacts); }).join("")
         : '<p class="empty-state">Keine kommenden Dienste im Kalender.</p>';
     } else if (configured && !dp.loading && !dp.lastError) {
       listHtml = '<p class="empty-state">Noch keine Daten – tippe auf „Aktualisieren“.</p>';
@@ -1727,7 +1791,8 @@
   quickDialSuffixEl.value = localStorage.getItem(QUICKDIAL_SUFFIX_KEY) || "";
 
   renderList();
-  setActiveTab("kontakte");
+  // Mit eingerichtetem Dienstplan startet die App direkt bei den Diensten
+  setActiveTab(dpIsConfigured() ? "dienste" : "kontakte");
   renderDienste();
   dpAutoRefresh();
 

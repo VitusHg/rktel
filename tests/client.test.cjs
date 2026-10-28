@@ -162,3 +162,23 @@ test("Zeitstempel und Zufallsschlüssel", () => {
   assert.ok(a.length >= DP.MIN_TOKEN_LENGTH);
   assert.match(a, /^[A-Za-z0-9_-]+$/);
 });
+
+test("Kollegen-Abgleich mit dem Telefonbuch", () => {
+  const contacts = [
+    { name: "Beispiel Anna", phones: ["+43 660 1111111"] },
+    { name: "Müller Jürgen (RS, SEF)", phones: ["+43 660 2222222"] },
+    { name: "Bernd Karl Muster", phones: ["+43 660 3333333"] },
+    { name: "Ohne Nummer", phones: [] },
+    { name: "Anna Andere", phones: ["+43 660 4444444"] },
+  ];
+  const match = DP.createContactMatcher(contacts);
+  const names = (n) => match(n).map((c) => c.name);
+  assert.deepEqual(names("Anna Beispiel"), ["Beispiel Anna"], "Reihenfolge Vor-/Nachname egal");
+  assert.deepEqual(names("anna  BEISPIEL"), ["Beispiel Anna"], "Groß/Klein, Leerzeichen");
+  assert.deepEqual(names("Juergen Mueller"), ["Müller Jürgen (RS, SEF)"], "Umlaute und Qualifikationszusatz");
+  assert.deepEqual(names("Bernd Muster"), ["Bernd Karl Muster"], "zweiter Vorname");
+  assert.deepEqual(names("Ohne Nummer"), [], "Kontakte ohne Nummer nicht anrufbar");
+  assert.deepEqual(names("Anna"), [], "Vorname allein reicht nicht");
+  assert.deepEqual(names("Unbekannt Person"), []);
+  assert.deepEqual(DP.createContactMatcher(null)("Anna Beispiel"), []);
+});

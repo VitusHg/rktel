@@ -10,7 +10,7 @@ RKTel ist ein lokales Telefonbuch für Einsatzmittel als Progressive Web App (PW
 - **Kurzwahl für Einsatzmittel**: Eine Basisnummer (z. B. Diensthandy-Präfix) in den Einstellungen hinterlegen; auf der Kontakte-Seite wird sie live mit der eingegebenen Einsatzmittel-Nummer zur vollständigen Rufnummer kombiniert.
 - **Installierbar als App**: Über „Zum Home-Bildschirm hinzufügen" (iOS/Android) lässt sich RKTel wie eine native App nutzen, inklusive Offline-Fähigkeit über einen Service Worker.
 - **JSON-Export**: Alle Kontakte lassen sich als JSON-Datei sichern.
-- **Dienstplan** (optional): Kommende Dienste aus dem privaten ICS-Kalender mit Datum, Beginn, Ende, Titel und Ort – inkl. Zeitzonen, ganztägiger Termine, Wiederholungen, Ausnahmen und abgesagter Termine. Offline bleibt der zuletzt geladene Stand verfügbar.
+- **Dienstplan** (optional): Kommende Dienste aus dem privaten ICS-Kalender mit Datum, Beginn, Ende, Titel, Ort und den eingeteilten Kollegen. Die Kollegen (erste Zeile der Terminbeschreibung, kommagetrennt) werden mit dem Telefonbuch abgeglichen – unabhängig von Vor-/Nachnamen-Reihenfolge, Groß-/Kleinschreibung, Umlautschreibweise (ä/ae) und Klammerzusätzen – und lassen sich direkt per 📞 oder 💬 WhatsApp erreichen. Weitere Zeilen der Beschreibung (z. B. „Zimmer 4“) werden als Hinweis angezeigt. Ist der Dienstplan eingerichtet, startet die App im Tab „Dienste“ – inkl. Zeitzonen, ganztägiger Termine, Wiederholungen, Ausnahmen und abgesagter Termine. Offline bleibt der zuletzt geladene Stand verfügbar.
 
 ## PDF-Import im Detail
 

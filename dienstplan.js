@@ -144,6 +144,9 @@
       allDay: allDay,
       cancelled: isCancelled(component)
     };
+    var desc = parseDescription(textProp(component, "description"));
+    occ.colleagues = desc.colleagues;
+    occ.note = desc.note;
     if (allDay) {
       occ.startDate = dateKey(startTime);
       // DTEND ist bei ganztägigen Terminen exklusiv -> letzter Tag = Ende - 1 Tag
@@ -151,6 +154,64 @@
       occ.endDate = last.getFullYear() + "-" + pad2(last.getMonth() + 1) + "-" + pad2(last.getDate());
     }
     return occ;
+  }
+
+  // ---------- Kollegen ----------
+
+  // DESCRIPTION im RK-Dienstplan: erste Zeile = Kollegen (kommagetrennt),
+  // weitere Zeilen = Zusatzinfos, z. B. "Name A, Name B\nZimmer 4".
+  function parseDescription(text) {
+    var lines = String(text || "").split(/\r?\n/)
+      .map(function (l) { return l.trim(); })
+      .filter(Boolean);
+    if (!lines.length) return { colleagues: [], note: "" };
+    var parts = lines[0].split(/[,;]/).map(function (p) { return p.trim(); }).filter(Boolean);
+    // Sieht die erste Zeile nicht wie eine Namensliste aus (Ziffern, Doppelpunkt,
+    // lange Sätze), wird sie als Notiz behandelt.
+    var looksLikeNames = parts.length && parts.every(function (p) {
+      return !/[\d:@\/]/.test(p) && p.split(/\s+/).length <= 4;
+    });
+    if (!looksLikeNames) return { colleagues: [], note: lines.join("\n") };
+    return { colleagues: parts, note: lines.slice(1).join("\n") };
+  }
+
+  // Name -> vergleichbare Teile: Klammerzusätze weg, Groß/Klein, Akzente,
+  // Umlaute (ä/ae), ß/ss vereinheitlicht; Reihenfolge egal.
+  function nameTokens(name) {
+    return String(name || "")
+      .replace(/\([^)]*\)/g, " ")
+      .toLowerCase()
+      .replace(/ß/g, "ss")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/ae/g, "a").replace(/oe/g, "o").replace(/ue/g, "u")
+      .split(/[\s,.\-]+/)
+      .filter(function (t) { return t.length > 1; });
+  }
+
+  /**
+   * Liefert eine Funktion name -> passende Kontakte (mit Telefonnummer).
+   * Exakt: gleiche Namensteile in beliebiger Reihenfolge ("Muster Max" =
+   * "Max Muster"). Sonst: alle Teile des kürzeren Namens (mind. 2) im
+   * längeren enthalten, z. B. bei zweitem Vornamen.
+   */
+  function createContactMatcher(contacts) {
+    var index = (contacts || [])
+      .filter(function (c) { return c && c.phones && c.phones.length; })
+      .map(function (c) { return { contact: c, tokens: nameTokens(c.name) }; })
+      .filter(function (e) { return e.tokens.length; });
+
+    return function (name) {
+      var t = nameTokens(name);
+      if (!t.length) return [];
+      var exact = [], partial = [];
+      index.forEach(function (e) {
+        var allIn = t.every(function (x) { return e.tokens.indexOf(x) !== -1; });
+        var allOut = e.tokens.every(function (x) { return t.indexOf(x) !== -1; });
+        if (allIn && allOut) exact.push(e.contact);
+        else if (Math.min(t.length, e.tokens.length) >= 2 && (allIn || allOut)) partial.push(e.contact);
+      });
+      return exact.length ? exact : partial;
+    };
   }
 
   function CalendarError(code, message) {
@@ -465,6 +526,8 @@
 
   return {
     parseCalendar: parseCalendar,
+    parseDescription: parseDescription,
+    createContactMatcher: createContactMatcher,
     timeToEpoch: timeToEpoch,
     resolveTzid: resolveTzid,
     wallTimeToEpoch: wallTimeToEpoch,

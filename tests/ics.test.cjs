@@ -142,3 +142,25 @@ test("Ungültige Daten werfen einen verständlichen Fehler", () => {
 test("Leerer Kalender liefert keine Termine", () => {
   assert.deepEqual(DP.parseCalendar(cal([]), { now: NOW }), []);
 });
+
+test("RK-Dienstplan-Format: Zeiten ohne TZID, Kollegen und Zusatzinfo aus DESCRIPTION", () => {
+  const ics = fs.readFileSync(path.join(__dirname, "fixtures", "rk-format-fiktiv.ics"), "utf8");
+  const r = DP.parseCalendar(ics, { now: NOW });
+  assert.equal(r.length, 2);
+  const [rtw, ktw] = r;
+  assert.equal(rtw.title, "RTW");
+  assert.equal(rtw.location, "Musterwache RKZ");
+  assert.equal(rtw.start, new Date(2026, 9, 30, 18, 0).getTime(), "floating -> Gerätezeit");
+  assert.equal(rtw.end, new Date(2026, 9, 31, 6, 0).getTime());
+  assert.equal(rtw.cancelled, false, "STATUS:Confirmed (gemischte Schreibweise)");
+  assert.deepEqual(rtw.colleagues, ["Anna Beispiel", "Bernd Muster"]);
+  assert.equal(rtw.note, "Zimmer 7");
+  assert.deepEqual(ktw.colleagues, ["Carla Testperson"]);
+  assert.equal(ktw.note, "");
+});
+
+test("DESCRIPTION ohne Namensliste wird als Notiz übernommen", () => {
+  assert.deepEqual(DP.parseDescription(""), { colleagues: [], note: "" });
+  assert.deepEqual(DP.parseDescription("Treffpunkt: 18:00 Haupteingang"), { colleagues: [], note: "Treffpunkt: 18:00 Haupteingang" });
+  assert.deepEqual(DP.parseDescription("Anna Beispiel; Bernd Muster"), { colleagues: ["Anna Beispiel", "Bernd Muster"], note: "" });
+});
