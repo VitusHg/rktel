@@ -97,6 +97,24 @@ Alternativ per Kommandozeile (im Ordner `worker/`): `npx wrangler login`, `npx w
 
 **Schlüssel wechseln**: Neuen Schlüssel erzeugen → Secret `ACCESS_TOKEN` im Worker ersetzen → in der App eintragen. Der alte Schlüssel ist sofort ungültig. Bei Verdacht auf ein kompromittiertes Gerät außerdem den privaten Kalenderlink im Dienstplan-System neu erzeugen (falls möglich) und `ICS_URL` aktualisieren.
 
+**Links ins Dienstplan-Portal (optional)**: Unter *Einstellungen → Dienstplan → „Dienststellen-Liste importieren“* eine JSON-Datei in diesem Format laden:
+
+```json
+{
+  "abteilungen": [
+    { "name": "MINA", "deptId": "57" },
+    { "name": "1 RKHE 05 - Sanitätshilfsstelle (SanHiSt)", "deptId": "276" }
+  ]
+}
+```
+
+Passt der Ort eines Dienstes zu einer Dienststelle, erscheint in der Dienstkarte der Button **„Dienstplan ↗“**. Er öffnet `https://dienstplan.st.roteskreuz.at/Home/Dienstplan/<Datum>-00000000-0000-0000-0000-000000000000-<deptId>` für den Tag des Dienstbeginns (Anmeldung im Portal nötig). Zuordnung:
+
+- Die Wörter „RKZ“ und „West“ werden ignoriert („MINA RKZ“ und „MINA West“ → „MINA“), ebenso Groß-/Kleinschreibung und Akzente.
+- Verglichen wird mit dem ganzen Namen, dem Teil nach „ - “ und der Abkürzung in Klammern (z. B. „SanHiSt“).
+- Sonst gewinnt die Dienststelle, deren Name alle Wörter des Orts enthält und die wenigsten zusätzlichen hat. Bei Gleichstand oder ohne Treffer gibt es keinen Button – lieber kein Link als ein falscher.
+- Die Liste bleibt nur lokal gespeichert; als `deptId` werden nur Ziffern akzeptiert.
+
 **Verhalten der App**: Abruf beim Öffnen und beim erneuten Aktivieren der App (höchstens alle 5 Minuten, laufende Abrufe werden nicht doppelt gestartet) sowie jederzeit über *Aktualisieren*. Keine Hintergrundabrufe, keine Benachrichtigungen.
 
 **Grenzen des kostenlosen Tarifs** (Stand der Umsetzung, bitte bei Cloudflare prüfen)

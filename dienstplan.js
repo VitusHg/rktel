@@ -254,6 +254,116 @@
     };
   }
 
+  // ---------- Dienststellen / Link ins Dienstplan-Portal ----------
+
+  var PORTAL_BASE = "https://dienstplan.st.roteskreuz.at/Home/Dienstplan/";
+  var PORTAL_GUID = "00000000-0000-0000-0000-000000000000";
+  var MAX_DEPARTMENTS = 5000;
+
+  // Zusätze im Ort, die für die Zuordnung zur Dienststelle keine Rolle spielen:
+  // "MINA RKZ" und "MINA West" gehören beide zum Dienstplan "MINA".
+  var IGNORED_PLACE_WORDS = { rkz: true, west: true };
+
+  /**
+   * Importierte Dienststellen-Liste prüfen:
+   * { "abteilungen": [ { "name": "...", "deptId": "276" }, ... ] }
+   * Wirft einen Error mit verständlicher Meldung.
+   */
+  function parseDepartments(jsonText) {
+    var data;
+    try { data = JSON.parse(jsonText); } catch (e) {
+      throw new Error("Die Datei ist kein gültiges JSON.");
+    }
+    var list = data && Array.isArray(data.abteilungen) ? data.abteilungen : null;
+    if (!list) throw new Error("Im JSON fehlt die Liste \"abteilungen\".");
+    if (list.length > MAX_DEPARTMENTS) throw new Error("Die Liste ist zu groß.");
+    var seen = {};
+    var result = [];
+    list.forEach(function (a) {
+      if (!a || typeof a !== "object") return;
+      var name = typeof a.name === "string" ? a.name.trim() : "";
+      var id = a.deptId == null ? "" : String(a.deptId).trim();
+      // deptId landet in einer URL -> nur Ziffern zulassen
+      if (!name || !/^\d{1,9}$/.test(id)) return;
+      var key = id + "|" + name;
+      if (seen[key]) return;
+      seen[key] = true;
+      result.push({ name: name.slice(0, 200), deptId: id });
+    });
+    if (!result.length) throw new Error("Keine gültigen Einträge (name + deptId) gefunden.");
+    return result;
+  }
+
+  function placeTokens(text, keepIgnored) {
+    return String(text || "")
+      .toLowerCase()
+      .replace(/ß/g, "ss")
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .split(/[^a-z0-9]+/)
+      .filter(function (t) { return t && (keepIgnored || !IGNORED_PLACE_WORDS[t]); });
+  }
+
+  // Vergleichsschlüssel einer Dienststelle: ganzer Name, Teil nach " - "
+  // (ohne Klammer) und Abkürzung in Klammern, z. B. für
+  // "1 RKHE 05 - Sanitätshilfsstelle (SanHiSt)".
+  function departmentKeys(name) {
+    var keys = [placeTokens(name).join(" ")];
+    var dash = name.lastIndexOf(" - ");
+    if (dash !== -1) keys.push(placeTokens(name.slice(dash + 3).replace(/\([^)]*\)/g, " ")).join(" "));
+    var m = name.match(/\(([^)]+)\)\s*$/);
+    if (m) keys.push(placeTokens(m[1]).join(" "));
+    return keys.filter(Boolean);
+  }
+
+  /**
+   * Liefert eine Funktion Ort -> Dienststelle (oder null).
+   * 1. Ort entspricht Name, Kurzname oder Abkürzung (RKZ/West ignoriert).
+   * 2. Sonst: alle Wörter des Orts im Namen enthalten; die Dienststelle mit
+   *    den wenigsten zusätzlichen Wörtern gewinnt, bei Gleichstand keine.
+   */
+  function createDepartmentMatcher(departments) {
+    var index = (departments || []).map(function (d) {
+      return { dept: d, tokens: placeTokens(d.name), keys: departmentKeys(d.name) };
+    }).filter(function (e) { return e.tokens.length; });
+
+    return function (location) {
+      var t = placeTokens(location);
+      if (!t.length) return null;
+      var key = t.join(" ");
+
+      var exact = index.filter(function (e) { return e.keys.indexOf(key) !== -1; });
+      if (exact.length) {
+        if (exact.length > 1) {
+          // z. B. "MINA" und "MINA West" in der Liste: wörtlich passende bevorzugen
+          var raw = placeTokens(location, true).join(" ");
+          var literal = exact.filter(function (e) { return placeTokens(e.dept.name, true).join(" ") === raw; });
+          if (literal.length) return literal[0].dept;
+        }
+        return exact[0].dept;
+      }
+
+      var candidates = index.filter(function (e) {
+        return t.every(function (x) { return e.tokens.indexOf(x) !== -1; });
+      }).sort(function (a, b) { return a.tokens.length - b.tokens.length; });
+      if (!candidates.length) return null;
+      if (candidates.length > 1 && candidates[0].tokens.length === candidates[1].tokens.length) return null;
+      return candidates[0].dept;
+    };
+  }
+
+  /** Kalendertag (lokal) eines Termins als YYYY-MM-DD. */
+  function occurrenceDateKey(occ) {
+    if (occ.allDay && occ.startDate) return occ.startDate;
+    var d = new Date(occ.start);
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
+
+  /** Link in den Dienstplan des Portals für Tag + Dienststelle. */
+  function portalUrl(dateKey, deptId) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey) || !/^\d{1,9}$/.test(String(deptId))) return null;
+    return PORTAL_BASE + dateKey + "-" + PORTAL_GUID + "-" + deptId;
+  }
+
   function CalendarError(code, message) {
     var err = new Error(message || code);
     err.name = "CalendarError";
@@ -567,6 +677,10 @@
     parseCalendar: parseCalendar,
     parseDescription: parseDescription,
     createContactMatcher: createContactMatcher,
+    parseDepartments: parseDepartments,
+    createDepartmentMatcher: createDepartmentMatcher,
+    occurrenceDateKey: occurrenceDateKey,
+    portalUrl: portalUrl,
     timeToEpoch: timeToEpoch,
     resolveTzid: resolveTzid,
     wallTimeToEpoch: wallTimeToEpoch,

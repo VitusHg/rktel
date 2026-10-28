@@ -670,6 +670,32 @@
 
   .dp-note { white-space: pre-line; color: var(--text3); }
 
+  .dp-loc-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .dp-loc-row .dp-loc { flex: 1; min-width: 0; margin-top: 0; }
+
+  .dp-portal-link {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--panel2);
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .dp-portal-link:active { background: var(--border2); }
+
   .dp-colleagues {
     margin-top: 10px;
     padding-top: 6px;
@@ -769,6 +795,16 @@
           <button id="dpSaveBtn" class="btn-primary" type="button">Speichern &amp; laden</button>
           <button id="dpGenTokenBtn" class="btn-secondary" type="button">Neuen Schlüssel erzeugen</button>
         </div>
+
+        <div class="settings-separator"></div>
+
+        <label class="field-label">Dienststellen (Links ins Dienstplan-Portal)</label>
+        <p class="settings-hint" id="dpDeptInfo"></p>
+        <div class="btn-row">
+          <button id="dpDeptImportBtn" class="btn-secondary" type="button">Dienststellen-Liste importieren</button>
+          <button id="dpDeptClearBtn" class="btn-secondary" type="button" hidden>Liste entfernen</button>
+        </div>
+        <input type="file" id="dpDeptFile" accept="application/json,.json" hidden>
 
         <div class="settings-separator"></div>
 
@@ -1493,19 +1529,23 @@
   var DP = window.RKDienstplan;
   var DP_ZUGANG_KEY = "rktelDienstplanZugangV1";
   var DP_CACHE_KEY = "rktelDienstplanCacheV1";
+  var DP_DEPTS_KEY = "rktelDienststellenV1";
 
   var dp = {
     config: null,      // { url, token } – vom Nutzer eingegeben, nie im Code
     cache: null,       // { fetchedAt, occurrences: [...] } – nur kommende Termine
     loading: false,
     lastError: null,   // { code, message }
-    generation: 0      // erhöht sich bei Zugangsänderung -> veraltete Antworten verwerfen
+    generation: 0,     // erhöht sich bei Zugangsänderung -> veraltete Antworten verwerfen
+    departments: []    // importierte Dienststellen [{ name, deptId }] für Portal-Links
   };
 
   function dpLoadState() {
     try { dp.config = JSON.parse(localStorage.getItem(DP_ZUGANG_KEY) || "null"); } catch (e) { dp.config = null; }
     try { dp.cache = JSON.parse(localStorage.getItem(DP_CACHE_KEY) || "null"); } catch (e) { dp.cache = null; }
     if (dp.cache && !Array.isArray(dp.cache.occurrences)) dp.cache = null;
+    try { dp.departments = JSON.parse(localStorage.getItem(DP_DEPTS_KEY) || "[]"); } catch (e) { dp.departments = []; }
+    if (!Array.isArray(dp.departments)) dp.departments = [];
   }
 
   function dpIsConfigured() {
@@ -1602,7 +1642,19 @@
     return '<div class="dp-colleagues">' + rows.join("") + "</div>";
   }
 
-  function dpCardHtml(o, now, matchContacts) {
+  function dpLocationHtml(o, matchDepartment) {
+    if (!o.location) return "";
+    var dept = matchDepartment(o.location);
+    var url = dept ? DP.portalUrl(DP.occurrenceDateKey(o), dept.deptId) : null;
+    return (
+      '<div class="dp-loc-row">' +
+      '<div class="dp-loc">📍 ' + escHtml(o.location) + "</div>" +
+      (url ? '<a class="dp-portal-link" href="' + escHtml(url) + '" target="_blank" rel="noopener noreferrer" title="Dienstplan ' + escHtml(dept.name) + ' öffnen">Dienstplan ↗</a>' : "") +
+      "</div>"
+    );
+  }
+
+  function dpCardHtml(o, now, matchContacts, matchDepartment) {
     var f = DP.formatOccurrence(o, now);
     var cls = "card dp-card" + (f.running ? " dp-running" : "") + (o.cancelled ? " dp-cancelled" : "");
     var badge = o.cancelled ? "Abgesagt" : f.relative;
@@ -1613,7 +1665,7 @@
       "</div>" +
       '<div class="dp-time">' + escHtml(f.timeLabel) + "</div>" +
       '<div class="card-name">' + escHtml(o.title) + "</div>" +
-      (o.location ? '<div class="dp-loc">📍 ' + escHtml(o.location) + "</div>" : "") +
+      dpLocationHtml(o, matchDepartment) +
       (o.note ? '<div class="dp-note">' + escHtml(o.note) + "</div>" : "") +
       dpColleaguesHtml(o, matchContacts) +
       "</article>"
@@ -1659,8 +1711,9 @@
     if (dp.cache) {
       var upcoming = dpUpcoming();
       var matchContacts = DP.createContactMatcher(state.contacts);
+      var matchDepartment = DP.createDepartmentMatcher(dp.departments);
       listHtml = upcoming.length
-        ? upcoming.map(function (o) { return dpCardHtml(o, now, matchContacts); }).join("")
+        ? upcoming.map(function (o) { return dpCardHtml(o, now, matchContacts, matchDepartment); }).join("")
         : '<p class="empty-state">Keine kommenden Dienste im Kalender.</p>';
     } else if (configured && !dp.loading && !dp.lastError) {
       listHtml = '<p class="empty-state">Noch keine Daten – tippe auf „Aktualisieren“.</p>';
@@ -1675,6 +1728,10 @@
     hint.textContent = dp.config && dp.config.token
       ? "Ein Zugangsschlüssel ist gespeichert. Zum Ändern einen neuen eingeben – leer lassen, um ihn zu behalten."
       : "Muss mit dem Secret ACCESS_TOKEN im Worker übereinstimmen (mind. " + DP.MIN_TOKEN_LENGTH + " Zeichen).";
+    document.getElementById("dpDeptInfo").textContent = dp.departments.length
+      ? dp.departments.length + " Dienststelle(n) importiert. Passt der Ort eines Dienstes zu einer Dienststelle (Zusätze wie „RKZ“ oder „West“ werden ignoriert), erscheint in der Karte ein Button, der den Tag im Dienstplan-Portal öffnet."
+      : "Optional: JSON-Liste im Format {\"abteilungen\": [{\"name\": …, \"deptId\": …}]} importieren. Dann öffnet ein Button in jeder Dienstkarte den Tag im Dienstplan-Portal.";
+    document.getElementById("dpDeptClearBtn").hidden = !dp.departments.length;
     document.getElementById("dpDataInfo").textContent = dp.cache
       ? "Lokal gespeichert: " + dp.cache.occurrences.length + " Termin(e), Stand " + DP.formatTimestamp(dp.cache.fetchedAt) + "."
       : "Keine Dienstplandaten auf diesem Gerät gespeichert.";
@@ -1754,6 +1811,37 @@
     }
   });
 
+  var dpDeptFile = document.getElementById("dpDeptFile");
+
+  document.getElementById("dpDeptImportBtn").addEventListener("click", function () { dpDeptFile.click(); });
+
+  dpDeptFile.addEventListener("change", function (e) {
+    var file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      showToast("Datei zu groß.");
+      return;
+    }
+    file.text().then(function (text) {
+      var depts = DP.parseDepartments(text);
+      localStorage.setItem(DP_DEPTS_KEY, JSON.stringify(depts));
+      dp.departments = depts;
+      renderDienste();
+      showToast(depts.length + " Dienststelle(n) importiert.");
+    }).catch(function (err) {
+      showToast("Import fehlgeschlagen: " + (err && err.message ? err.message : "unbekannter Fehler"));
+    });
+  });
+
+  document.getElementById("dpDeptClearBtn").addEventListener("click", function () {
+    if (!confirm("Importierte Dienststellen-Liste entfernen?")) return;
+    dp.departments = [];
+    try { localStorage.removeItem(DP_DEPTS_KEY); } catch (e) { /* ignorieren */ }
+    renderDienste();
+    showToast("Dienststellen-Liste entfernt.");
+  });
+
   document.getElementById("dpClearDataBtn").addEventListener("click", function () {
     if (!confirm("Lokal gespeicherte Dienstplandaten löschen? Der Zugang (Worker-Adresse, Schlüssel) bleibt erhalten.")) return;
     dp.generation++;
@@ -1763,10 +1851,12 @@
   });
 
   document.getElementById("dpForgetBtn").addEventListener("click", function () {
-    if (!confirm("Worker-Adresse, Zugangsschlüssel und Dienstplandaten von diesem Gerät entfernen?")) return;
+    if (!confirm("Worker-Adresse, Zugangsschlüssel, Dienstplandaten und Dienststellen-Liste von diesem Gerät entfernen?")) return;
     dp.generation++;
     dp.config = null;
+    dp.departments = [];
     dpRemoveCache();
+    try { localStorage.removeItem(DP_DEPTS_KEY); } catch (e) { /* ignorieren */ }
     try { localStorage.removeItem(DP_ZUGANG_KEY); } catch (e) { /* ignorieren */ }
     dpUrlInput.value = "";
     dpTokenInput.value = "";

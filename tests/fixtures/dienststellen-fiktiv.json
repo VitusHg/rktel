@@ -1,0 +1,12 @@
+{
+  "abteilungen": [
+    { "name": "MINA", "deptId": "57" },
+    { "name": "Musterdorf", "deptId": "58" },
+    { "name": "Musterdorf Nord", "deptId": "59" },
+    { "name": "1 RKHE 05 - Sanitätshilfsstelle (SanHiSt)", "deptId": "276" },
+    { "name": "1 RKHE 06 - Mobiles Sanitätsteam (MobSan)", "deptId": "277" },
+    { "name": "1 RKHE 12 - Psychosoziale Betreuung - Krisenintervention (KIT)", "deptId": "309" },
+    { "name": "Lehrsaal A", "deptId": "401" },
+    { "name": "Lehrsaal B", "deptId": "402" }
+  ]
+}
