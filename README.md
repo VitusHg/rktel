@@ -2,6 +2,8 @@
 
 RKTel ist ein lokales Telefonbuch für Einsatzmittel als Progressive Web App (PWA). Alle Telefonbuchdaten bleiben ausschließlich auf dem Gerät. Optional zeigt RKTel deinen Dienstplan an – geladen über einen eigenen, kostenlosen Cloudflare Worker (siehe unten).
 
+> **Privates Eigenprojekt.** RKTel ist kein Angebot des Österreichischen Roten Kreuzes und wird von diesem weder entwickelt, betrieben, geprüft noch unterstützt. Es besteht keine Verbindung zum Online Dienstplan oder dessen Betreibern; RKTel verarbeitet lediglich Exporte (PDF, ICS), auf die Nutzerinnen und Nutzer selbst Zugriff haben. Genannte Namen und Marken gehören ihren jeweiligen Inhabern. Nutzung auf eigene Verantwortung; bei Fragen zu RKTel bitte nicht an Stellen des Roten Kreuzes wenden, sondern an den unten genannten Kontakt.
+
 ## Funktionen
 
 - **Kontakte verwalten**: Hinzufügen, Bearbeiten, Löschen – mit Name, Dienststelle, mehreren Telefonnummern und Notiz.
@@ -29,6 +31,8 @@ Der Import ist auf das PDF-Format des ÖRK-Online-Dienstplans zugeschnitten (*Do
 6. In RKTel unter **Einstellungen → Telefonbuch** das PDF auswählen bzw. hineinziehen. Für weitere Dienststellen die Schritte mit anderer Auswahl wiederholen – Kontakte werden zusammengeführt.
 
 ![Online Dienstplan: Downloads → Mitarbeiter, PDF-Export der Telefonnummern (rot markiert)](docs/pdf-export-telefonnummern.png)
+
+*Screenshot des Online Dienstplans (Logo entfernt), nur zur Orientierung.*
 
 Damit der Dienstplan die eingeteilten Kollegen mit Anruf- und WhatsApp-Button zeigen kann, müssen diese im Telefonbuch stehen – am einfachsten über diesen Export.
 
