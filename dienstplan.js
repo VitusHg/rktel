@@ -531,8 +531,7 @@
       var e = fmtTime.format(endDate);
       var diff = dayDiff(startDate, endDate);
       if (occ.end === occ.start) timeLabel = s + " Uhr";
-      else if (diff === 0) timeLabel = s + " – " + e + " Uhr";
-      else if (diff === 1) timeLabel = s + " – " + e + " Uhr (Folgetag)";
+      else if (diff <= 1) timeLabel = s + " – " + e + " Uhr";
       else timeLabel = s + " Uhr – " + fmtShortDate.format(endDate) + ", " + e + " Uhr";
     }
 

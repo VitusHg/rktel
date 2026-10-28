@@ -131,7 +131,7 @@ test("Formatierung: Tagdienst, Nachtdienst, mehrtägig, ganztägig, relative Hin
   assert.equal(f.running, true);
 
   f = DP.formatOccurrence({ start: at(29, 19), end: at(30, 7) }, now);
-  assert.equal(f.timeLabel, "19:00 – 07:00 Uhr (Folgetag)");
+  assert.equal(f.timeLabel, "19:00 – 07:00 Uhr");
   assert.equal(f.relative, "Morgen");
   assert.match(f.dateLabel, /29\.10\.2026/);
 
@@ -152,7 +152,7 @@ test("Formatierung über die Sommerzeit-Umstellung (Kalendertage stimmen)", () =
   const now = new Date(2026, 9, 24, 12, 0).getTime(); // Sa vor der Umstellung
   const f = DP.formatOccurrence({ start: new Date(2026, 9, 25, 19).getTime(), end: new Date(2026, 9, 26, 7).getTime() }, now);
   assert.equal(f.relative, "Morgen");
-  assert.equal(f.timeLabel, "19:00 – 07:00 Uhr (Folgetag)");
+  assert.equal(f.timeLabel, "19:00 – 07:00 Uhr");
 });
 
 test("Zeitstempel und Zufallsschlüssel", () => {
