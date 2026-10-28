@@ -14,7 +14,27 @@ RKTel ist ein lokales Telefonbuch für Einsatzmittel als Progressive Web App (PW
 
 ## PDF-Import im Detail
 
-Der Import ist auf das PDF-Format des ÖRK-Online-Dienstplans zugeschnitten (*Mitarbeiter → Downloads → „Telefonnummern"-Export*). Aus jeder importierten Liste werden automatisch erkannt:
+Der Import ist auf das PDF-Format des ÖRK-Online-Dienstplans zugeschnitten (*Downloads → Mitarbeiter → „Telefonnummern"-Export*).
+
+### Telefonliste als PDF exportieren
+
+1. Im **Online Dienstplan** anmelden.
+2. Links im Menü **Downloads → Mitarbeiter** öffnen.
+3. In der Zeile **Telefonnummern** auswählen:
+   - Liste: z. B. **Dienststelle**
+   - **inkl. E-Mail-Adressen**: nicht nötig (E-Mail-Adressen werden beim Import ohnehin verworfen)
+   - **Filter**: z. B. **alle**
+4. Auf das **PDF-Symbol rechts in der Zeile „Telefonnummern"** tippen (rot markiert) – *nicht* auf das obere Symbol der Geburtstagsliste.
+5. PDF speichern (iPhone: Teilen → „In Dateien sichern").
+6. In RKTel unter **Einstellungen → Telefonbuch** das PDF auswählen bzw. hineinziehen. Für weitere Dienststellen die Schritte mit anderer Auswahl wiederholen – Kontakte werden zusammengeführt.
+
+![Online Dienstplan: Downloads → Mitarbeiter, PDF-Export der Telefonnummern (rot markiert)](docs/pdf-export-telefonnummern.png)
+
+Damit der Dienstplan die eingeteilten Kollegen mit Anruf- und WhatsApp-Button zeigen kann, müssen diese im Telefonbuch stehen – am einfachsten über diesen Export.
+
+### Was beim Import erkannt wird
+
+Aus jeder importierten Liste werden automatisch erkannt:
 
 - **Dienststelle** – aus der Kopfzeile „TELEFON \<Dienststelle\>"
 - **Erstellungsdatum** – aus der Fußzeile „Online erstellt am … Seite …"
