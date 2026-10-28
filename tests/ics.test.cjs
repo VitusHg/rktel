@@ -164,3 +164,25 @@ test("DESCRIPTION ohne Namensliste wird als Notiz übernommen", () => {
   assert.deepEqual(DP.parseDescription("Treffpunkt: 18:00 Haupteingang"), { colleagues: [], note: "Treffpunkt: 18:00 Haupteingang" });
   assert.deepEqual(DP.parseDescription("Anna Beispiel; Bernd Muster"), { colleagues: ["Anna Beispiel", "Bernd Muster"], note: "" });
 });
+
+test("Titel als eigener Listeneintrag werden dem vorherigen Namen zugeordnet", () => {
+  const ics = cal([
+    "BEGIN:VEVENT", "UID:titel@test.invalid",
+    "DTSTART:20261105T070000", "DTEND:20261105T190000", "SUMMARY:RTW",
+    "DESCRIPTION:Muster Max\\, Beispiel Anna\\, Mag.\\, Test Carla\\, Dr. med. univ.\\, Probe Dora\\, Dipl.-Ing.\\, BSc MSc\\nZimmer 2",
+    "END:VEVENT",
+  ]);
+  const [o] = DP.parseCalendar(ics, { now: NOW });
+  assert.deepEqual(o.colleagues, [
+    "Muster Max",
+    "Beispiel Anna, Mag.",
+    "Test Carla, Dr. med. univ.",
+    "Probe Dora, Dipl.-Ing., BSc MSc",
+  ]);
+  assert.equal(o.note, "Zimmer 2");
+});
+
+test("Titel am Listenanfang und Namen, die nur ähnlich klingen", () => {
+  assert.deepEqual(DP.parseDescription("Mag., Muster Max").colleagues, ["Muster Max"]);
+  assert.deepEqual(DP.parseDescription("Maria Magdalena, Ing Bert").colleagues, ["Maria Magdalena", "Ing Bert"]);
+});

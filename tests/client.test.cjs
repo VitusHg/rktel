@@ -182,3 +182,17 @@ test("Kollegen-Abgleich mit dem Telefonbuch", () => {
   assert.deepEqual(names("Unbekannt Person"), []);
   assert.deepEqual(DP.createContactMatcher(null)("Anna Beispiel"), []);
 });
+
+test("Kollegen-Abgleich ignoriert Titel auf beiden Seiten", () => {
+  const match = DP.createContactMatcher([
+    { name: "Beispiel Anna", phones: ["+43 660 1111111"] },
+    { name: "Mag. Test Carla (RS)", phones: ["+43 660 2222222"] },
+    { name: "Probe Dora DI", phones: ["+43 660 3333333"] },
+  ]);
+  const names = (n) => match(n).map((c) => c.name);
+  assert.deepEqual(names("Beispiel Anna, Mag."), ["Beispiel Anna"]);
+  assert.deepEqual(names("Test Carla"), ["Mag. Test Carla (RS)"]);
+  assert.deepEqual(names("Dr. Anna Beispiel"), ["Beispiel Anna"]);
+  assert.deepEqual(names("Probe Dora, Dipl.-Ing."), ["Probe Dora DI"]);
+  assert.deepEqual(names("Mag."), [], "Titel allein ist kein Name");
+});

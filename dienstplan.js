@@ -158,6 +158,31 @@
 
   // ---------- Kollegen ----------
 
+  // Akademische Grade/Titel (klein, ohne Punkte). Im RK-Dienstplan stehen sie
+  // als eigener Listeneintrag hinter dem Namen: "Muster Max, Mag., Beispiel Anna".
+  var TITLE_WORDS = [
+    "mag", "mmag", "dr", "ddr", "prof", "univ", "med", "dent", "vet", "rer", "nat", "techn", "jur",
+    "phil", "oec", "pharm", "habil", "di", "dipl", "ing", "dipl-ing", "di(fh)", "fh", "bsc", "msc",
+    "ba", "ma", "bed", "med", "mba", "mas", "mpa", "mph", "llb", "llm", "phd", "bakk", "dgkp",
+    "dgks", "dsa", "pd", "ao", "emer", "hon", "rn"
+  ].reduce(function (set, w) { set[w] = true; return set; }, {});
+
+  function titleKey(word) {
+    return String(word).toLowerCase().replace(/\./g, "").replace(/[–—]/g, "-");
+  }
+
+  function isTitleWord(word) {
+    return !!TITLE_WORDS[titleKey(word)];
+  }
+
+  // "Mag.", "Dr. med. univ.", "Dipl.-Ing.", "BSc MSc" -> true
+  function isTitleOnly(segment) {
+    var words = String(segment).trim().split(/\s+/).filter(Boolean);
+    return words.length > 0 && words.every(function (w) {
+      return isTitleWord(w) || w.split("-").every(isTitleWord);
+    });
+  }
+
   // DESCRIPTION im RK-Dienstplan: erste Zeile = Kollegen (kommagetrennt),
   // weitere Zeilen = Zusatzinfos, z. B. "Name A, Name B\nZimmer 4".
   function parseDescription(text) {
@@ -172,19 +197,34 @@
       return !/[\d:@\/]/.test(p) && p.split(/\s+/).length <= 4;
     });
     if (!looksLikeNames) return { colleagues: [], note: lines.join("\n") };
-    return { colleagues: parts, note: lines.slice(1).join("\n") };
+
+    // Einzelne Titel-Einträge an den vorherigen Namen anhängen statt als
+    // eigene Person zu zählen.
+    var colleagues = [];
+    parts.forEach(function (p) {
+      if (isTitleOnly(p)) {
+        if (colleagues.length) colleagues[colleagues.length - 1] += ", " + p;
+        return;
+      }
+      colleagues.push(p);
+    });
+    return { colleagues: colleagues, note: lines.slice(1).join("\n") };
   }
 
-  // Name -> vergleichbare Teile: Klammerzusätze weg, Groß/Klein, Akzente,
-  // Umlaute (ä/ae), ß/ss vereinheitlicht; Reihenfolge egal.
+  // Name -> vergleichbare Teile: Titel und Klammerzusätze weg, Groß/Klein,
+  // Akzente, Umlaute (ä/ae), ß/ss vereinheitlicht; Reihenfolge egal.
   function nameTokens(name) {
-    return String(name || "")
+    var words = String(name || "")
       .replace(/\([^)]*\)/g, " ")
+      .split(/[\s,]+/)
+      .filter(function (w) { return w && !isTitleOnly(w); })
+      .join(" ");
+    return words
       .toLowerCase()
       .replace(/ß/g, "ss")
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/ae/g, "a").replace(/oe/g, "o").replace(/ue/g, "u")
-      .split(/[\s,.\-]+/)
+      .split(/[\s.\-]+/)
       .filter(function (t) { return t.length > 1; });
   }
 
