@@ -182,6 +182,13 @@ test("Titel als eigener Listeneintrag werden dem vorherigen Namen zugeordnet", (
   assert.equal(o.note, "Zimmer 2");
 });
 
+test("Titel-Kombinationen aus dem RK-Dienstplan", () => {
+  assert.deepEqual(
+    DP.parseDescription("Muster Max, Prof. Ing. Mag., Beispiel Anna, OL, Test Carla, Ing. Mag., Probe Dora").colleagues,
+    ["Muster Max, Prof. Ing. Mag.", "Beispiel Anna, OL", "Test Carla, Ing. Mag.", "Probe Dora"]
+  );
+});
+
 test("Titel am Listenanfang und Namen, die nur ähnlich klingen", () => {
   assert.deepEqual(DP.parseDescription("Mag., Muster Max").colleagues, ["Muster Max"]);
   assert.deepEqual(DP.parseDescription("Maria Magdalena, Ing Bert").colleagues, ["Maria Magdalena", "Ing Bert"]);

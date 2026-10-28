@@ -164,7 +164,7 @@
     "mag", "mmag", "dr", "ddr", "prof", "univ", "med", "dent", "vet", "rer", "nat", "techn", "jur",
     "phil", "oec", "pharm", "habil", "di", "dipl", "ing", "dipl-ing", "di(fh)", "fh", "bsc", "msc",
     "ba", "ma", "bed", "med", "mba", "mas", "mpa", "mph", "llb", "llm", "phd", "bakk", "dgkp",
-    "dgks", "dsa", "pd", "ao", "emer", "hon", "rn"
+    "dgks", "dsa", "pd", "ao", "emer", "hon", "rn", "ol"
   ].reduce(function (set, w) { set[w] = true; return set; }, {});
 
   function titleKey(word) {
