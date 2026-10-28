@@ -12,7 +12,7 @@ RKTel ist ein lokales Telefonbuch für Einsatzmittel als Progressive Web App (PW
 - **Kurzwahl für Einsatzmittel**: Eine Basisnummer (z. B. Diensthandy-Präfix) in den Einstellungen hinterlegen; auf der Kontakte-Seite wird sie live mit der eingegebenen Einsatzmittel-Nummer zur vollständigen Rufnummer kombiniert.
 - **Installierbar als App**: Über „Zum Home-Bildschirm hinzufügen" (iOS/Android) lässt sich RKTel wie eine native App nutzen, inklusive Offline-Fähigkeit über einen Service Worker.
 - **JSON-Export**: Alle Kontakte lassen sich als JSON-Datei sichern.
-- **Dienstplan** (optional): Kommende Dienste aus dem privaten ICS-Kalender mit Datum, Beginn, Ende, Titel, Ort und den eingeteilten Kollegen. Die Kollegen (erste Zeile der Terminbeschreibung, kommagetrennt) werden mit dem Telefonbuch abgeglichen – unabhängig von Vor-/Nachnamen-Reihenfolge, Groß-/Kleinschreibung, Umlautschreibweise (ä/ae) und Klammerzusätzen – und lassen sich direkt per 📞 oder 💬 WhatsApp erreichen. Weitere Zeilen der Beschreibung (z. B. „Zimmer 4“) werden als Hinweis angezeigt. Ist der Dienstplan eingerichtet, startet die App im Tab „Dienste“ – inkl. Zeitzonen, ganztägiger Termine, Wiederholungen, Ausnahmen und abgesagter Termine. Offline bleibt der zuletzt geladene Stand verfügbar.
+- **Dienstplan** (optional): Kommende Dienste aus dem privaten ICS-Kalender mit Datum, Beginn, Ende, Titel, Ort und den eingeteilten Kollegen. Die Kollegen (erste Zeile der Terminbeschreibung, kommagetrennt) werden mit dem Telefonbuch abgeglichen – unabhängig von Vor-/Nachnamen-Reihenfolge, Groß-/Kleinschreibung, Umlautschreibweise (ä/ae) und Klammerzusätzen – und lassen sich direkt per 📞 oder 💬 WhatsApp erreichen. Weitere Zeilen der Beschreibung (z. B. „Zimmer 4“) werden als Hinweis angezeigt. Die Funktion ist **optional** und für das Telefonbuch nicht nötig: Der Tab „Dienste“ erscheint erst, wenn unter *Einstellungen → Dienstplan* ein Kalender verbunden ist – dann startet die App direkt dort – inkl. Zeitzonen, ganztägiger Termine, Wiederholungen, Ausnahmen und abgesagter Termine. Offline bleibt der zuletzt geladene Stand verfügbar.
 
 ## PDF-Import im Detail
 
@@ -62,6 +62,8 @@ Statische Dateien (kein Build-Schritt nötig): `index.html` mit eingebettetem [p
 Tests (Node ≥ 20, ohne Abhängigkeiten, nur fiktive Kalenderdaten): `npm test`
 
 ## Dienstplan einrichten (Cloudflare Worker, kostenlos)
+
+*Optional.* Wer nur das Telefonbuch nutzt, kann diesen Abschnitt überspringen – ohne verbundenen Kalender ist der Dienstplan in der App ausgeblendet.
 
 **Warum ein Worker?** Der Dienstplan-Server erlaubt keinen direkten Abruf aus dem Browser (CORS). Der Worker holt den Kalender serverseitig und gibt ihn nur an dich weiter.
 

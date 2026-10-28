@@ -92,41 +92,23 @@
 
   #topArea[hidden] { display: none; }
 
-  .qd-card {
-    background: var(--panel);
-    border: 1.5px solid var(--accent);
-    border-radius: var(--radius);
-    padding: 10px 12px;
-  }
-
-  .qd-card[hidden] { display: none; }
-
-  .qd-card-label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    color: var(--text2);
-    margin-bottom: 6px;
-  }
-
-  .quickdial-row { display: flex; align-items: center; gap: 8px; }
+  /* Kurzwahl: gleiche Kachel wie ein angepinnter Kontakt, erste Kachel im Raster */
+  .favorit-row[hidden] { display: none; }
 
   .quickdial-suffix {
-    flex: 1;
+    width: 100%;
     min-width: 0;
-    padding: 9px 12px;
+    padding: 3px 6px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border2);
-    background: var(--card);
+    background: var(--panel2);
     color: var(--text);
     font-size: 1rem;
-    min-height: 40px;
-    text-align: center;
+    line-height: 1.2;
     font-variant-numeric: tabular-nums;
   }
 
-  .quickdial-suffix::placeholder { color: var(--text3); }
+  .quickdial-suffix::placeholder { color: var(--text3); font-size: 0.8rem; }
   .quickdial-suffix:focus { outline: none; border-color: var(--accent); }
 
   .quickdial-call.disabled {
@@ -144,7 +126,8 @@
     overflow-y: auto;
   }
 
-  .favoriten-list:empty { display: none; }
+  /* Favoriten-Kacheln liegen direkt im Raster neben der Kurzwahl-Kachel */
+  #favoritenItems { display: contents; }
 
   .favorit-row {
     display: flex;
@@ -366,6 +349,7 @@
     cursor: pointer;
   }
 
+  #bottomNav button[hidden] { display: none; }
   #bottomNav button .nav-icon { font-size: 1.25rem; }
   #bottomNav button.active { color: var(--accent); }
 
@@ -391,6 +375,19 @@
     font-size: 0.85rem;
     color: var(--text2);
     line-height: 1.5;
+  }
+
+  .settings-optional {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text2);
+    background: var(--panel2);
+    border-radius: var(--radius-sm);
+    padding: 2px 7px;
+    margin-left: 6px;
+    vertical-align: middle;
   }
 
   .settings-hint {
@@ -718,14 +715,16 @@
   <main id="mainContent">
     <div id="kontakteView">
       <div id="topArea" hidden>
-        <div id="quickDialCard" class="qd-card" hidden>
-          <div class="qd-card-label">Kurzwahl Einsatzmittel</div>
-          <div class="quickdial-row">
-            <input id="quickDialSuffix" class="quickdial-suffix" type="text" inputmode="numeric" maxlength="8" placeholder="Einsatzmittel-Nr." autocomplete="off">
-            <a id="quickDialCallBtn" class="icon-btn quickdial-call disabled" title="Anrufen">📞</a>
+        <div class="favoriten-list">
+          <div id="quickDialCard" class="favorit-row" hidden>
+            <div class="favorit-name">Einsatzmittel</div>
+            <input id="quickDialSuffix" class="quickdial-suffix" type="text" inputmode="numeric" maxlength="8" placeholder="Nr." aria-label="Einsatzmittel-Nummer" autocomplete="off">
+            <div class="favorit-actions">
+              <a id="quickDialCallBtn" class="icon-btn-sm quickdial-call disabled" title="Einsatzmittel anrufen">📞</a>
+            </div>
           </div>
+          <div id="favoritenItems"></div>
         </div>
-        <div id="favoritenList" class="favoriten-list"></div>
       </div>
       <div id="listContainer"></div>
     </div>
@@ -758,8 +757,9 @@
       </section>
 
       <section class="settings-section">
-        <h2>🗓️ Dienstplan</h2>
-        <p>Der Dienstplan wird über deinen eigenen Cloudflare Worker geladen. Der private Kalenderlink bleibt als Secret im Worker – hier werden nur die Worker-Adresse und dein Zugangsschlüssel gespeichert.</p>
+        <h2>🗓️ Dienstplan <span class="settings-optional">optional</span></h2>
+        <p>Zusatzfunktion: zeigt deine kommenden Dienste samt eingeteilten Kollegen (mit Anruf- und WhatsApp-Button). Für das Telefonbuch nicht nötig – der Tab „Dienste“ erscheint erst, wenn hier ein Kalender verbunden ist.</p>
+        <p>Der Dienstplan wird über deinen eigenen Cloudflare Worker geladen (Einrichtung siehe README). Der private Kalenderlink bleibt als Secret im Worker – hier werden nur die Worker-Adresse und dein Zugangsschlüssel gespeichert.</p>
         <label class="field-label" for="dpUrlInput">Worker-Adresse</label>
         <input class="field-input" id="dpUrlInput" type="url" inputmode="url" placeholder="https://rktel-dienstplan.<name>.workers.dev" autocomplete="off" autocapitalize="off" spellcheck="false">
         <label class="field-label" for="dpTokenInput">Zugangsschlüssel</label>
@@ -805,7 +805,7 @@
       <span class="nav-icon">📞</span>
       <span>Kontakte</span>
     </button>
-    <button data-tab="dienste">
+    <button data-tab="dienste" hidden>
       <span class="nav-icon">🗓️</span>
       <span>Dienste</span>
     </button>
@@ -1083,7 +1083,7 @@
   var quickDialCardEl = document.getElementById("quickDialCard");
   var quickDialSuffixEl = document.getElementById("quickDialSuffix");
   var quickDialCallBtn = document.getElementById("quickDialCallBtn");
-  var favoritenListEl = document.getElementById("favoritenList");
+  var favoritenListEl = document.getElementById("favoritenItems");
 
   function updateQuickDialCallBtn() {
     var suffix = quickDialSuffixEl.value.trim();
@@ -1680,6 +1680,13 @@
       : "Keine Dienstplandaten auf diesem Gerät gespeichert.";
   }
 
+  // Der Tab "Dienste" ist nur sichtbar, solange ein Kalender verbunden ist.
+  function dpUpdateTabVisibility() {
+    var configured = dpIsConfigured();
+    document.querySelector('#bottomNav button[data-tab="dienste"]').hidden = !configured;
+    if (!configured && state.activeTab === "dienste") setActiveTab("kontakte");
+  }
+
   function dpRemoveCache() {
     dp.cache = null;
     dp.lastError = null;
@@ -1724,6 +1731,7 @@
     dpUrlInput.value = url;
     dpTokenInput.value = "";
     dpTokenInput.type = "password";
+    dpUpdateTabVisibility();
     setActiveTab("dienste");
     dpRefresher.refresh(true).then(function (r) {
       if (r && r.ok) showToast("Dienstplan geladen.");
@@ -1763,6 +1771,7 @@
     dpUrlInput.value = "";
     dpTokenInput.value = "";
     dpTokenInput.type = "password";
+    dpUpdateTabVisibility();
     renderDienste();
     showToast("Dienstplan-Zugang entfernt.");
   });
@@ -1793,6 +1802,7 @@
 
   renderList();
   // Mit eingerichtetem Dienstplan startet die App direkt bei den Diensten
+  dpUpdateTabVisibility();
   setActiveTab(dpIsConfigured() ? "dienste" : "kontakte");
   renderDienste();
   dpAutoRefresh();
