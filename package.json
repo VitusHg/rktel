@@ -1,0 +1,8 @@
+{
+  "name": "rktel",
+  "private": true,
+  "description": "RKTel – Telefonbuch-PWA mit Dienstplanansicht",
+  "scripts": {
+    "test": "TZ=Europe/Vienna node --test \"tests/*.test.*\" && TZ=America/New_York node --test tests/ics.test.cjs"
+  }
+}

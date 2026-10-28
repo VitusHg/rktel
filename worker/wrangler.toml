@@ -1,0 +1,22 @@
+# Cloudflare Worker für den RKTel-Dienstplan (kostenloser Tarif, *.workers.dev).
+# Secrets NICHT hier eintragen, sondern mit:
+#   npx wrangler secret put ICS_URL
+#   npx wrangler secret put ACCESS_TOKEN
+name = "rktel-dienstplan"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+# Erreichbar unter https://rktel-dienstplan.<account-subdomain>.workers.dev
+workers_dev = true
+# Keine zusätzlichen Vorschau-Adressen je Version
+preview_urls = false
+
+[vars]
+# Herkunft der PWA (GitHub Pages). Mehrere Einträge kommagetrennt.
+ALLOWED_ORIGINS = "https://vitushg.github.io"
+# Die ICS_URL muss auf diesen Host zeigen.
+UPSTREAM_HOST = "dienstplan.st.roteskreuz.at"
+
+# Keine Laufzeit-Logs/Traces speichern (Datensparsamkeit).
+[observability]
+enabled = false

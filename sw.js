@@ -1,8 +1,10 @@
-const CACHE_NAME = "rktel-cache-v1";
+const CACHE_NAME = "rktel-cache-v2";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
+  "./dienstplan.js",
+  "./vendor/ical.min.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png"
@@ -23,14 +25,20 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+  const request = event.request;
+  if (request.method !== "GET") return;
+  // Nur eigene App-Dateien cachen. Anfragen an andere Server (z. B. den
+  // Dienstplan-Worker) und Anfragen mit Zugangsdaten gehen immer direkt ans
+  // Netz – private Kalenderdaten landen nie im Service-Worker-Cache.
+  if (new URL(request.url).origin !== self.location.origin) return;
+  if (request.headers.has("Authorization")) return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request)
+    caches.match(request).then((cached) => {
+      const fetchPromise = fetch(request)
         .then((response) => {
           if (response && response.ok) {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           }
           return response;
         })
