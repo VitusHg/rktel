@@ -76,3 +76,12 @@ test("Kalendertag eines Dienstes: Nachtdienst zählt zum Beginn, ganztägig zum 
   assert.equal(DP.occurrenceDateKey({ start: new Date(2026, 9, 29, 0, 30).getTime() }), "2026-10-29");
   assert.equal(DP.occurrenceDateKey({ allDay: true, startDate: "2026-11-05", start: 0 }), "2026-11-05");
 });
+
+test("Safari-Link für iOS und Geräteerkennung", () => {
+  const url = DP.portalUrl("2026-10-28", "57");
+  assert.equal(DP.safariHref(url), "x-safari-" + url);
+  assert.equal(DP.safariHref("http://localhost/x"), "http://localhost/x");
+  assert.equal(DP.isIOS({ userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)" }), true);
+  assert.equal(DP.isIOS({ userAgent: "Mozilla/5.0 (Macintosh)", platform: "MacIntel", maxTouchPoints: 5 }), true, "iPad mit Desktop-Modus");
+  assert.equal(DP.isIOS({ userAgent: "Mozilla/5.0 (Windows NT 10.0)", platform: "Win32", maxTouchPoints: 0 }), false);
+});

@@ -114,6 +114,7 @@ Passt der Ort eines Dienstes zu einer Dienststelle, erscheint in der Dienstkarte
 - Verglichen wird mit dem ganzen Namen, dem Teil nach „ - “ und der Abkürzung in Klammern (z. B. „SanHiSt“).
 - Sonst gewinnt die Dienststelle, deren Name alle Wörter des Orts enthält und die wenigsten zusätzlichen hat. Bei Gleichstand oder ohne Treffer gibt es keinen Button – lieber kein Link als ein falscher.
 - Die Liste bleibt nur lokal gespeichert; als `deptId` werden nur Ziffern akzeptiert.
+- **In Safari öffnen (iPhone/iPad)**: Standardmäßig öffnet der Button Safari statt des eingebetteten Fensters der Home-Bildschirm-App, damit die Portal-Anmeldung erhalten bleibt. Dafür wird das inoffizielle iOS-Schema `x-safari-https://` genutzt (ab iOS 17). Einen anderen Standardbrowser kann eine Web-App nicht gezielt öffnen. Funktioniert der Link nicht, die Option *Einstellungen → Dienstplan → „Portal-Links in Safari öffnen“* ausschalten.
 
 **Verhalten der App**: Abruf beim Öffnen und beim erneuten Aktivieren der App (höchstens alle 5 Minuten, laufende Abrufe werden nicht doppelt gestartet) sowie jederzeit über *Aktualisieren*. Keine Hintergrundabrufe, keine Benachrichtigungen.
 

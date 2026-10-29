@@ -351,6 +351,21 @@
     };
   }
 
+  /**
+   * https-Link so umschreiben, dass iOS ihn in Safari öffnet statt im
+   * eingebetteten Browserfenster der Home-Bildschirm-App ("x-safari-https://",
+   * inoffizielles iOS-Schema, ab iOS 17). Andere Links bleiben unverändert.
+   */
+  function safariHref(url) {
+    return /^https:\/\//.test(url) ? "x-safari-" + url : url;
+  }
+
+  function isIOS(nav) {
+    nav = nav || (typeof navigator !== "undefined" ? navigator : {});
+    return /iPhone|iPad|iPod/.test(nav.userAgent || "") ||
+      (nav.platform === "MacIntel" && nav.maxTouchPoints > 1);
+  }
+
   /** Kalendertag (lokal) eines Termins als YYYY-MM-DD. */
   function occurrenceDateKey(occ) {
     if (occ.allDay && occ.startDate) return occ.startDate;
@@ -681,6 +696,8 @@
     createDepartmentMatcher: createDepartmentMatcher,
     occurrenceDateKey: occurrenceDateKey,
     portalUrl: portalUrl,
+    safariHref: safariHref,
+    isIOS: isIOS,
     timeToEpoch: timeToEpoch,
     resolveTzid: resolveTzid,
     wallTimeToEpoch: wallTimeToEpoch,

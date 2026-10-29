@@ -805,6 +805,11 @@
           <button id="dpDeptClearBtn" class="btn-secondary" type="button" hidden>Liste entfernen</button>
         </div>
         <input type="file" id="dpDeptFile" accept="application/json,.json" hidden>
+        <label class="field-checkbox-label" for="dpPortalSafari">
+          <input type="checkbox" id="dpPortalSafari">
+          Portal-Links in Safari öffnen (iPhone/iPad)
+        </label>
+        <p class="settings-hint">Öffnet „Dienstplan ↗“ in Safari statt im eingebetteten Fenster der App – dort bleibst du im Portal angemeldet. Nutzt ein inoffizielles iOS-Schema (ab iOS 17); passiert beim Tippen nichts, diese Option ausschalten.</p>
 
         <div class="settings-separator"></div>
 
@@ -1530,6 +1535,14 @@
   var DP_ZUGANG_KEY = "rktelDienstplanZugangV1";
   var DP_CACHE_KEY = "rktelDienstplanCacheV1";
   var DP_DEPTS_KEY = "rktelDienststellenV1";
+  var DP_PORTAL_SAFARI_KEY = "rktelPortalInSafariV1";
+
+  // Standard: auf iPhone/iPad in Safari öffnen, sonst normal in neuem Tab
+  function dpPortalInSafari() {
+    var v = null;
+    try { v = localStorage.getItem(DP_PORTAL_SAFARI_KEY); } catch (e) { /* ignorieren */ }
+    return v === null ? DP.isIOS() : v === "1";
+  }
 
   var dp = {
     config: null,      // { url, token } – vom Nutzer eingegeben, nie im Code
@@ -1642,6 +1655,14 @@
     return '<div class="dp-colleagues">' + rows.join("") + "</div>";
   }
 
+  function dpPortalLinkHtml(url, dept) {
+    var title = ' title="Dienstplan ' + escHtml(dept.name) + ' öffnen"';
+    if (dpPortalInSafari()) {
+      return '<a class="dp-portal-link" href="' + escHtml(DP.safariHref(url)) + '"' + title + ">Dienstplan ↗</a>";
+    }
+    return '<a class="dp-portal-link" href="' + escHtml(url) + '" target="_blank" rel="noopener noreferrer"' + title + ">Dienstplan ↗</a>";
+  }
+
   function dpLocationHtml(o, matchDepartment) {
     if (!o.location) return "";
     var dept = matchDepartment(o.location);
@@ -1649,7 +1670,7 @@
     return (
       '<div class="dp-loc-row">' +
       '<div class="dp-loc">📍 ' + escHtml(o.location) + "</div>" +
-      (url ? '<a class="dp-portal-link" href="' + escHtml(url) + '" target="_blank" rel="noopener noreferrer" title="Dienstplan ' + escHtml(dept.name) + ' öffnen">Dienstplan ↗</a>' : "") +
+      (url ? dpPortalLinkHtml(url, dept) : "") +
       "</div>"
     );
   }
@@ -1732,6 +1753,7 @@
       ? dp.departments.length + " Dienststelle(n) importiert. Passt der Ort eines Dienstes zu einer Dienststelle (Zusätze wie „RKZ“ oder „West“ werden ignoriert), erscheint in der Karte ein Button, der den Tag im Dienstplan-Portal öffnet."
       : "Optional: JSON-Liste im Format {\"abteilungen\": [{\"name\": …, \"deptId\": …}]} importieren. Dann öffnet ein Button in jeder Dienstkarte den Tag im Dienstplan-Portal.";
     document.getElementById("dpDeptClearBtn").hidden = !dp.departments.length;
+    document.getElementById("dpPortalSafari").checked = dpPortalInSafari();
     document.getElementById("dpDataInfo").textContent = dp.cache
       ? "Lokal gespeichert: " + dp.cache.occurrences.length + " Termin(e), Stand " + DP.formatTimestamp(dp.cache.fetchedAt) + "."
       : "Keine Dienstplandaten auf diesem Gerät gespeichert.";
@@ -1832,6 +1854,11 @@
     }).catch(function (err) {
       showToast("Import fehlgeschlagen: " + (err && err.message ? err.message : "unbekannter Fehler"));
     });
+  });
+
+  document.getElementById("dpPortalSafari").addEventListener("change", function (e) {
+    try { localStorage.setItem(DP_PORTAL_SAFARI_KEY, e.target.checked ? "1" : "0"); } catch (err) { /* ignorieren */ }
+    renderDienste();
   });
 
   document.getElementById("dpDeptClearBtn").addEventListener("click", function () {
