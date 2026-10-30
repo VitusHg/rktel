@@ -1,10 +1,10 @@
 # RKTel
 
-**RKTel** ist ein Telefonbuch fürs Handy, gemacht für den Dienst beim Roten Kreuz Steiermark. Es knüpft an die Services an, die du ohnehin nutzt – den **Online Dienstplan** mit seiner Telefonliste und deinem persönlichen Dienstplan-Kalender – und macht daraus eine schnelle App: Kontakte suchen, anrufen oder per WhatsApp schreiben, und auf Wunsch sehen, mit wem du deinen nächsten Dienst hast.
+**RKTel** ist ein Telefonbuch fürs Handy, gemacht für den Dienst beim RK Steiermark. Es knüpft an die Services an, die du ohnehin nutzt – den **Online Dienstplan** mit seiner Telefonliste und deinem persönlichen Dienstplan-Kalender – und macht daraus eine schnelle App: Kontakte suchen, anrufen oder per WhatsApp schreiben, und auf Wunsch sehen, mit wem du deinen nächsten Dienst hast.
 
 RKTel läuft als Web-App (PWA) im Browser und lässt sich auf iPhone und Android wie eine normale App auf den Home-Bildschirm legen – ohne App Store.
 
-> **Privates Eigenprojekt.** RKTel ist kein Angebot des Österreichischen Roten Kreuzes und wird von diesem weder entwickelt, betrieben, geprüft noch unterstützt. Es besteht keine Verbindung zum Online Dienstplan oder dessen Betreibern; RKTel verarbeitet lediglich Exporte (PDF, Kalender), auf die du selbst Zugriff hast. Genannte Namen und Marken gehören ihren jeweiligen Inhabern. Bei Fragen zu RKTel bitte nicht an Stellen des Roten Kreuzes wenden, sondern an den [Kontakt](#kontakt) unten.
+> **Privates Eigenprojekt.** RKTel ist kein Angebot des ÖRK und wird von diesem weder entwickelt, betrieben, geprüft noch unterstützt. Es besteht keine Verbindung zum Online Dienstplan oder dessen Betreibern; RKTel verarbeitet lediglich Exporte (PDF, Kalender), auf die du selbst Zugriff hast. Genannte Namen und Marken gehören ihren jeweiligen Inhabern. Bei Fragen zu RKTel bitte nicht an Stellen des ÖRK wenden, sondern an den [Kontakt](#kontakt) unten.
 
 **Der Weg durch diese Anleitung**
 
