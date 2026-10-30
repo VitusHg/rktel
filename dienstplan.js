@@ -264,10 +264,38 @@
   // "MINA RKZ" und "MINA West" gehören beide zum Dienstplan "MINA".
   var IGNORED_PLACE_WORDS = { rkz: true, west: true };
 
+  function parseAliases(value) {
+    var list = Array.isArray(value) ? value : String(value || "").split(/[,;\n]/);
+    var seen = {};
+    return list
+      .map(function (a) { return typeof a === "string" ? a.trim().slice(0, 100) : ""; })
+      .filter(function (a) {
+        var k = a.toLowerCase();
+        if (!a || seen[k]) return false;
+        seen[k] = true;
+        return true;
+      })
+      .slice(0, 20);
+  }
+
+  /**
+   * Eine Dienststelle prüfen (Import oder Eingabe in der App). Wirft einen
+   * Error mit verständlicher Meldung. aliases: weitere Ortsbezeichnungen,
+   * die genau dieser Dienststelle zugeordnet werden ("MINA West" -> MINA).
+   */
+  function makeDepartment(name, deptId, aliases) {
+    name = typeof name === "string" ? name.trim() : "";
+    var id = deptId == null ? "" : String(deptId).trim();
+    if (!name) throw new Error("Bitte einen Dienststellennamen eingeben.");
+    // deptId landet in einer URL -> nur Ziffern zulassen
+    if (!/^\d{1,9}$/.test(id)) throw new Error("Die Dienststellen-ID darf nur aus Ziffern bestehen.");
+    return { name: name.slice(0, 200), deptId: id, aliases: parseAliases(aliases) };
+  }
+
   /**
    * Importierte Dienststellen-Liste prüfen:
-   * { "abteilungen": [ { "name": "...", "deptId": "276" }, ... ] }
-   * Wirft einen Error mit verständlicher Meldung.
+   * { "abteilungen": [ { "name": "...", "deptId": "276", "aliases": ["..."] }, ... ] }
+   * Ungültige Einträge werden übersprungen. Wirft bei unbrauchbarer Datei.
    */
   function parseDepartments(jsonText) {
     var data;
@@ -277,20 +305,34 @@
     var list = data && Array.isArray(data.abteilungen) ? data.abteilungen : null;
     if (!list) throw new Error("Im JSON fehlt die Liste \"abteilungen\".");
     if (list.length > MAX_DEPARTMENTS) throw new Error("Die Liste ist zu groß.");
-    var seen = {};
     var result = [];
     list.forEach(function (a) {
       if (!a || typeof a !== "object") return;
-      var name = typeof a.name === "string" ? a.name.trim() : "";
-      var id = a.deptId == null ? "" : String(a.deptId).trim();
-      // deptId landet in einer URL -> nur Ziffern zulassen
-      if (!name || !/^\d{1,9}$/.test(id)) return;
-      var key = id + "|" + name;
-      if (seen[key]) return;
-      seen[key] = true;
-      result.push({ name: name.slice(0, 200), deptId: id });
+      try {
+        result = mergeDepartments(result, [makeDepartment(a.name, a.deptId, a.aliases)]);
+      } catch (e) { /* ungültigen Eintrag überspringen */ }
     });
     if (!result.length) throw new Error("Keine gültigen Einträge (name + deptId) gefunden.");
+    return result;
+  }
+
+  /**
+   * Dienststellen zusammenführen: gleiche deptId wird aktualisiert (Name aus
+   * "incoming", Aliase vereint), neue werden angehängt.
+   */
+  function mergeDepartments(existing, incoming) {
+    var result = (existing || []).map(function (d) {
+      return { name: d.name, deptId: d.deptId, aliases: parseAliases(d.aliases) };
+    });
+    (incoming || []).forEach(function (d) {
+      var found = result.filter(function (e) { return e.deptId === d.deptId; })[0];
+      if (found) {
+        found.name = d.name;
+        found.aliases = parseAliases(found.aliases.concat(d.aliases || []));
+      } else {
+        result.push({ name: d.name, deptId: d.deptId, aliases: parseAliases(d.aliases) });
+      }
+    });
     return result;
   }
 
@@ -317,16 +359,27 @@
 
   /**
    * Liefert eine Funktion Ort -> Dienststelle (oder null).
+   * 0. Ausnahmeregel: Ort entspricht einer eingetragenen Ortsbezeichnung (Alias).
    * 1. Ort entspricht Name, Kurzname oder Abkürzung (RKZ/West ignoriert).
    * 2. Sonst: alle Wörter des Orts im Namen enthalten; die Dienststelle mit
    *    den wenigsten zusätzlichen Wörtern gewinnt, bei Gleichstand keine.
    */
   function createDepartmentMatcher(departments) {
     var index = (departments || []).map(function (d) {
-      return { dept: d, tokens: placeTokens(d.name), keys: departmentKeys(d.name) };
+      return {
+        dept: d,
+        tokens: placeTokens(d.name),
+        keys: departmentKeys(d.name),
+        aliasKeys: (d.aliases || []).map(function (a) { return placeTokens(a, true).join(" "); }).filter(Boolean)
+      };
     }).filter(function (e) { return e.tokens.length; });
 
     return function (location) {
+      var rawKey = placeTokens(location, true).join(" ");
+      if (rawKey) {
+        var byAlias = index.filter(function (e) { return e.aliasKeys.indexOf(rawKey) !== -1; });
+        if (byAlias.length) return byAlias[0].dept;
+      }
       var t = placeTokens(location);
       if (!t.length) return null;
       var key = t.join(" ");
@@ -693,6 +746,8 @@
     parseDescription: parseDescription,
     createContactMatcher: createContactMatcher,
     parseDepartments: parseDepartments,
+    makeDepartment: makeDepartment,
+    mergeDepartments: mergeDepartments,
     createDepartmentMatcher: createDepartmentMatcher,
     occurrenceDateKey: occurrenceDateKey,
     portalUrl: portalUrl,

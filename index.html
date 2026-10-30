@@ -2,11 +2,13 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, interactive-widget=resizes-content">
 <title>RKTel</title>
 <meta name="description" content="RKTel – lokales Telefonbuch für Einsatzmittel. Alle Daten bleiben auf diesem Gerät.">
 <meta name="theme-color" content="#c62828">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="RKTel">
 <link rel="manifest" href="manifest.json">
@@ -24,6 +26,16 @@
   }
 
   * { box-sizing: border-box; }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Auf der Dienste-Seite eigenes "Ziehen zum Aktualisieren" statt Browser-Reload (Android) */
+  html.dp-ptr-active, html.dp-ptr-active body { overscroll-behavior-y: contain; }
+
+  button, a, input, summary, label { touch-action: manipulation; }
 
   html, body {
     margin: 0;
@@ -354,7 +366,7 @@
   #bottomNav button.active { color: var(--accent); }
 
   /* Settings view */
-  #einstellungenView { padding: 14px 14px 4px; }
+  #einstellungenView { padding: calc(env(safe-area-inset-top, 0px) + 14px) 14px 4px; }
 
   .settings-section {
     background: var(--panel);
@@ -376,6 +388,103 @@
     color: var(--text2);
     line-height: 1.5;
   }
+
+  .settings-sub {
+    margin: 18px 0 4px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .settings-section h2 { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .settings-section .field-label { display: flex; align-items: center; gap: 6px; }
+
+  /* Kleiner i-Button: blendet den Erklärtext darunter ein/aus */
+  .info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    font: italic 700 0.75rem/1 Georgia, "Times New Roman", serif;
+    cursor: pointer;
+    position: relative;
+  }
+
+  /* größere Tippfläche ohne größeren Kreis */
+  .info-btn::after { content: ""; position: absolute; inset: -11px; }
+  .info-btn[aria-expanded="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .info-text {
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin: 6px 0 10px;
+  }
+
+  .info-text[hidden] { display: none; }
+  .info-text p { margin: 0 0 6px; font-size: 0.8rem; color: var(--text2); line-height: 1.5; }
+  .info-text p:last-child { margin-bottom: 0; }
+  .info-text code { font-size: 0.75rem; overflow-wrap: anywhere; color: var(--text); }
+
+  .settings-status {
+    font-size: 0.78rem;
+    color: var(--text3);
+    margin: 6px 0 10px;
+    line-height: 1.45;
+  }
+
+  .settings-status:empty { display: none; }
+
+  .drop-sub { font-size: 0.75rem; color: var(--text3); }
+
+  .dept-list { list-style: none; margin: 6px 0 8px; padding: 0; }
+  .dept-list:empty { display: none; }
+
+  .dept-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dept-item:last-child { border-bottom: none; }
+  .dept-text { flex: 1; min-width: 0; }
+  .dept-name { font-size: 0.9rem; font-weight: 600; word-break: break-word; }
+  .dept-meta { font-size: 0.75rem; color: var(--text3); overflow-wrap: anywhere; }
+
+  .dept-form {
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    margin-bottom: 10px;
+  }
+
+  .dept-form[open] { padding-bottom: 12px; }
+
+  .dept-form summary {
+    cursor: pointer;
+    padding: 12px 0;
+    min-height: 44px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--accent-hover);
+    list-style: none;
+  }
+
+  .dept-form summary::-webkit-details-marker { display: none; }
 
   .settings-optional {
     font-size: 0.7rem;
@@ -568,6 +677,33 @@
 
   #toast.show { opacity: 1; }
 
+  /* Dienstplan: Ziehen zum Aktualisieren */
+  .dp-pull {
+    position: fixed;
+    left: 50%;
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: var(--panel2);
+    color: var(--text);
+    font-size: 0.8rem;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0,0,0,.4);
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -60px);
+    transition: opacity .15s;
+  }
+
+  .dp-pull.visible { opacity: 1; }
+  .dp-pull.ready { background: var(--accent); color: #fff; }
+
+  .dp-pull-icon { display: inline-block; width: 1em; text-align: center; }
+
   /* Dienstplan */
   #diensteView { padding: calc(env(safe-area-inset-top, 0px) + 14px) 10px 4px; }
 
@@ -756,6 +892,7 @@
     </div>
 
     <div id="diensteView" hidden>
+      <div id="dpPull" class="dp-pull" aria-hidden="true"><span class="dp-pull-icon" id="dpPullIcon">↓</span><span id="dpPullText">Zum Aktualisieren ziehen</span></div>
       <div class="dp-header">
         <h2>Dienstplan</h2>
         <button id="dpRefreshBtn" class="btn-secondary dp-refresh" type="button">↻ Aktualisieren</button>
@@ -770,50 +907,76 @@
 
     <div id="einstellungenView" hidden>
       <section class="settings-section">
-        <h2>📞 Telefonbuch</h2>
-        <label class="field-label" for="quickDialBaseInput">Basisnummer Einsatzmittel (Kurzwahl)</label>
-        <input class="field-input" id="quickDialBaseInput" type="tel" inputmode="tel" placeholder="z. B. +43664XXXXXXX" autocomplete="off">
-        <p class="settings-hint">Auf der Kontakte-Seite wird die Basisnummer mit der eingegebenen Einsatzmittel-Nummer zur vollständigen Rufnummer kombiniert, z. B. Basisnummer + 1823.</p>
-
-        <div class="settings-separator"></div>
-
-        <p>Eine oder mehrere PDF-Telefonlisten hochladen oder hierher ziehen. Neue Kontakte werden anhand des Namens mit bestehenden zusammengeführt, Qualifikationszusätze in Klammern und E-Mail-Adressen werden beim Import verworfen. Dienststelle und Erstellungsdatum je Liste werden automatisch erkannt. Die Verarbeitung erfolgt vollständig im Browser – nichts wird hochgeladen.</p>
-        <div id="dropZone">PDF(s) hierher ziehen oder tippen zum Auswählen</div>
+        <h2>📞 Telefonbuch <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoImport" aria-label="Info zum PDF-Import">i</button></h2>
+        <div class="settings-hint info-text" id="infoImport" hidden>
+          <p>Telefonliste im Online Dienstplan unter <strong>Downloads → Mitarbeiter → Telefonnummern</strong> als PDF exportieren und hier importieren. Mehrere Listen sind möglich – Kontakte werden anhand des Namens zusammengeführt.</p>
+          <p>Qualifikationszusätze in Klammern und E-Mail-Adressen werden verworfen, Dienststelle und Erstellungsdatum automatisch erkannt. Die Verarbeitung erfolgt vollständig auf diesem Gerät – nichts wird hochgeladen.</p>
+        </div>
+        <div id="dropZone" role="button" tabindex="0">PDF-Telefonliste auswählen<br><span class="drop-sub">oder hierher ziehen</span></div>
         <input type="file" id="fileInput" accept="application/pdf" multiple hidden>
       </section>
 
       <section class="settings-section">
-        <h2>🗓️ Dienstplan <span class="settings-optional">optional</span></h2>
-        <p>Zusatzfunktion: zeigt deine kommenden Dienste samt eingeteilten Kollegen (mit Anruf- und WhatsApp-Button). Für das Telefonbuch nicht nötig – der Tab „Dienste“ erscheint erst, wenn hier ein Kalender verbunden ist.</p>
-        <p>Der Dienstplan wird über deinen eigenen Cloudflare Worker geladen (Einrichtung siehe README). Der private Kalenderlink bleibt als Secret im Worker – hier werden nur die Worker-Adresse und dein Zugangsschlüssel gespeichert.</p>
+        <h2>🗓️ Dienstplan <span class="settings-optional">optional</span> <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoDienstplan" aria-label="Info zum Dienstplan">i</button></h2>
+        <div class="settings-hint info-text" id="infoDienstplan" hidden>
+          <p>Zusatzfunktion: zeigt deine kommenden Dienste aus dem Online Dienstplan samt eingeteilten Kollegen mit Anruf- und WhatsApp-Button. Für das Telefonbuch nicht nötig – der Tab „Dienste“ erscheint erst, wenn hier ein Kalender verbunden ist.</p>
+          <p>Geladen wird über deinen eigenen Cloudflare Worker (Einrichtung siehe README). Der private Kalenderlink bleibt als Secret im Worker – hier werden nur Worker-Adresse und Zugangsschlüssel gespeichert.</p>
+        </div>
+
+        <h3 class="settings-sub">Verbindung</h3>
         <label class="field-label" for="dpUrlInput">Worker-Adresse</label>
         <input class="field-input" id="dpUrlInput" type="url" inputmode="url" placeholder="https://rktel-dienstplan.<name>.workers.dev" autocomplete="off" autocapitalize="off" spellcheck="false">
-        <label class="field-label" for="dpTokenInput">Zugangsschlüssel</label>
+        <label class="field-label" for="dpTokenInput">Zugangsschlüssel <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoToken" aria-label="Info zum Zugangsschlüssel">i</button></label>
+        <div class="settings-hint info-text" id="infoToken" hidden>
+          <p>Muss mit dem Secret ACCESS_TOKEN im Worker übereinstimmen (mind. 32 Zeichen). „Neuen Schlüssel erzeugen“ erstellt einen sicheren Zufallsschlüssel und kopiert ihn – dann im Worker als Secret hinterlegen und hier speichern.</p>
+        </div>
         <input class="field-input" id="dpTokenInput" type="password" placeholder="Zugangsschlüssel (ACCESS_TOKEN)" autocomplete="off" autocapitalize="off" spellcheck="false">
-        <p class="settings-hint" id="dpTokenHint">Muss mit dem Secret ACCESS_TOKEN im Worker übereinstimmen (mind. 32 Zeichen).</p>
+        <p class="settings-status" id="dpTokenHint"></p>
         <div class="btn-row">
           <button id="dpSaveBtn" class="btn-primary" type="button">Speichern &amp; laden</button>
           <button id="dpGenTokenBtn" class="btn-secondary" type="button">Neuen Schlüssel erzeugen</button>
         </div>
 
-        <div class="settings-separator"></div>
-
-        <label class="field-label">Dienststellen (Links ins Dienstplan-Portal)</label>
-        <p class="settings-hint" id="dpDeptInfo"></p>
+        <h3 class="settings-sub">Dienststellen <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoDept" aria-label="Info zu Dienststellen">i</button></h3>
+        <div class="settings-hint info-text" id="infoDept" hidden>
+          <p>Mit eingetragenen Dienststellen erscheint in jeder Dienstkarte der Button „Dienstplan ↗“, der den Tag im Online Dienstplan öffnet.</p>
+          <p><strong>ID finden:</strong> Im Online Dienstplan auf der Startseite in den Tagesdienstplan der Dienststelle klicken – die Zahl ganz am Ende der Adresse ist die ID, z. B. <code>…-0000-000000000000-<strong>123</strong></code>.</p>
+          <p><strong>Zuordnung:</strong> Der Ort eines Dienstes wird mit dem Namen verglichen; „RKZ“ und „West“ werden dabei ignoriert. Passt das nicht, unter „Ausnahmeregeln“ weitere Ortsbezeichnungen eintragen, z. B. „MINA West“ für die Dienststelle „MINA“.</p>
+          <p>Alternativ eine JSON-Liste importieren: <code>{"abteilungen": [{"name": "MINA", "deptId": "57", "aliases": ["MINA West"]}]}</code></p>
+        </div>
+        <ul class="dept-list" id="dpDeptList"></ul>
+        <details class="dept-form" id="dpDeptForm">
+          <summary id="dpDeptFormTitle">+ Dienststelle hinzufügen</summary>
+          <label class="field-label" for="dpDeptName">Name</label>
+          <input class="field-input" id="dpDeptName" placeholder="z. B. MINA" autocomplete="off">
+          <label class="field-label" for="dpDeptId">ID</label>
+          <input class="field-input" id="dpDeptId" inputmode="numeric" pattern="[0-9]*" placeholder="z. B. 123" autocomplete="off">
+          <label class="field-label" for="dpDeptAliases">Ausnahmeregeln (optional)</label>
+          <input class="field-input" id="dpDeptAliases" placeholder="z. B. MINA West, MINA RKZ" autocomplete="off">
+          <p class="settings-status">Weitere Ortsbezeichnungen aus dem Dienstplan, die zu dieser Dienststelle gehören – kommagetrennt.</p>
+          <div class="btn-row">
+            <button id="dpDeptSaveBtn" class="btn-primary" type="button">Hinzufügen</button>
+            <button id="dpDeptCancelBtn" class="btn-secondary" type="button" hidden>Abbrechen</button>
+          </div>
+        </details>
         <div class="btn-row">
-          <button id="dpDeptImportBtn" class="btn-secondary" type="button">Dienststellen-Liste importieren</button>
-          <button id="dpDeptClearBtn" class="btn-secondary" type="button" hidden>Liste entfernen</button>
+          <button id="dpDeptImportBtn" class="btn-secondary" type="button">JSON importieren</button>
+          <button id="dpDeptClearBtn" class="btn-secondary" type="button" hidden>Alle entfernen</button>
         </div>
         <input type="file" id="dpDeptFile" accept="application/json,.json" hidden>
-        <label class="field-checkbox-label" for="dpPortalSafari">
-          <input type="checkbox" id="dpPortalSafari">
-          Portal-Links in Safari öffnen (iPhone/iPad)
-        </label>
-        <p class="settings-hint">Öffnet „Dienstplan ↗“ in Safari statt im eingebetteten Fenster der App – dort bleibst du im Portal angemeldet. Nutzt ein inoffizielles iOS-Schema (ab iOS 17); passiert beim Tippen nichts, diese Option ausschalten.</p>
+        <div id="dpSafariRow" hidden>
+          <label class="field-checkbox-label" for="dpPortalSafari">
+            <input type="checkbox" id="dpPortalSafari">
+            Portal-Links in Safari öffnen
+            <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoSafari" aria-label="Info zu Safari-Links">i</button>
+          </label>
+          <div class="settings-hint info-text" id="infoSafari" hidden>
+            <p>Öffnet „Dienstplan ↗“ in Safari statt im eingebetteten Fenster der App – dort bleibst du im Portal angemeldet. Nutzt ein inoffizielles iOS-Schema (ab iOS 17); passiert beim Tippen nichts, diese Option ausschalten.</p>
+          </div>
+        </div>
 
-        <div class="settings-separator"></div>
-
-        <p class="settings-hint" id="dpDataInfo"></p>
+        <h3 class="settings-sub">Gespeicherte Dienstplandaten</h3>
+        <p class="settings-status" id="dpDataInfo"></p>
         <div class="btn-row">
           <button id="dpClearDataBtn" class="btn-secondary" type="button">Dienstplandaten löschen</button>
           <button id="dpForgetBtn" class="btn-danger" type="button">Zugang entfernen</button>
@@ -821,8 +984,19 @@
       </section>
 
       <section class="settings-section">
-        <h2>💾 Daten</h2>
-        <p>Alle Kontakte werden ausschließlich lokal in diesem Browser gespeichert (localStorage). Es findet keine Übertragung an einen Server statt. Ausnahme: Der Dienstplan wird – falls eingerichtet – von deinem eigenen Worker geladen und ebenfalls nur lokal zwischengespeichert.</p>
+        <h2>☎️ Kurzwahl <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoKurzwahl" aria-label="Info zur Kurzwahl">i</button></h2>
+        <div class="settings-hint info-text" id="infoKurzwahl" hidden>
+          <p>Mit einer Basisnummer erscheint auf der Kontakte-Seite eine Kachel „Einsatzmittel“: Die eingegebene Nummer wird angehängt, z. B. Basisnummer + 1825. Leer lassen, um die Kachel auszublenden.</p>
+        </div>
+        <label class="field-label" for="quickDialBaseInput">Basisnummer Einsatzmittel</label>
+        <input class="field-input" id="quickDialBaseInput" type="tel" inputmode="tel" placeholder="z. B. +43664XXXXXXX" autocomplete="off">
+      </section>
+
+      <section class="settings-section">
+        <h2>💾 Daten <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoDaten" aria-label="Info zur Datenhaltung">i</button></h2>
+        <div class="settings-hint info-text" id="infoDaten" hidden>
+          <p>Alle Daten werden nur lokal auf diesem Gerät gespeichert. Es gibt keine Übertragung an Dritte – einzige Ausnahme ist der Abruf des Dienstplans über deinen eigenen Worker. „Alle Daten löschen“ entfernt alle Kontakte unwiderruflich.</p>
+        </div>
         <div class="btn-row">
           <button id="exportBtn" class="btn-secondary">JSON exportieren</button>
           <button id="resetBtn" class="btn-danger">Alle Daten löschen</button>
@@ -832,9 +1006,9 @@
       <section class="settings-section">
         <h2>Über</h2>
         <p class="about-line" id="contactCountLine"></p>
-        <p class="about-line">RKTel · Progressive Web App</p>
-        <p class="about-line">Privates Eigenprojekt – kein Angebot des Österreichischen Roten Kreuzes und nicht mit dem Online Dienstplan verbunden.</p>
-        <p class="about-line">Mehr zu Datenimport &amp; Datenhaltung im <a href="https://github.com/VitusHg/rktel#readme" target="_blank" rel="noopener">README auf GitHub</a>.</p>
+        <button id="installBtn" class="btn-secondary" type="button" hidden>📲 Als App installieren</button>
+        <p class="about-line">RKTel · Progressive Web App · privates Eigenprojekt, kein Angebot des Österreichischen Roten Kreuzes.</p>
+        <p class="about-line">Anleitung &amp; Datenschutz im <a href="https://github.com/VitusHg/rktel#readme" target="_blank" rel="noopener">README auf GitHub</a>.</p>
       </section>
     </div>
   </main>
@@ -969,7 +1143,11 @@
   }
 
   function saveContacts() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.contacts));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.contacts));
+    } catch (e) {
+      showToast("Speichern fehlgeschlagen – Gerätespeicher voll oder privater Modus?");
+    }
   }
 
   function loadQuickDialBase() {
@@ -1106,6 +1284,7 @@
       document.getElementById(TAB_VIEWS[key]).hidden = key !== tab;
     });
     if (tab === "dienste") renderDienste();
+    document.documentElement.classList.toggle("dp-ptr-active", tab === "dienste");
     document.getElementById("topbar").style.display = isKontakte ? "" : "none";
     document.getElementById("fabAdd").style.display = isKontakte ? "" : "none";
     document.querySelectorAll("#bottomNav button").forEach(function (btn) {
@@ -1165,7 +1344,7 @@
   }
 
   quickDialSuffixEl.addEventListener("input", function () {
-    localStorage.setItem(QUICKDIAL_SUFFIX_KEY, quickDialSuffixEl.value.trim());
+    try { localStorage.setItem(QUICKDIAL_SUFFIX_KEY, quickDialSuffixEl.value.trim()); } catch (e) { /* ignorieren */ }
     updateQuickDialCallBtn();
   });
 
@@ -1230,16 +1409,22 @@
     var phones = contact && contact.phones && contact.phones.length ? contact.phones : [""];
     phones.forEach(function (p) { addPhoneRow(p); });
     dialogOverlay.hidden = false;
+    // Zurück-Taste/-Geste (Android) schließt den Dialog statt die App
+    try { history.pushState({ rktelSheet: true }, ""); } catch (e) { /* ignorieren */ }
     setTimeout(function () { document.getElementById("fieldName").focus(); }, 50);
   }
 
-  function closeDialog() {
+  function closeDialog(fromHistory) {
+    if (dialogOverlay.hidden) return;
     dialogOverlay.hidden = true;
     editingId = null;
+    if (fromHistory !== true && history.state && history.state.rktelSheet) history.back();
   }
 
+  window.addEventListener("popstate", function () { closeDialog(true); });
+
   document.getElementById("fabAdd").addEventListener("click", function () { openDialog(null); });
-  document.getElementById("cancelBtn").addEventListener("click", closeDialog);
+  document.getElementById("cancelBtn").addEventListener("click", function () { closeDialog(); });
   dialogOverlay.addEventListener("click", function (e) { if (e.target === dialogOverlay) closeDialog(); });
 
   contactForm.addEventListener("submit", function (e) {
@@ -1562,7 +1747,7 @@
   }
 
   function dpIsConfigured() {
-    return !!(dp.config && dp.config.url && dp.config.token);
+    return !!(DP && dp.config && dp.config.url && dp.config.token);
   }
 
   async function dpRun() {
@@ -1593,10 +1778,12 @@
     }
   }
 
-  var dpRefresher = DP.createRefresher({
+  // Fehlt dienstplan.js (z. B. unvollständiger Offline-Cache), bleibt das
+  // Telefonbuch trotzdem voll nutzbar; der Dienstplan ist dann ausgeblendet.
+  var dpRefresher = DP ? DP.createRefresher({
     run: dpRun,
     getLastSuccess: function () { return dp.cache ? dp.cache.fetchedAt : 0; }
-  });
+  }) : { refresh: function () { return Promise.resolve({ skipped: true }); }, isRunning: function () { return false; } };
 
   // Automatisch: beim Öffnen/erneuten Aktivieren (entprellt, siehe createRefresher)
   function dpAutoRefresh() {
@@ -1694,6 +1881,7 @@
   }
 
   function renderDienste() {
+    if (!DP) return;
     var configured = dpIsConfigured();
     var online = navigator.onLine !== false;
     var stand = dp.cache ? DP.formatTimestamp(dp.cache.fetchedAt) : "";
@@ -1745,19 +1933,32 @@
   }
 
   function renderDpSettings() {
-    var hint = document.getElementById("dpTokenHint");
-    hint.textContent = dp.config && dp.config.token
-      ? "Ein Zugangsschlüssel ist gespeichert. Zum Ändern einen neuen eingeben – leer lassen, um ihn zu behalten."
-      : "Muss mit dem Secret ACCESS_TOKEN im Worker übereinstimmen (mind. " + DP.MIN_TOKEN_LENGTH + " Zeichen).";
-    document.getElementById("dpDeptInfo").textContent = dp.departments.length
-      ? dp.departments.length + " Dienststelle(n) importiert. Passt der Ort eines Dienstes zu einer Dienststelle (Zusätze wie „RKZ“ oder „West“ werden ignoriert), erscheint in der Karte ein Button, der den Tag im Dienstplan-Portal öffnet."
-      : "Optional: JSON-Liste im Format {\"abteilungen\": [{\"name\": …, \"deptId\": …}]} importieren. Dann öffnet ein Button in jeder Dienstkarte den Tag im Dienstplan-Portal.";
+    document.getElementById("dpTokenHint").textContent = dp.config && dp.config.token
+      ? "✓ Zugangsschlüssel gespeichert – zum Ändern neu eingeben, sonst leer lassen."
+      : "";
+    renderDeptList();
     document.getElementById("dpDeptClearBtn").hidden = !dp.departments.length;
+    document.getElementById("dpSafariRow").hidden = !DP.isIOS();
     document.getElementById("dpPortalSafari").checked = dpPortalInSafari();
     document.getElementById("dpDataInfo").textContent = dp.cache
       ? "Lokal gespeichert: " + dp.cache.occurrences.length + " Termin(e), Stand " + DP.formatTimestamp(dp.cache.fetchedAt) + "."
       : "Keine Dienstplandaten auf diesem Gerät gespeichert.";
   }
+
+  function renderDeptList() {
+    document.getElementById("dpDeptList").innerHTML = dp.departments.map(function (d) {
+      var aliases = d.aliases && d.aliases.length ? " · auch: " + d.aliases.join(", ") : "";
+      return (
+        '<li class="dept-item">' +
+        '<div class="dept-text"><div class="dept-name">' + escHtml(d.name) + "</div>" +
+        '<div class="dept-meta">ID ' + escHtml(d.deptId) + escHtml(aliases) + "</div></div>" +
+        '<button type="button" class="icon-btn-sm" data-dept-edit="' + escHtml(d.deptId) + '" title="Bearbeiten" aria-label="' + escHtml(d.name) + ' bearbeiten">✏️</button>' +
+        '<button type="button" class="icon-btn-sm" data-dept-delete="' + escHtml(d.deptId) + '" title="Löschen" aria-label="' + escHtml(d.name) + ' löschen">🗑️</button>' +
+        "</li>"
+      );
+    }).join("");
+  }
+
 
   // Der Tab "Dienste" ist nur sichtbar, solange ein Kalender verbunden ist.
   function dpUpdateTabVisibility() {
@@ -1833,7 +2034,86 @@
     }
   });
 
+  function dpSaveDepartments(list) {
+    try {
+      localStorage.setItem(DP_DEPTS_KEY, JSON.stringify(list));
+    } catch (e) {
+      showToast(DP.errorMessage("storage"));
+      return false;
+    }
+    dp.departments = list;
+    renderDienste();
+    return true;
+  }
+
   var dpDeptFile = document.getElementById("dpDeptFile");
+  var dpDeptForm = document.getElementById("dpDeptForm");
+  var dpDeptNameEl = document.getElementById("dpDeptName");
+  var dpDeptIdEl = document.getElementById("dpDeptId");
+  var dpDeptAliasesEl = document.getElementById("dpDeptAliases");
+  var dpEditingDeptId = null;
+
+  function dpResetDeptForm() {
+    dpEditingDeptId = null;
+    dpDeptNameEl.value = "";
+    dpDeptIdEl.value = "";
+    dpDeptAliasesEl.value = "";
+    document.getElementById("dpDeptFormTitle").textContent = "+ Dienststelle hinzufügen";
+    document.getElementById("dpDeptSaveBtn").textContent = "Hinzufügen";
+    document.getElementById("dpDeptCancelBtn").hidden = true;
+  }
+
+  document.getElementById("dpDeptSaveBtn").addEventListener("click", function () {
+    var dept;
+    try {
+      dept = DP.makeDepartment(dpDeptNameEl.value, dpDeptIdEl.value, dpDeptAliasesEl.value);
+    } catch (err) {
+      showToast(err.message);
+      return;
+    }
+    var editing = dpEditingDeptId;
+    var clash = dp.departments.some(function (d) { return d.deptId === dept.deptId && d.deptId !== editing; });
+    if (clash && !confirm("Eine Dienststelle mit ID " + dept.deptId + " existiert bereits. Ersetzen?")) return;
+    // Bearbeiteter Eintrag bleibt an seiner Stelle, ein neuer kommt ans Ende
+    var list = [];
+    dp.departments.forEach(function (d) {
+      if (editing && d.deptId === editing) list.push(dept);
+      else if (d.deptId !== dept.deptId) list.push(d);
+    });
+    if (!editing) list.push(dept);
+    if (!dpSaveDepartments(list)) return;
+    dpResetDeptForm();
+    dpDeptForm.open = false;
+    showToast(editing ? "Dienststelle gespeichert." : "Dienststelle hinzugefügt.");
+  });
+
+  document.getElementById("dpDeptCancelBtn").addEventListener("click", function () {
+    dpResetDeptForm();
+    dpDeptForm.open = false;
+  });
+
+  document.getElementById("dpDeptList").addEventListener("click", function (e) {
+    var editBtn = e.target.closest("[data-dept-edit]");
+    var delBtn = e.target.closest("[data-dept-delete]");
+    if (editBtn) {
+      var d = dp.departments.filter(function (x) { return x.deptId === editBtn.dataset.deptEdit; })[0];
+      if (!d) return;
+      dpEditingDeptId = d.deptId;
+      dpDeptNameEl.value = d.name;
+      dpDeptIdEl.value = d.deptId;
+      dpDeptAliasesEl.value = (d.aliases || []).join(", ");
+      document.getElementById("dpDeptFormTitle").textContent = "Dienststelle bearbeiten";
+      document.getElementById("dpDeptSaveBtn").textContent = "Speichern";
+      document.getElementById("dpDeptCancelBtn").hidden = false;
+      dpDeptForm.open = true;
+      dpDeptForm.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    } else if (delBtn) {
+      var d2 = dp.departments.filter(function (x) { return x.deptId === delBtn.dataset.deptDelete; })[0];
+      if (!d2 || !confirm("Dienststelle „" + d2.name + "“ entfernen?")) return;
+      if (dpEditingDeptId === d2.deptId) dpResetDeptForm();
+      if (dpSaveDepartments(dp.departments.filter(function (x) { return x !== d2; }))) showToast("Dienststelle entfernt.");
+    }
+  });
 
   document.getElementById("dpDeptImportBtn").addEventListener("click", function () { dpDeptFile.click(); });
 
@@ -1847,10 +2127,10 @@
     }
     file.text().then(function (text) {
       var depts = DP.parseDepartments(text);
-      localStorage.setItem(DP_DEPTS_KEY, JSON.stringify(depts));
-      dp.departments = depts;
-      renderDienste();
-      showToast(depts.length + " Dienststelle(n) importiert.");
+      // Mit vorhandenen (auch manuell eingetragenen) zusammenführen
+      if (dpSaveDepartments(DP.mergeDepartments(dp.departments, depts))) {
+        showToast(depts.length + " Dienststelle(n) importiert.");
+      }
     }).catch(function (err) {
       showToast("Import fehlgeschlagen: " + (err && err.message ? err.message : "unbekannter Fehler"));
     });
@@ -1862,11 +2142,12 @@
   });
 
   document.getElementById("dpDeptClearBtn").addEventListener("click", function () {
-    if (!confirm("Importierte Dienststellen-Liste entfernen?")) return;
-    dp.departments = [];
+    if (!confirm("Alle Dienststellen entfernen?")) return;
+    dpResetDeptForm();
     try { localStorage.removeItem(DP_DEPTS_KEY); } catch (e) { /* ignorieren */ }
+    dp.departments = [];
     renderDienste();
-    showToast("Dienststellen-Liste entfernt.");
+    showToast("Dienststellen entfernt.");
   });
 
   document.getElementById("dpClearDataBtn").addEventListener("click", function () {
@@ -1907,6 +2188,109 @@
   window.addEventListener("online", dpOnActivate);
   window.addEventListener("offline", renderDienste);
 
+  // ---------- Info-Buttons (Erklärtexte ein-/ausklappen) ----------
+
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest(".info-btn");
+    if (!btn) return;
+    e.preventDefault(); // in <label>: nicht das Eingabefeld/die Checkbox auslösen
+    var target = document.getElementById(btn.getAttribute("aria-controls"));
+    if (!target) return;
+    target.hidden = !target.hidden;
+    btn.setAttribute("aria-expanded", target.hidden ? "false" : "true");
+  });
+
+  dropZone.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); }
+  });
+
+  // ---------- Dienste: Ziehen zum Aktualisieren ----------
+
+  (function setupPullToRefresh() {
+    var view = document.getElementById("diensteView");
+    var pill = document.getElementById("dpPull");
+    var pillText = document.getElementById("dpPullText");
+    var pillIcon = document.getElementById("dpPullIcon");
+    var THRESHOLD = 70;   // Auslösen ab dieser (gedämpften) Zugstrecke in px
+    var MAX = 110;
+    var startY = null, startX = 0, dist = 0;
+
+    function show(d) {
+      var ready = d >= THRESHOLD;
+      pill.classList.add("visible");
+      pill.classList.toggle("ready", ready);
+      pill.style.transform = "translate(-50%, " + Math.round(d - 50) + "px)";
+      pillText.textContent = ready ? "Loslassen zum Aktualisieren" : "Zum Aktualisieren ziehen";
+      pillIcon.textContent = ready ? "↻" : "↓";
+    }
+
+    function hide() {
+      pill.classList.remove("visible", "ready");
+      pill.style.transform = "";
+    }
+
+    function atTop() {
+      return (window.scrollY || document.documentElement.scrollTop || 0) <= 0;
+    }
+
+    view.addEventListener("touchstart", function (e) {
+      startY = null;
+      if (e.touches.length !== 1 || !atTop() || dpRefresher.isRunning() || !dpIsConfigured()) return;
+      startY = e.touches[0].clientY;
+      startX = e.touches[0].clientX;
+      dist = 0;
+    }, { passive: true });
+
+    view.addEventListener("touchmove", function (e) {
+      if (startY === null) return;
+      var dy = e.touches[0].clientY - startY;
+      var dx = Math.abs(e.touches[0].clientX - startX);
+      // nur senkrechtes Ziehen nach unten am Seitenanfang zählt
+      if (dy <= 0 || dx > dy || !atTop()) {
+        if (!atTop() || dx > Math.abs(dy)) startY = null;
+        dist = 0;
+        hide();
+        return;
+      }
+      dist = Math.min(MAX, dy * 0.5);
+      if (dist > 8) show(dist);
+    }, { passive: true });
+
+    function end() {
+      if (startY === null) return;
+      var trigger = dist >= THRESHOLD;
+      startY = null;
+      dist = 0;
+      hide();
+      if (trigger) dpManualRefresh();
+    }
+
+    view.addEventListener("touchend", end);
+    view.addEventListener("touchcancel", function () { startY = null; dist = 0; hide(); });
+  })();
+
+  // ---------- App installieren (Android/Chrome) ----------
+
+  var installPrompt = null;
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    installPrompt = e;
+    document.getElementById("installBtn").hidden = false;
+  });
+
+  document.getElementById("installBtn").addEventListener("click", function () {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    installPrompt.userChoice.finally(function () {
+      installPrompt = null;
+      document.getElementById("installBtn").hidden = true;
+    });
+  });
+
+  window.addEventListener("appinstalled", function () {
+    document.getElementById("installBtn").hidden = true;
+  });
+
   // ---------- Init ----------
 
   dpLoadState();
@@ -1915,7 +2299,7 @@
   loadContacts();
   loadQuickDialBase();
   document.getElementById("quickDialBaseInput").value = state.quickDialBase;
-  quickDialSuffixEl.value = localStorage.getItem(QUICKDIAL_SUFFIX_KEY) || "";
+  try { quickDialSuffixEl.value = localStorage.getItem(QUICKDIAL_SUFFIX_KEY) || ""; } catch (e) { /* ignorieren */ }
 
   renderList();
   // Mit eingerichtetem Dienstplan startet die App direkt bei den Diensten

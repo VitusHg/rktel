@@ -12,7 +12,7 @@ const id = (loc) => (match(loc) || {}).deptId || null;
 
 test("Import: gültige Liste", () => {
   assert.equal(DEPTS.length, 8);
-  assert.deepEqual(DEPTS[0], { name: "MINA", deptId: "57" });
+  assert.deepEqual(DEPTS[0], { name: "MINA", deptId: "57", aliases: [] });
 });
 
 test("Import: deptId als Zahl, ungültige und doppelte Einträge", () => {
@@ -24,7 +24,7 @@ test("Import: deptId als Zahl, ungültige und doppelte Einträge", () => {
     { name: "", deptId: "13" },
     null,
   ] }));
-  assert.deepEqual(r, [{ name: "A", deptId: "12" }]);
+  assert.deepEqual(r, [{ name: "A", deptId: "12", aliases: [] }]);
 });
 
 test("Import: verständliche Fehler", () => {
@@ -84,4 +84,47 @@ test("Safari-Link für iOS und Geräteerkennung", () => {
   assert.equal(DP.isIOS({ userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)" }), true);
   assert.equal(DP.isIOS({ userAgent: "Mozilla/5.0 (Macintosh)", platform: "MacIntel", maxTouchPoints: 5 }), true, "iPad mit Desktop-Modus");
   assert.equal(DP.isIOS({ userAgent: "Mozilla/5.0 (Windows NT 10.0)", platform: "Win32", maxTouchPoints: 0 }), false);
+});
+
+test("Manuelle Eingabe: Prüfung und verständliche Fehler", () => {
+  assert.deepEqual(DP.makeDepartment(" MINA ", " 57 ", "MINA West, mina west, ; Garage Süd"),
+    { name: "MINA", deptId: "57", aliases: ["MINA West", "Garage Süd"] });
+  assert.throws(() => DP.makeDepartment("", "57"), /Dienststellennamen/);
+  assert.throws(() => DP.makeDepartment("MINA", "57a"), /nur aus Ziffern/);
+  assert.throws(() => DP.makeDepartment("MINA", ""), /nur aus Ziffern/);
+});
+
+test("Zusammenführen: gleiche ID wird aktualisiert, Ausnahmeregeln bleiben", () => {
+  const a = [DP.makeDepartment("MINA alt", "57", ["MINA West"])];
+  const r = DP.mergeDepartments(a, [DP.makeDepartment("MINA", "57", ["Garage"]), DP.makeDepartment("Musterdorf", "58")]);
+  assert.deepEqual(r, [
+    { name: "MINA", deptId: "57", aliases: ["MINA West", "Garage"] },
+    { name: "Musterdorf", deptId: "58", aliases: [] },
+  ]);
+  assert.deepEqual(a[0].name, "MINA alt", "Original unverändert");
+});
+
+test("Ausnahmeregeln (Aliase) haben Vorrang vor der automatischen Zuordnung", () => {
+  const m = DP.createDepartmentMatcher([
+    DP.makeDepartment("MINA", "57"),
+    DP.makeDepartment("MINA West", "60"),
+    DP.makeDepartment("Lehrsaal A", "401", "Schulungsraum"),
+    DP.makeDepartment("Hauptwache", "70", "Garage Süd"),
+  ]);
+  const id = (loc) => (m(loc) || {}).deptId || null;
+  assert.equal(id("MINA West"), "60", "ohne Regel: wörtlich passende Dienststelle");
+  assert.equal(id("Schulungsraum"), "401");
+  assert.equal(id("garage süd"), "70", "Groß/Klein egal");
+  assert.equal(id("Garage"), null, "Regel gilt nur für die ganze Bezeichnung");
+
+  const m2 = DP.createDepartmentMatcher([
+    DP.makeDepartment("MINA", "57", "MINA West"),
+    DP.makeDepartment("MINA West", "60"),
+  ]);
+  assert.equal((m2("MINA West") || {}).deptId, "57", "Regel schlägt Namensgleichheit");
+});
+
+test("Import übernimmt Ausnahmeregeln aus dem JSON", () => {
+  const r = DP.parseDepartments(JSON.stringify({ abteilungen: [{ name: "MINA", deptId: "57", aliases: ["MINA West", 5] }] }));
+  assert.deepEqual(r[0].aliases, ["MINA West"]);
 });

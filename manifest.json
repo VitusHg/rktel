@@ -1,7 +1,7 @@
 {
   "name": "RKTel",
   "short_name": "RKTel",
-  "description": "RKTel – lokales Telefonbuch für Einsatzmittel. Alle Daten bleiben auf diesem Gerät.",
+  "description": "RKTel – Telefonbuch für Einsatzmittel mit optionaler Dienstplanansicht. Privates Eigenprojekt.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -27,5 +27,11 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "id": "./",
+  "categories": [
+    "productivity",
+    "utilities"
+  ],
+  "orientation": "any"
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = "rktel-cache-v2";
+const CACHE_NAME = "rktel-cache-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -9,6 +9,8 @@ const ASSETS = [
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png"
 ];
+// Bei langsamer Verbindung nach dieser Zeit auf den Offline-Stand ausweichen
+const NETWORK_TIMEOUT_MS = 4000;
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -24,6 +26,16 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+function fetchWithTimeout(request, ms) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("timeout")), ms);
+    fetch(request).then(
+      (res) => { clearTimeout(timer); resolve(res); },
+      (err) => { clearTimeout(timer); reject(err); }
+    );
+  });
+}
+
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
@@ -32,18 +44,23 @@ self.addEventListener("fetch", (event) => {
   // Netz – private Kalenderdaten landen nie im Service-Worker-Cache.
   if (new URL(request.url).origin !== self.location.origin) return;
   if (request.headers.has("Authorization")) return;
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      const fetchPromise = fetch(request)
-        .then((response) => {
-          if (response && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(() => cached);
-      return cached || fetchPromise;
-    })
-  );
+
+  // Netz zuerst (damit nach einem Update alle Dateien zusammenpassen),
+  // offline oder bei Zeitüberschreitung der zuletzt gespeicherte Stand.
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    try {
+      const response = await fetchWithTimeout(request, NETWORK_TIMEOUT_MS);
+      if (response && response.ok) await cache.put(request, response.clone());
+      return response;
+    } catch (err) {
+      const cached = await cache.match(request, { ignoreSearch: true });
+      if (cached) return cached;
+      if (request.mode === "navigate") {
+        const index = await cache.match("./index.html");
+        if (index) return index;
+      }
+      throw err;
+    }
+  })());
 });
