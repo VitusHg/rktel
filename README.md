@@ -23,6 +23,8 @@ RKTel läuft als Web-App (PWA) im Browser und lässt sich auf iPhone und Android
 
 Nach dem ersten Öffnen funktioniert das Telefonbuch auch ohne Internet.
 
+Beim allerersten Start führt eine kurze **Einrichtung** Schritt für Schritt durch Design-Wahl, Telefonliste, Home-Bildschirm und den optionalen Dienstplan. Mit „Überspringen“ oben rechts lässt sie sich jederzeit beenden und unter *Einstellungen → Über RKTel → „Einführung erneut ansehen“* wieder aufrufen.
+
 ## 2. Telefonbuch befüllen
 
 Die Kontakte kommen aus der Telefonliste des Online Dienstplans.
@@ -47,9 +49,10 @@ Kommt die Meldung „Keine Kontakte erkannt“, stammt das PDF nicht aus diesem 
 - **Suchen** nach Name, Nummer oder Dienststelle; 📞 ruft an, 💬 öffnet WhatsApp.
 - **Kontakt öffnen:** Tippen auf einen Namen öffnet die Kontaktkarte mit Anrufen, WhatsApp und allen Nummern; der grüne Hörer in der Liste ruft direkt an.
 - **Favoriten:** in der Kontaktkarte „Zu Favoriten“ tippen. Favoriten stehen als Kacheln ganz oben.
-- **Bedienung wie bei iOS:** nach rechts wischen führt zur vorherigen Seite zurück; erneutes Tippen auf den aktiven Tab bringt dich zur Startseite des Tabs bzw. ganz nach oben (auf „Kontakte“ danach in die Suche). Formulare schließt du mit „Abbrechen“ oder durch Herunterwischen. Hell- und Dunkelmodus sowie die iOS-Textgröße werden übernommen.
+- **Bedienung wie bei iOS:** nach rechts wischen führt zur vorherigen Seite zurück; erneutes Tippen auf den aktiven Tab bringt dich zur Startseite des Tabs bzw. ganz nach oben (auf „Kontakte“ danach in die Suche). Formulare schließt du mit „Abbrechen“ oder durch Herunterwischen. Die iOS-Textgröße wird übernommen.
+- **Design:** unter *Einstellungen → Darstellung* zwischen **Klassisch** (Standard, dunkel mit roten Akzenten) und dem **iPhone-Design** wählen – wie System, hell oder dunkel. Bedienung und Funktionen sind überall gleich.
 - **Kontakte** lassen sich auch von Hand anlegen, bearbeiten und löschen; *Einstellungen → Daten & Datenschutz* exportiert alles als JSON-Sicherung.
-- *Nebenbei:* Wer Einsatzmittel häufig über eine gemeinsame Vorwahl anruft, kann unter *Einstellungen → Kurzwahl* eine Basisnummer hinterlegen. Dann erscheint neben den Favoriten eine Kachel „Einsatzmittel“, in die nur noch die Endnummer getippt wird (z. B. Basisnummer + 1825).
+- *Nebenbei:* Wer Einsatzmittel häufig über eine gemeinsame Vorwahl anruft, kann unter *Einstellungen → Kurzwahl* eine Basisnummer hinterlegen. Dann erscheint neben den Favoriten eine Kachel „Einsatzmittel“, in die nur noch die Endnummer getippt wird (z. B. Basisnummer + 1825). Die eingetippte Nummer wird nicht gespeichert – nach dem Anruf oder beim Verlassen der App ist das Feld wieder leer.
 
 ## 4. Optional: Dienstplan verbinden
 

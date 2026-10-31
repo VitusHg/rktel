@@ -6,8 +6,16 @@
 <title>RKTel</title>
 <meta name="description" content="RKTel – Telefonbuch für Einsatzmittel mit optionaler Dienstplanansicht. Alle Daten bleiben auf diesem Gerät.">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f7">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000">
+<meta name="theme-color" id="themeColorMeta" content="#191919">
+<script>
+  // Gewählte Darstellung vor dem ersten Zeichnen setzen (kein Aufblitzen)
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem("rktelDarstellungV1"); } catch (e) { /* ignorieren */ }
+    if (["classic", "ios", "ios-light", "ios-dark"].indexOf(t) === -1) t = "classic";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no">
@@ -48,8 +56,38 @@
     color-scheme: light dark;
   }
 
+  /* Darstellung (Einstellungen → Darstellung), gesetzt als data-theme auf <html>:
+     classic = bisheriges Design, ios = iPhone wie System, ios-light, ios-dark */
+  :root[data-theme="ios-light"] { color-scheme: light; }
+
+  :root[data-theme="ios-dark"] {
+    color-scheme: dark;
+    --bg: #000000;
+    --cell: #1c1c1e;
+    --cell-pressed: #3a3a3c;
+    --fill: rgba(118,118,128,.24);
+    --fill2: rgba(118,118,128,.32);
+    --label: #ffffff;
+    --label2: rgba(235,235,245,.6);
+    --label3: rgba(235,235,245,.3);
+    --sep: rgba(84,84,88,.65);
+    --tint: #ff453a;
+    --tint-fill: rgba(255,69,58,.18);
+    --green: #30d158;
+    --green-fill: rgba(48,209,88,.18);
+    --orange: #ff9f0a;
+    --blue: #0a84ff;
+    --gray: #8e8e93;
+    --indigo: #5e5ce6;
+    --warn-fill: rgba(255,159,10,.16);
+    --material: rgba(22,22,24,.78);
+    --glass: rgba(44,44,46,.7);
+    --glass-border: rgba(255,255,255,.12);
+    --shadow: 0 8px 30px rgba(0,0,0,.5);
+  }
+
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root[data-theme="ios"] {
       --bg: #000000;
       --cell: #1c1c1e;
       --cell-pressed: #3a3a3c;
@@ -74,6 +112,34 @@
       --shadow: 0 8px 30px rgba(0,0,0,.5);
     }
   }
+
+  /* Klassisch: das bisherige dunkle Design mit Rot als Akzent */
+  :root[data-theme="classic"] {
+    color-scheme: dark;
+    --bg: #191919;
+    --cell: #252525;
+    --cell-pressed: #383838;
+    --fill: #383838;
+    --fill2: #525252;
+    --label: #efefef;
+    --label2: #a8a8a8;
+    --label3: #686868;
+    --sep: #404040;
+    --tint: #d43333;
+    --tint-fill: rgba(198,40,40,.2);
+    --green: #43a047;
+    --green-fill: #383838;
+    --orange: #ef6c00;
+    --blue: #d43333;
+    --warn-fill: #2f2a1c;
+    --material: #232323;
+    --glass: #2e2e2e;
+    --glass-border: #404040;
+    --shadow: 0 4px 14px rgba(0,0,0,.4);
+    --radius: 8px;
+    --tabbar-h: 58px;
+  }
+
 
   * { box-sizing: border-box; }
 
@@ -314,6 +380,7 @@
 
   .row.has-icon { --sep-inset: 58px; }
   .row.has-avatar { --sep-inset: 68px; }
+  .row.has-avatar .circle-btn + .circle-btn { margin-left: -4px; }
   button.row, a.row, .row.tappable { cursor: pointer; }
   button.row:active, a.row:active, .row.tappable:active { background: var(--cell-pressed); }
 
@@ -879,6 +946,306 @@
   #phoneFields:not(:empty) + .row::before { content: ""; position: absolute; top: 0; right: 0; left: 16px; border-top: .5px solid var(--sep); }
   .phone-input-row + .phone-input-row::before { left: 50px; }
   .row a.row-text { color: inherit; }
+
+  /* ---------- Klassisches Design ---------- */
+  html[data-theme="classic"] body { letter-spacing: 0; }
+
+  /* feste Kopfzeile mit Titel statt großem Titel */
+  html[data-theme="classic"] .nav-bar {
+    min-height: calc(env(safe-area-inset-top, 0px) + 50px);
+    background: var(--material);
+    border-bottom: 1px solid var(--sep);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+  html[data-theme="classic"] .nav-title { opacity: 1; font-size: 1.05rem; font-weight: 700; }
+  html[data-theme="classic"] .large-title { display: none; }
+  html[data-theme="classic"] .search-wrap { top: calc(env(safe-area-inset-top, 0px) + 50px); padding-top: 10px; }
+  html[data-theme="classic"] .section-letter { top: calc(env(safe-area-inset-top, 0px) + 50px + 58px); }
+  html[data-theme="classic"] .dp-status { margin-top: 10px; }
+  html[data-theme="classic"] #einstellungenView > .group-header:first-of-type { margin-top: 18px; }
+
+  html[data-theme="classic"] .glass-btn {
+    height: 36px;
+    min-width: 36px;
+    border: none;
+    border-radius: 5px;
+    background: var(--fill);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    font-size: .92rem;
+  }
+  html[data-theme="classic"] .glass-btn.icon-only { width: 36px; }
+  html[data-theme="classic"] #fabAdd { background: var(--tint); color: #fff; }
+
+  /* Karten und Listen mit Rahmen */
+  html[data-theme="classic"] .group,
+  html[data-theme="classic"] .tile,
+  html[data-theme="classic"] .dp-card,
+  html[data-theme="classic"] .hero-action,
+  html[data-theme="classic"] .dp-banner { border: 1px solid var(--sep); border-radius: 8px; }
+  html[data-theme="classic"] .dp-card { border-left: 3px solid var(--fill2); }
+  html[data-theme="classic"] .dp-card.dp-running { box-shadow: none; border-left-color: var(--tint); }
+  html[data-theme="classic"] .dp-banner.warn { border-color: #b8860b; }
+  html[data-theme="classic"] .dp-banner.error { border-color: var(--tint); }
+  html[data-theme="classic"] .group-header { text-transform: none; font-size: .85rem; font-weight: 700; color: var(--label); letter-spacing: 0; }
+  html[data-theme="classic"] .tiles-header { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--label2); }
+  html[data-theme="classic"] .dp-portal-link { border-radius: 5px; background: var(--fill); color: var(--label); }
+  html[data-theme="classic"] .dp-badge { border-radius: 5px; }
+
+  /* Buttons eckiger, ohne Farbkreise */
+  html[data-theme="classic"] .avatar { background: var(--fill); color: var(--label2); }
+  html[data-theme="classic"] .circle-btn { border-radius: 5px; background: var(--fill); }
+  html[data-theme="classic"] .circle-btn.call { background: var(--fill); color: var(--green); }
+  html[data-theme="classic"] .circle-btn.wa { background: var(--fill); color: #25d366; }
+  html[data-theme="classic"] .tile.quickdial .sq-icon { border-radius: 8px; }
+  html[data-theme="classic"] .tile.quickdial { border-color: var(--tint); }
+  html[data-theme="classic"] .sq-icon { background: var(--fill) !important; color: var(--tint); }
+  html[data-theme="classic"] .switch:checked { background: var(--tint); }
+  html[data-theme="classic"] .search-field { border: 1px solid var(--fill2); border-radius: 8px; background: #2e2e2e; }
+  html[data-theme="classic"] .info-btn { color: var(--label2); }
+  html[data-theme="classic"] .info-btn[aria-expanded="true"] { color: var(--tint); }
+
+  /* Tab-Leiste über die volle Breite am unteren Rand */
+  html[data-theme="classic"] #bottomNav {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    padding: 0 0 env(safe-area-inset-bottom, 0px);
+    border: none;
+    border-top: 1px solid var(--sep);
+    border-radius: 0;
+    background: var(--material);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    transform: none;
+  }
+  html[data-theme="classic"] #bottomNav button { height: var(--tabbar-h); border-radius: 0; color: var(--label3); font-size: .72rem; }
+  html[data-theme="classic"] #bottomNav button.active { background: transparent; color: var(--tint); }
+  html[data-theme="classic"] #toast { border-radius: 5px; border: none; background: var(--fill); -webkit-backdrop-filter: none; backdrop-filter: none; bottom: calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 14px); }
+  html[data-theme="classic"] .dp-pull { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--fill); }
+  html[data-theme="classic"] .page { box-shadow: none; border-left: 1px solid var(--sep); }
+
+  /* Auswahlliste Darstellung */
+  .choice-check { color: var(--tint); font-size: 1.1rem; visibility: hidden; }
+  .row[aria-checked="true"] .choice-check { visibility: visible; }
+
+  /* ---------- Einrichtung beim ersten Start ---------- */
+  .ob {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--label);
+    overflow: hidden;
+    animation: fade-in .35s ease-out;
+  }
+
+  .ob.closing { opacity: 0; transform: scale(1.04); transition: opacity .35s, transform .35s; }
+
+  .ob-skip {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
+    right: 16px;
+    z-index: 2;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 999px;
+    background: var(--fill);
+    color: var(--label2);
+    font-size: .9rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .ob-track { position: relative; flex: 1; }
+
+  .ob-step {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+    padding: calc(env(safe-area-inset-top, 0px) + 64px) 28px 16px;
+    text-align: center;
+    overflow-y: auto;
+    opacity: 0;
+    transform: translateX(40%);
+    pointer-events: none;
+    transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .4s;
+  }
+
+  /* zentriert, bei wenig Platz aber scrollbar statt oben abgeschnitten */
+  .ob-step > * { flex-shrink: 0; }
+  .ob-step > :first-child { margin-top: auto; }
+  .ob-step > :last-child { margin-bottom: auto; }
+  .ob-step.before { transform: translateX(-40%); }
+  .ob-step.active { opacity: 1; transform: none; pointer-events: auto; }
+
+  .ob-step h2 { margin: 0; font-size: 1.75rem; font-weight: 700; line-height: 1.15; }
+  .ob-step p { margin: 0; max-width: 420px; color: var(--label2); font-size: 1rem; line-height: 1.45; }
+  .ob-step .ob-small { font-size: .8rem; color: var(--label3); }
+
+  /* Elemente eines Schritts erscheinen nacheinander */
+  .ob-step .ob-in { opacity: 0; transform: translateY(14px); }
+  .ob-step.active .ob-in { animation: ob-rise .55s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: calc(var(--d, 0) * 90ms + 150ms); }
+
+  @keyframes ob-rise { to { opacity: 1; transform: none; } }
+
+  .ob-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 6px;
+    border-radius: 30px;
+    background: var(--cell);
+    color: var(--tint);
+    font-size: 3.4rem;
+    box-shadow: var(--shadow);
+  }
+
+  .ob-step.active .ob-hero { animation: ob-pop .7s cubic-bezier(.3,1.5,.5,1) both, ob-float 4s ease-in-out .8s infinite; }
+  .ob-hero img { width: 120px; height: 120px; border-radius: 28px; }
+  .ob-hero.ring::before {
+    content: "";
+    position: absolute;
+    inset: -10px;
+    border-radius: 38px;
+    border: 2px solid var(--tint);
+    opacity: 0;
+  }
+
+  .ob-step.active .ob-hero.ring::before { animation: ob-ring 2.4s ease-out 1s infinite; }
+  .ob-step.active .ob-bounce { animation: ob-bounce 1.4s ease-in-out .9s infinite; }
+
+  @keyframes ob-pop { from { opacity: 0; transform: scale(.5) rotate(-8deg); } to { opacity: 1; transform: none; } }
+  @keyframes ob-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  @keyframes ob-ring { 0% { opacity: .7; transform: scale(.92); } 100% { opacity: 0; transform: scale(1.25); } }
+  @keyframes ob-bounce { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(8px); } }
+
+  .ob-list {
+    width: 100%;
+    max-width: 400px;
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+    text-align: left;
+  }
+
+  .ob-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    border-radius: var(--radius);
+    background: var(--cell);
+    font-size: .92rem;
+  }
+
+  .ob-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--tint);
+    color: #fff;
+    font-size: .8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .ob-list .ico { font-size: 1.2rem; color: var(--tint); }
+
+  .ob-action {
+    min-height: 46px;
+    padding: 0 22px;
+    border: none;
+    border-radius: 999px;
+    background: var(--tint-fill);
+    color: var(--tint);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .ob-status { min-height: 1.3em; font-size: .9rem; font-weight: 600; color: var(--green); }
+
+  .ob-themes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; width: 100%; max-width: 400px; }
+
+  .ob-theme {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    background: var(--cell);
+    color: var(--label);
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .2s, transform .2s;
+  }
+
+  .ob-theme[aria-checked="true"] { border-color: var(--tint); transform: scale(1.03); }
+
+  /* Mini-Vorschau des Designs */
+  .ob-preview { display: flex; flex-direction: column; gap: 4px; height: 74px; padding: 8px; border-radius: 10px; }
+  .ob-preview i { display: block; height: 12px; border-radius: 4px; }
+  .ob-preview i:first-child { width: 55%; height: 10px; }
+  .pv-classic { background: #191919; } .pv-classic i { background: #2e2e2e; border: 1px solid #404040; } .pv-classic i:first-child { background: #c62828; border: none; }
+  .pv-light { background: #f2f2f7; } .pv-light i { background: #fff; } .pv-light i:first-child { background: #ff3b30; }
+  .pv-dark { background: #000; } .pv-dark i { background: #1c1c1e; } .pv-dark i:first-child { background: #ff453a; }
+  .pv-auto { background: linear-gradient(135deg, #f2f2f7 50%, #000 50%); } .pv-auto i { background: rgba(127,127,127,.45); } .pv-auto i:first-child { background: #ff3b30; }
+
+  .ob-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 24px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  }
+
+  .ob-dots { display: flex; gap: 8px; }
+  .ob-dots span { width: 7px; height: 7px; border-radius: 4px; background: var(--fill2); transition: width .3s, background .3s; }
+  .ob-dots span.on { width: 22px; background: var(--tint); }
+
+  .ob-next {
+    width: 100%;
+    max-width: 400px;
+    min-height: 52px;
+    border: none;
+    border-radius: 14px;
+    background: var(--tint);
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .15s;
+  }
+
+  .ob-next:active { transform: scale(.98); }
+  html[data-theme="classic"] .ob-next, html[data-theme="classic"] .ob-action { border-radius: 8px; }
+  html[data-theme="classic"] .ob-next { background: #c62828; }
+
+  /* Haken zeichnet sich im letzten Schritt */
+  .ob-check path { stroke-dasharray: 30; stroke-dashoffset: 30; }
+  .ob-step.active .ob-check path { animation: ob-draw .6s ease-out .5s forwards; }
+  @keyframes ob-draw { to { stroke-dashoffset: 0; } }
 </style>
 </head>
 <body>
@@ -904,6 +1271,9 @@
   <symbol id="i-building" viewBox="0 0 24 24"><path fill="currentColor" d="M4 21V6l8-4 8 4v15h-6v-5h-4v5zm4-11h2V8H8zm6 0h2V8h-2zm-6 4h2v-2H8zm6 0h2v-2h-2z"/></symbol>
   <symbol id="i-keypad" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="6" cy="5" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="6" cy="11" r="2"/><circle cx="12" cy="11" r="2"/><circle cx="18" cy="11" r="2"/><circle cx="6" cy="17" r="2"/><circle cx="12" cy="17" r="2"/><circle cx="18" cy="17" r="2"/><circle cx="12" cy="22" r="1.6"/></g></symbol>
   <symbol id="i-lock" viewBox="0 0 24 24"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></symbol>
+  <symbol id="i-brush" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3a9 9 0 0 0 0 18c1.1 0 1.8-.8 1.8-1.8 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-1 .8-1.8 1.8-1.8H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8zM6.5 12a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path class="ico-stroke" d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path class="ico-stroke" d="M12 3v12M8 7l4-4 4 4M7 11H6a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></symbol>
   <symbol id="i-safari" viewBox="0 0 24 24"><circle class="ico-stroke" cx="12" cy="12" r="9" style="stroke-width:1.8"/><path fill="currentColor" d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
 </svg>
 
@@ -930,7 +1300,7 @@
       <div class="favoriten-list">
         <div id="quickDialCard" class="tile quickdial" hidden>
           <span class="sq-icon sq-orange"><svg class="ico"><use href="#i-keypad"/></svg></span>
-          <input id="quickDialSuffix" class="quickdial-suffix" type="text" inputmode="numeric" maxlength="8" placeholder="Einsatzmittel" aria-label="Einsatzmittel-Nummer" autocomplete="off">
+          <input id="quickDialSuffix" class="quickdial-suffix" type="text" inputmode="numeric" maxlength="8" placeholder="Einsatzmittel" aria-label="Einsatzmittel-Nummer" autocomplete="off" autocorrect="off" spellcheck="false" data-form-type="other">
           <div class="tile-actions">
             <a id="quickDialCallBtn" class="circle-btn call disabled" aria-label="Einsatzmittel anrufen"><svg class="ico"><use href="#i-phone"/></svg></a>
           </div>
@@ -985,6 +1355,12 @@
         <span class="sq-icon sq-red"><svg class="ico"><use href="#i-calendar"/></svg></span>
         <span class="row-text row-title">Dienstplan</span>
         <span class="row-value" id="setDienstplanValue"></span>
+        <svg class="ico row-chevron"><use href="#i-chev-r"/></svg>
+      </button>
+      <button class="row has-icon" type="button" data-push="pageDarstellung">
+        <span class="sq-icon sq-indigo"><svg class="ico"><use href="#i-brush"/></svg></span>
+        <span class="row-text row-title">Darstellung</span>
+        <span class="row-value" id="setDarstellungValue"></span>
         <svg class="ico row-chevron"><use href="#i-chev-r"/></svg>
       </button>
       <button class="row has-icon" type="button" data-push="pageKurzwahl">
@@ -1122,6 +1498,23 @@
   <input type="file" id="dpDeptFile" accept="application/json,.json" hidden>
 </div>
 
+<!-- ===== Unterseite: Darstellung ===== -->
+<div class="page" id="pageDarstellung" data-tab="einstellungen" hidden>
+  <header class="nav-bar inline">
+    <div class="nav-side"><button class="glass-btn icon-only" type="button" data-back aria-label="Zurück"><svg class="ico"><use href="#i-chev-l"/></svg></button></div>
+    <div class="nav-title">Darstellung</div>
+    <div class="nav-side right"></div>
+  </header>
+  <div class="group-header">Design</div>
+  <div class="group" role="radiogroup" aria-label="Design" id="themeChoices">
+    <button class="row" type="button" role="radio" data-theme-choice="classic"><span class="row-text"><span class="row-title" style="display:block">Klassisch</span><span class="row-sub" style="display:block">Dunkel mit roten Akzenten</span></span><svg class="ico choice-check"><use href="#i-check"/></svg></button>
+    <button class="row" type="button" role="radio" data-theme-choice="ios"><span class="row-text"><span class="row-title" style="display:block">iPhone – wie System</span><span class="row-sub" style="display:block">Hell oder dunkel nach Geräteeinstellung</span></span><svg class="ico choice-check"><use href="#i-check"/></svg></button>
+    <button class="row" type="button" role="radio" data-theme-choice="ios-light"><span class="row-text row-title">iPhone – Hell</span><svg class="ico choice-check"><use href="#i-check"/></svg></button>
+    <button class="row" type="button" role="radio" data-theme-choice="ios-dark"><span class="row-text row-title">iPhone – Dunkel</span><svg class="ico choice-check"><use href="#i-check"/></svg></button>
+  </div>
+  <p class="group-footer">Bedienung und Funktionen sind in allen Designs gleich.</p>
+</div>
+
 <!-- ===== Unterseite: Kurzwahl ===== -->
 <div class="page" id="pageKurzwahl" data-tab="einstellungen" hidden>
   <header class="nav-bar inline">
@@ -1171,6 +1564,7 @@
   </div>
   <div class="group" style="margin-top:18px">
     <button id="installBtn" class="row action" type="button" hidden><span class="row-text">Als App installieren</span></button>
+    <button id="obReplayBtn" class="row action" type="button"><span class="row-text">Einführung erneut ansehen</span></button>
     <a class="row action" href="https://github.com/VitusHg/rktel#readme" target="_blank" rel="noopener"><span class="row-text">Anleitung (README)</span><svg class="ico row-chevron"><use href="#i-ext"/></svg></a>
   </div>
   <p class="group-footer">Privates Eigenprojekt – kein Angebot des ÖRK und nicht mit dem Online Dienstplan verbunden.</p>
@@ -1216,6 +1610,86 @@
       </div>
     </div>
   </form>
+</div>
+
+
+<!-- ===== Einrichtung beim ersten Start ===== -->
+<div id="onboarding" class="ob" role="dialog" aria-modal="true" aria-label="Einrichtung" hidden>
+  <button type="button" class="ob-skip" id="obSkip">Überspringen</button>
+  <div class="ob-track" id="obTrack">
+    <section class="ob-step" data-step="welcome">
+      <div class="ob-hero ring"><img src="icons/icon-192.png" alt=""></div>
+      <h2 class="ob-in" style="--d:1">Willkommen bei RKTel</h2>
+      <p class="ob-in" style="--d:2">Dein Telefonbuch für den Dienst beim RK Steiermark: Kolleginnen und Kollegen finden, anrufen oder per WhatsApp schreiben – in Sekunden.</p>
+      <p class="ob-in" style="--d:3">In wenigen Schritten ist alles eingerichtet. Deine Daten bleiben dabei nur auf diesem Gerät.</p>
+      <p class="ob-in ob-small" style="--d:4">Privates Eigenprojekt – kein Angebot des ÖRK.</p>
+    </section>
+
+    <section class="ob-step" data-step="design">
+      <h2 class="ob-in" style="--d:0">Wähle dein Design</h2>
+      <p class="ob-in" style="--d:1">Du kannst es jederzeit unter Einstellungen → Darstellung ändern.</p>
+      <div class="ob-themes ob-in" style="--d:2" role="radiogroup" aria-label="Design" id="obThemes">
+        <button type="button" class="ob-theme" role="radio" data-ob-theme="classic"><span class="ob-preview pv-classic"><i></i><i></i><i></i></span>Klassisch</button>
+        <button type="button" class="ob-theme" role="radio" data-ob-theme="ios"><span class="ob-preview pv-auto"><i></i><i></i><i></i></span>iPhone – wie System</button>
+        <button type="button" class="ob-theme" role="radio" data-ob-theme="ios-light"><span class="ob-preview pv-light"><i></i><i></i><i></i></span>iPhone – Hell</button>
+        <button type="button" class="ob-theme" role="radio" data-ob-theme="ios-dark"><span class="ob-preview pv-dark"><i></i><i></i><i></i></span>iPhone – Dunkel</button>
+      </div>
+    </section>
+
+    <section class="ob-step" data-step="import">
+      <div class="ob-hero"><svg class="ico ob-bounce"><use href="#i-import"/></svg></div>
+      <h2 class="ob-in" style="--d:1">Telefonliste holen</h2>
+      <p class="ob-in" style="--d:2">Die Kontakte kommen aus dem Online Dienstplan:</p>
+      <ol class="ob-list">
+        <li class="ob-in" style="--d:3"><span class="ob-num">1</span>Im Online Dienstplan anmelden</li>
+        <li class="ob-in" style="--d:4"><span class="ob-num">2</span>Links Downloads → Mitarbeiter öffnen</li>
+        <li class="ob-in" style="--d:5"><span class="ob-num">3</span>Bei „Telefonnummern“ auf das PDF-Symbol tippen und speichern</li>
+        <li class="ob-in" style="--d:6"><span class="ob-num">4</span>Hier das PDF auswählen</li>
+      </ol>
+      <button type="button" class="ob-action ob-in" style="--d:7" id="obImportBtn">PDF auswählen</button>
+      <div class="ob-status" id="obImportStatus" aria-live="polite"></div>
+    </section>
+
+    <section class="ob-step" data-step="install">
+      <div class="ob-hero"><svg class="ico ob-bounce"><use href="#i-share"/></svg></div>
+      <h2 class="ob-in" style="--d:1">Auf den Home-Bildschirm</h2>
+      <p class="ob-in" style="--d:2">So startet RKTel wie eine normale App – auch offline.</p>
+      <ol class="ob-list" id="obInstallIos">
+        <li class="ob-in" style="--d:3"><span class="ob-num">1</span><span>In Safari auf „Teilen“ <svg class="ico" style="display:inline-block;vertical-align:-3px;color:var(--blue)"><use href="#i-share"/></svg> tippen</span></li>
+        <li class="ob-in" style="--d:4"><span class="ob-num">2</span>„Zum Home-Bildschirm“ wählen</li>
+        <li class="ob-in" style="--d:5"><span class="ob-num">3</span>RKTel künftig über das neue Symbol öffnen</li>
+      </ol>
+      <ol class="ob-list" id="obInstallOther" hidden>
+        <li class="ob-in" style="--d:3"><span class="ob-num">1</span>Im Browsermenü ⋮ „App installieren“ wählen</li>
+        <li class="ob-in" style="--d:4"><span class="ob-num">2</span>RKTel künftig über das neue Symbol öffnen</li>
+      </ol>
+      <button type="button" class="ob-action ob-in" style="--d:6" id="obInstallBtn" hidden>Jetzt installieren</button>
+    </section>
+
+    <section class="ob-step" data-step="dienstplan">
+      <div class="ob-hero"><svg class="ico"><use href="#i-calendar"/></svg></div>
+      <h2 class="ob-in" style="--d:1">Deine Dienste <span style="font-size:.6em;color:var(--label2);font-weight:600;vertical-align:middle">optional</span></h2>
+      <p class="ob-in" style="--d:2">RKTel kann deine nächsten Dienste aus dem Online Dienstplan zeigen – mit Zeit, Ort und den eingeteilten Kollegen samt Anruf- und WhatsApp-Button.</p>
+      <p class="ob-in" style="--d:3">Dafür brauchst du einmalig einen kostenlosen Cloudflare Worker. Die Anleitung steht im README – du kannst das auch später machen.</p>
+      <button type="button" class="ob-action ob-in" style="--d:4" id="obDienstplanBtn">Jetzt einrichten</button>
+    </section>
+
+    <section class="ob-step" data-step="done">
+      <div class="ob-hero"><svg class="ico ob-check" viewBox="0 0 24 24"><path class="ico-stroke" d="M5 12.5l4.5 4.5L19 7.5" style="stroke-width:2.6"/></svg></div>
+      <h2 class="ob-in" style="--d:1">Alles bereit!</h2>
+      <p class="ob-in" style="--d:2">Ein paar Tipps zur Bedienung:</p>
+      <ul class="ob-list">
+        <li class="ob-in" style="--d:3"><svg class="ico"><use href="#i-chev-l"/></svg>Nach rechts wischen führt zurück</li>
+        <li class="ob-in" style="--d:4"><svg class="ico"><use href="#i-person"/></svg>Aktiven Tab erneut tippen: zurück zum Anfang</li>
+        <li class="ob-in" style="--d:5"><svg class="ico"><use href="#i-star-fill"/></svg>Favoriten in der Kontaktkarte festlegen</li>
+        <li class="ob-in" style="--d:6"><svg class="ico"><use href="#i-refresh"/></svg>Dienste: nach unten ziehen zum Aktualisieren</li>
+      </ul>
+    </section>
+  </div>
+  <div class="ob-footer">
+    <div class="ob-dots" id="obDots" aria-hidden="true"></div>
+    <button type="button" class="ob-next" id="obNext">Weiter</button>
+  </div>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
@@ -1384,7 +1858,7 @@
       '<span class="avatar">' + escHtml(initials(c.name)) + "</span>" +
       '<span class="row-text"><span class="row-title" style="display:block">' + escHtml(c.name) + "</span>" +
       (sub ? '<span class="row-sub" style="display:block">' + escHtml(sub) + "</span>" : "") + "</span>" +
-      (phone ? callBtnHtml(phone, c.name) : "") +
+      (phone ? waBtnHtml(phone, c.name) + callBtnHtml(phone, c.name) : "") +
       "</li>"
     );
   }
@@ -1781,10 +2255,23 @@
     if (av) openContact(av.dataset.contact);
   });
 
-  quickDialSuffixEl.addEventListener("input", function () {
-    try { localStorage.setItem(QUICKDIAL_SUFFIX_KEY, quickDialSuffixEl.value.trim()); } catch (e) { /* ignorieren */ }
+  // Die Einsatzmittel-Nummer wird nie gespeichert: nach dem Anruf und wenn
+  // die App in den Hintergrund geht, ist das Feld wieder leer.
+  function clearQuickDial() {
+    quickDialSuffixEl.value = "";
     updateQuickDialCallBtn();
+  }
+
+  quickDialSuffixEl.addEventListener("input", updateQuickDialCallBtn);
+  quickDialCallBtn.addEventListener("click", function () {
+    if (quickDialCallBtn.classList.contains("disabled")) return;
+    quickDialSuffixEl.blur();
+    setTimeout(clearQuickDial, 400); // erst nach dem Start des Anrufs leeren
   });
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") clearQuickDial();
+  });
+  window.addEventListener("pageshow", clearQuickDial); // auch bei Wiederherstellung aus dem Verlauf
 
   document.getElementById("quickDialBaseInput").addEventListener("change", function (e) {
     state.quickDialBase = e.target.value.trim();
@@ -1793,6 +2280,53 @@
     renderSettingsRoot();
     showToast("Gespeichert.");
   });
+
+  // ---------- Darstellung ----------
+
+  var THEME_KEY = "rktelDarstellungV1";
+  var THEME_LABELS = { classic: "Klassisch", ios: "iPhone", "ios-light": "iPhone hell", "ios-dark": "iPhone dunkel" };
+  var darkQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+
+  function currentTheme() {
+    var t = document.documentElement.getAttribute("data-theme");
+    return THEME_LABELS[t] ? t : "classic";
+  }
+
+  // Farbe der Statusleiste/Browserleiste passend zum Design
+  function updateThemeColor() {
+    var t = currentTheme();
+    var dark = t === "ios-dark" || (t === "ios" && darkQuery && darkQuery.matches);
+    var color = t === "classic" ? "#191919" : dark ? "#000000" : "#f2f2f7";
+    document.getElementById("themeColorMeta").setAttribute("content", color);
+  }
+
+  function renderThemeChoices() {
+    var t = currentTheme();
+    document.querySelectorAll("[data-theme-choice]").forEach(function (btn) {
+      btn.setAttribute("aria-checked", btn.dataset.themeChoice === t ? "true" : "false");
+    });
+    var label = document.getElementById("setDarstellungValue");
+    if (label) label.textContent = THEME_LABELS[t];
+  }
+
+  function setTheme(t) {
+    if (!THEME_LABELS[t]) return;
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem(THEME_KEY, t); } catch (e) { /* ignorieren */ }
+    updateThemeColor();
+    renderThemeChoices();
+  }
+
+  document.getElementById("themeChoices").addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-theme-choice]");
+    if (btn) setTheme(btn.dataset.themeChoice);
+  });
+
+  if (darkQuery) {
+    var onSchemeChange = function () { updateThemeColor(); };
+    if (darkQuery.addEventListener) darkQuery.addEventListener("change", onSchemeChange);
+    else if (darkQuery.addListener) darkQuery.addListener(onSchemeChange);
+  }
 
   // ---------- Suche ----------
 
@@ -2173,6 +2707,9 @@
 
     saveContacts();
     renderList();
+
+    // Ergebnis auch für die Einrichtung beim ersten Start melden
+    document.dispatchEvent(new CustomEvent("rktel:imported", { detail: { total: totalImported, added: totalNew, failed: failed } }));
 
     if (!totalImported && !failed) {
       showToast("Keine Kontakte erkannt.");
@@ -2760,6 +3297,8 @@
     e.preventDefault();
     installPrompt = e;
     document.getElementById("installBtn").hidden = false;
+    var obInstall = document.getElementById("obInstallBtn");
+    if (obInstall) obInstall.hidden = false;
   });
 
   document.getElementById("installBtn").addEventListener("click", function () {
@@ -2775,6 +3314,140 @@
     document.getElementById("installBtn").hidden = true;
   });
 
+  // ---------- Einrichtung beim ersten Start ----------
+
+  var OB_KEY = "rktelEinrichtungV1";
+  var obEl = document.getElementById("onboarding");
+  var obSteps = [];
+  var obIndex = 0;
+
+  function isStandalone() {
+    return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+  }
+
+  function obBuild() {
+    // Schritt "Home-Bildschirm" entfällt, wenn RKTel schon als App läuft
+    obSteps = Array.prototype.filter.call(obEl.querySelectorAll(".ob-step"), function (st) {
+      return !(st.dataset.step === "install" && isStandalone());
+    });
+    obEl.querySelectorAll(".ob-step").forEach(function (st) { st.hidden = obSteps.indexOf(st) === -1; });
+    var ios = DP ? DP.isIOS() : /iPhone|iPad|iPod/.test(navigator.userAgent);
+    document.getElementById("obInstallIos").hidden = !ios;
+    document.getElementById("obInstallOther").hidden = ios;
+    document.getElementById("obInstallBtn").hidden = !installPrompt;
+    document.getElementById("obDots").innerHTML = obSteps.map(function () { return "<span></span>"; }).join("");
+    document.getElementById("obImportStatus").textContent = "";
+  }
+
+  function obRenderThemes() {
+    var t = currentTheme();
+    obEl.querySelectorAll("[data-ob-theme]").forEach(function (b) {
+      b.setAttribute("aria-checked", b.dataset.obTheme === t ? "true" : "false");
+    });
+  }
+
+  function obShow(i) {
+    obIndex = Math.max(0, Math.min(obSteps.length - 1, i));
+    obSteps.forEach(function (st, k) {
+      st.classList.toggle("active", k === obIndex);
+      st.classList.toggle("before", k < obIndex);
+      st.setAttribute("aria-hidden", k === obIndex ? "false" : "true");
+    });
+    obEl.querySelectorAll("#obDots span").forEach(function (d, k) { d.classList.toggle("on", k === obIndex); });
+    var last = obIndex === obSteps.length - 1;
+    document.getElementById("obNext").textContent = last ? "Los geht’s" : "Weiter";
+    obRenderThemes();
+  }
+
+  function obOpen() {
+    obBuild();
+    obEl.classList.remove("closing");
+    obEl.hidden = false;
+    obShow(0);
+  }
+
+  function obClose(after) {
+    try { localStorage.setItem(OB_KEY, "1"); } catch (e) { /* ignorieren */ }
+    obEl.classList.add("closing");
+    setTimeout(function () {
+      obEl.hidden = true;
+      obEl.classList.remove("closing");
+      obSteps.forEach(function (st) { st.classList.remove("active", "before"); });
+      if (after) after();
+    }, 350);
+  }
+
+  document.getElementById("obNext").addEventListener("click", function () {
+    if (obIndex >= obSteps.length - 1) obClose();
+    else obShow(obIndex + 1);
+  });
+  document.getElementById("obSkip").addEventListener("click", function () { obClose(); });
+  document.getElementById("obReplayBtn").addEventListener("click", obOpen);
+
+  document.getElementById("obThemes").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-ob-theme]");
+    if (b) { setTheme(b.dataset.obTheme); obRenderThemes(); }
+  });
+
+  document.getElementById("obImportBtn").addEventListener("click", function () { fileInput.click(); });
+
+  document.addEventListener("rktel:imported", function (e) {
+    if (obEl.hidden) return;
+    var d = e.detail || {};
+    var st = document.getElementById("obImportStatus");
+    if (d.total) {
+      st.style.color = "";
+      st.textContent = "✓ " + state.contacts.length + " Kontakte im Telefonbuch";
+    } else {
+      st.style.color = "var(--tint)";
+      st.textContent = d.failed ? "Die Datei konnte nicht gelesen werden." : "Keine Kontakte erkannt – ist es das PDF „Telefonnummern“?";
+    }
+  });
+
+  document.getElementById("obInstallBtn").addEventListener("click", function () {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    installPrompt.userChoice.finally(function () {
+      installPrompt = null;
+      document.getElementById("obInstallBtn").hidden = true;
+      document.getElementById("installBtn").hidden = true;
+    });
+  });
+
+  document.getElementById("obDienstplanBtn").addEventListener("click", function () {
+    obClose(dpOpenSettings);
+  });
+
+  // Wischen zwischen den Schritten
+  (function () {
+    var x0 = null, y0 = 0;
+    var track = document.getElementById("obTrack");
+    track.addEventListener("touchstart", function (e) {
+      x0 = e.touches[0].clientX;
+      y0 = e.touches[0].clientY;
+    }, { passive: true });
+    track.addEventListener("touchend", function (e) {
+      if (x0 === null) return;
+      var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+      x0 = null;
+      if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      if (dx < 0 && obIndex < obSteps.length - 1) obShow(obIndex + 1);
+      if (dx > 0 && obIndex > 0) obShow(obIndex - 1);
+    });
+  })();
+
+  // Nur bei echter Ersteinrichtung zeigen; bestehende Nutzer nicht stören
+  function obMaybeStart() {
+    var seen = null;
+    try { seen = localStorage.getItem(OB_KEY); } catch (e) { seen = "1"; }
+    if (seen) return;
+    if (state.contacts.length || dpIsConfigured()) {
+      try { localStorage.setItem(OB_KEY, "1"); } catch (e) { /* ignorieren */ }
+      return;
+    }
+    obOpen();
+  }
+
   // ---------- Init ----------
 
   dpLoadState();
@@ -2783,7 +3456,12 @@
   loadContacts();
   loadQuickDialBase();
   document.getElementById("quickDialBaseInput").value = state.quickDialBase;
-  try { quickDialSuffixEl.value = localStorage.getItem(QUICKDIAL_SUFFIX_KEY) || ""; } catch (e) { /* ignorieren */ }
+  updateThemeColor();
+  renderThemeChoices();
+
+  // Früher gespeicherte Einsatzmittel-Nummer entfernen
+  try { localStorage.removeItem(QUICKDIAL_SUFFIX_KEY); } catch (e) { /* ignorieren */ }
+  clearQuickDial();
 
   renderList();
   // Mit eingerichtetem Dienstplan startet die App direkt bei den Diensten
@@ -2792,6 +3470,7 @@
   renderDienste();
   renderSettingsRoot();
   dpAutoRefresh();
+  obMaybeStart();
 
   if (window.pdfjsLib) initPdfWorker();
 
