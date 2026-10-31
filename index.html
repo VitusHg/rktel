@@ -809,7 +809,7 @@
     position: fixed;
     left: 50%;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
-    z-index: 10;
+    z-index: 16;
     display: flex;
     gap: 2px;
     width: min(420px, calc(100% - 32px));
@@ -2018,12 +2018,17 @@
     return index > 0 ? document.getElementById(stack[index - 1]) : document.getElementById(TAB_VIEWS[state.activeTab]);
   }
 
+  // Ebene einer Unterseite nach ihrer Position im Stapel (nicht nach der
+  // Reihenfolge im HTML), damit die oberste Seite immer obenauf liegt
+  function stackZ(index) { return 8 + Math.min(index, 6); }
+
   function pushPage(id) {
     var stack = currentStack();
     if (stack[stack.length - 1] === id) return;
     var page = document.getElementById(id);
     var below = layerBelow(stack, stack.length);
     stack.push(id);
+    page.style.zIndex = String(stackZ(stack.length - 1));
     page.hidden = false;
     page.scrollTop = 0;
     page.classList.remove("shown", "covered");
@@ -2078,9 +2083,10 @@
     });
     // Unterseiten gehören zu ihrem Tab und bleiben dort erhalten (wie bei iOS)
     document.querySelectorAll(".page").forEach(function (p) {
-      var mine = p.dataset.tab === tab && stacks[tab].indexOf(p.id) !== -1;
+      var idx = p.dataset.tab === tab ? stacks[tab].indexOf(p.id) : -1;
+      var mine = idx !== -1;
       p.hidden = !mine;
-      if (mine) p.classList.add("shown");
+      if (mine) { p.classList.add("shown"); p.style.zIndex = String(stackZ(idx)); }
     });
     if (tab === "dienste") renderDienste();
     if (tab === "einstellungen") renderSettingsRoot();
@@ -2170,6 +2176,7 @@
           if (p.id === "pageContact" && stacks.kontakte.indexOf("pageContact") === -1) state.openContactId = null;
         } else {
           p.hidden = false;
+          p.style.zIndex = String(stackZ(idx));
           p.classList.add("shown");
           p.classList.toggle("covered", idx < stack.length - 1);
         }
@@ -2876,9 +2883,18 @@
     dpRefresher.refresh(false);
   }
 
+  // Direkt zu Einstellungen → Dienstplan, ohne alte Unterseiten darunter
   function dpOpenSettings() {
     setActiveTab("einstellungen");
-    if (currentStack().indexOf("pageDienstplan") === -1) pushPage("pageDienstplan");
+    var stack = currentStack();
+    if (stack.length === 1 && stack[0] === "pageDienstplan") return;
+    while (stack.length) {
+      var el = document.getElementById(stack.pop());
+      el.hidden = true;
+      el.classList.remove("shown", "covered");
+    }
+    document.getElementById(TAB_VIEWS.einstellungen).classList.remove("covered");
+    pushPage("pageDienstplan");
   }
 
   function dpManualRefresh() {
