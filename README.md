@@ -19,7 +19,7 @@ RKTel läuft als Web-App (PWA) im Browser und lässt sich auf iPhone und Android
 ## 1. App installieren
 
 - **iPhone (Safari):** RKTel öffnen → Teilen-Symbol → „Zum Home-Bildschirm“.
-- **Android (Chrome):** RKTel öffnen → Menü ⋮ → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“. Bietet Chrome die Installation an, erscheint unter *Einstellungen → Über* auch der Button „Als App installieren“.
+- **Android (Chrome):** RKTel öffnen → Menü ⋮ → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“. Bietet Chrome die Installation an, erscheint unter *Einstellungen → Über RKTel* auch „Als App installieren“.
 
 Nach dem ersten Öffnen funktioniert das Telefonbuch auch ohne Internet.
 
@@ -32,7 +32,7 @@ Die Kontakte kommen aus der Telefonliste des Online Dienstplans.
 3. In der Zeile **Telefonnummern** die Liste wählen (z. B. *Dienststelle*) und den Filter (z. B. *alle*). „inkl. E-Mail-Adressen“ ist nicht nötig.
 4. Auf das **PDF-Symbol rechts in der Zeile „Telefonnummern“** tippen (rot markiert) – *nicht* auf das Symbol der Geburtstagsliste darüber.
 5. PDF speichern (iPhone: Teilen → „In Dateien sichern“; Android: Download-Ordner).
-6. In RKTel unter **Einstellungen → Telefonbuch** das PDF auswählen.
+6. In RKTel unter **Einstellungen → Telefonliste importieren** das PDF auswählen.
 
 ![Online Dienstplan: Downloads → Mitarbeiter, PDF-Export der Telefonnummern (rot markiert)](docs/pdf-export-telefonnummern.png)
 
@@ -45,8 +45,10 @@ Kommt die Meldung „Keine Kontakte erkannt“, stammt das PDF nicht aus diesem 
 ## 3. Im Alltag
 
 - **Suchen** nach Name, Nummer oder Dienststelle; 📞 ruft an, 💬 öffnet WhatsApp.
-- **Favoriten:** Kontakt öffnen → Bearbeiten → „Anpinnen“. Angepinnte Kontakte stehen als Kacheln ganz oben.
-- **Kontakte** lassen sich auch von Hand anlegen, bearbeiten und löschen; *Einstellungen → Daten* exportiert alles als JSON-Sicherung.
+- **Kontakt öffnen:** Tippen auf einen Namen öffnet die Kontaktkarte mit Anrufen, WhatsApp und allen Nummern; der grüne Hörer in der Liste ruft direkt an.
+- **Favoriten:** in der Kontaktkarte „Zu Favoriten“ tippen. Favoriten stehen als Kacheln ganz oben.
+- **Bedienung wie bei iOS:** nach rechts wischen führt zur vorherigen Seite zurück; erneutes Tippen auf den aktiven Tab bringt dich zur Startseite des Tabs bzw. ganz nach oben (auf „Kontakte“ danach in die Suche). Formulare schließt du mit „Abbrechen“ oder durch Herunterwischen. Hell- und Dunkelmodus sowie die iOS-Textgröße werden übernommen.
+- **Kontakte** lassen sich auch von Hand anlegen, bearbeiten und löschen; *Einstellungen → Daten & Datenschutz* exportiert alles als JSON-Sicherung.
 - *Nebenbei:* Wer Einsatzmittel häufig über eine gemeinsame Vorwahl anruft, kann unter *Einstellungen → Kurzwahl* eine Basisnummer hinterlegen. Dann erscheint neben den Favoriten eine Kachel „Einsatzmittel“, in die nur noch die Endnummer getippt wird (z. B. Basisnummer + 1825).
 
 ## 4. Optional: Dienstplan verbinden
@@ -95,11 +97,11 @@ Per Kommandozeile geht es alternativ im Ordner `worker/` mit `npx wrangler secre
 
 ### Aktualisieren
 
-Der Dienstplan wird geladen, wenn du die App öffnest oder wieder in den Vordergrund holst (höchstens alle 5 Minuten), mit **„Aktualisieren“** oder indem du auf der Dienste-Seite **von oben nach unten ziehst**. Ohne Verbindung bleibt der zuletzt geladene Stand mit Hinweis sichtbar. Es gibt keine Hintergrundabfragen und keine Benachrichtigungen.
+Der Dienstplan wird geladen, wenn du die App öffnest oder wieder in den Vordergrund holst (höchstens alle 5 Minuten), mit dem **Aktualisieren-Symbol ↻** oben rechts oder indem du auf der Dienste-Seite **von oben nach unten ziehst**. Ohne Verbindung bleibt der zuletzt geladene Stand mit Hinweis sichtbar. Es gibt keine Hintergrundabfragen und keine Benachrichtigungen.
 
 ### Dienststellen & Links ins Online Dienstplan
 
-Damit „Dienstplan ↗“ erscheint, braucht RKTel die **ID** der Dienststelle. Eintragen unter *Einstellungen → Dienstplan → Dienststellen → „+ Dienststelle hinzufügen“*: Name, ID und optional Ausnahmeregeln.
+Damit „Dienstplan ↗“ erscheint, braucht RKTel die **ID** der Dienststelle. Eintragen unter *Einstellungen → Dienstplan → Dienststellen* im Bereich „Neue Dienststelle“: Name, ID und optional Ausnahmeregeln. Zum Bearbeiten oder Löschen eine eingetragene Dienststelle antippen.
 
 **Woher kommt die ID?** Im Online Dienstplan auf der **Startseite** in den **Tagesdienstplan** der Dienststelle klicken und auf die Adresszeile schauen – die Zahl ganz am Ende ist die ID:
 
@@ -146,7 +148,7 @@ Was du tun solltest:
 - Handy mit Code/Biometrie sperren.
 - Telefonlisten-PDFs, JSON-Exporte, den privaten Kalenderlink und den Zugangsschlüssel nicht weitergeben.
 - Interne Vorgaben zum Umgang mit Mitarbeiterdaten gelten auch hier.
-- Bei Gerätewechsel oder Ausscheiden die Daten löschen: *Einstellungen → Dienstplan → „Zugang entfernen“* und *Einstellungen → Daten → „Alle Daten löschen“*. Bei Verdacht, dass Schlüssel oder Kalenderlink in fremde Hände geraten sind, den Schlüssel wechseln und – falls möglich – den Kalenderlink im Online Dienstplan neu erzeugen.
+- Bei Gerätewechsel oder Ausscheiden die Daten löschen: *Einstellungen → Dienstplan → „Zugang entfernen“* und *Einstellungen → Daten & Datenschutz → „Alle Kontakte löschen“*. Bei Verdacht, dass Schlüssel oder Kalenderlink in fremde Hände geraten sind, den Schlüssel wechseln und – falls möglich – den Kalenderlink im Online Dienstplan neu erzeugen.
 
 Hinweis iOS: Daten einer Home-Bildschirm-App bleiben erhalten. Bei reiner Nutzung im Safari-Tab kann iOS lokale Daten nach längerer Nichtnutzung löschen.
 

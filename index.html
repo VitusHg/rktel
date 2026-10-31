@@ -4,680 +4,664 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, interactive-widget=resizes-content">
 <title>RKTel</title>
-<meta name="description" content="RKTel – lokales Telefonbuch für Einsatzmittel. Alle Daten bleiben auf diesem Gerät.">
-<meta name="theme-color" content="#c62828">
+<meta name="description" content="RKTel – Telefonbuch für Einsatzmittel mit optionaler Dienstplanansicht. Alle Daten bleiben auf diesem Gerät.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f7">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="RKTel">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
+  /* ---------- iOS-Systemfarben (hell/dunkel) ---------- */
   :root {
-    --bg: #191919; --bg2: #232323; --panel: #2e2e2e; --panel2: #383838;
-    --card: #252525; --card2: #303030; --border: #404040; --border2: #525252;
-    --text: #efefef; --text2: #a8a8a8; --text3: #686868;
-    --accent: #c62828; --accent2: #a31f1f; --accent-hover: #d43333;
-    --radius: 8px; --radius-sm: 5px;
-    color-scheme: dark;
+    --bg: #f2f2f7;               /* systemGroupedBackground */
+    --cell: #ffffff;             /* secondarySystemGroupedBackground */
+    --cell-pressed: #d1d1d6;
+    --fill: rgba(118,118,128,.12);
+    --fill2: rgba(118,118,128,.2);
+    --label: #000000;
+    --label2: rgba(60,60,67,.6);
+    --label3: rgba(60,60,67,.3);
+    --sep: rgba(60,60,67,.29);
+    --tint: #ff3b30;             /* systemRed – App-Akzent */
+    --tint-fill: rgba(255,59,48,.12);
+    --green: #34c759;
+    --green-fill: rgba(52,199,89,.15);
+    --orange: #ff9500;
+    --blue: #007aff;
+    --gray: #8e8e93;
+    --indigo: #5856d6;
+    --warn-fill: rgba(255,149,0,.14);
+    --material: rgba(249,249,249,.78);
+    --glass: rgba(255,255,255,.72);
+    --glass-border: rgba(255,255,255,.6);
+    --shadow: 0 8px 30px rgba(0,0,0,.12);
+    --radius: 12px;
+    --radius-lg: 22px;
+    --tabbar-h: 62px;
+    color-scheme: light dark;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --cell: #1c1c1e;
+      --cell-pressed: #3a3a3c;
+      --fill: rgba(118,118,128,.24);
+      --fill2: rgba(118,118,128,.32);
+      --label: #ffffff;
+      --label2: rgba(235,235,245,.6);
+      --label3: rgba(235,235,245,.3);
+      --sep: rgba(84,84,88,.65);
+      --tint: #ff453a;
+      --tint-fill: rgba(255,69,58,.18);
+      --green: #30d158;
+      --green-fill: rgba(48,209,88,.18);
+      --orange: #ff9f0a;
+      --blue: #0a84ff;
+      --gray: #8e8e93;
+      --indigo: #5e5ce6;
+      --warn-fill: rgba(255,159,10,.16);
+      --material: rgba(22,22,24,.78);
+      --glass: rgba(44,44,46,.7);
+      --glass-border: rgba(255,255,255,.12);
+      --shadow: 0 8px 30px rgba(0,0,0,.5);
+    }
   }
 
   * { box-sizing: border-box; }
 
   html {
+    /* Systemschrift inkl. Dynamic Type (Textgröße aus den iOS-Einstellungen) */
+    font: -apple-system-body;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    background: var(--bg);
+  }
+
+  @supports not (font: -apple-system-body) {
+    html { font-size: 17px; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--label);
+    font-size: 1rem;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
   }
 
   /* Auf der Dienste-Seite eigenes "Ziehen zum Aktualisieren" statt Browser-Reload (Android) */
   html.dp-ptr-active, html.dp-ptr-active body { overscroll-behavior-y: contain; }
 
-  button, a, input, summary, label { touch-action: manipulation; }
+  button, input, textarea, select { font: inherit; color: inherit; letter-spacing: inherit; }
+  button, a, input, summary, label, .row { touch-action: manipulation; }
+  button { -webkit-appearance: none; appearance: none; }
+  a { color: var(--tint); text-decoration: none; }
+  [hidden] { display: none !important; }
 
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    -webkit-tap-highlight-color: transparent;
-  }
+  .ico { width: 1em; height: 1em; display: block; flex-shrink: 0; }
+  .ico-stroke { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
-  button, input, textarea {
-    font-family: inherit;
-    color: inherit;
-  }
-
-  /* Kein eigener Scroll-Container: die Seite selbst scrollt (nicht #mainContent),
-     damit iOS' "Statusleiste antippen -> nach oben scrollen"-Geste funktioniert. */
-  #app {
-    display: flex;
-    flex-direction: column;
+  /* ---------- Tab-Seiten & Navigationsleiste ---------- */
+  .tab-root {
     min-height: 100vh;
     min-height: 100dvh;
+    padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 32px);
+    transition: transform .35s cubic-bezier(.2,.8,.2,1), filter .35s;
   }
 
-  /* Topbar */
-  #topbar {
+  .tab-root.covered { transform: translateX(-28%); filter: brightness(.88); }
+
+  .nav-bar {
     position: sticky;
     top: 0;
     z-index: 5;
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    padding: calc(env(safe-area-inset-top, 0px) + 10px) 12px 10px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 8px;
+    min-height: calc(env(safe-area-inset-top, 0px) + 52px);
+    padding: env(safe-area-inset-top, 0px) 16px 0;
+    background: transparent;
+    transition: background .2s, box-shadow .2s;
+  }
+
+  .nav-bar.scrolled {
+    background: var(--material);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    box-shadow: 0 .5px 0 var(--sep);
+  }
+
+  .nav-title {
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60vw;
+    opacity: 0;
+    transition: opacity .15s;
+  }
+
+  .nav-bar.scrolled .nav-title, .nav-bar.inline .nav-title { opacity: 1; }
+  .nav-side { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .nav-side.right { justify-content: flex-end; }
+
+  /* Glas-Buttons in der Navigationsleiste (iOS 26) */
+  .glass-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 12px;
+    border: .5px solid var(--glass-border);
+    border-radius: 999px;
+    background: var(--glass);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    box-shadow: 0 2px 10px rgba(0,0,0,.08);
+    color: var(--label);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .glass-btn.icon-only { width: 40px; padding: 0; font-size: 1.15rem; }
+  .glass-btn:active { transform: scale(.94); }
+  .glass-btn:disabled { opacity: .45; }
+  .glass-btn.tinted { color: var(--tint); }
+  .glass-btn .spin { animation: spin .8s linear infinite; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .large-title {
+    margin: 0;
+    padding: 2px 16px 10px;
+    font-size: 2.05rem;
+    font-weight: 700;
+    letter-spacing: .01em;
+    line-height: 1.15;
+  }
+
+  /* ---------- Suche ---------- */
+  .search-wrap {
+    position: sticky;
+    top: calc(env(safe-area-inset-top, 0px) + 52px);
+    z-index: 4;
+    padding: 0 16px 10px;
+    background: var(--bg);
+  }
+
+  .search-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 10px;
+    border-radius: 10px;
+    background: var(--fill);
+    color: var(--label2);
+  }
+
+  .search-field .ico { font-size: 1.05rem; }
+
+  .search-field input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--label);
+    font-size: 1rem;
+    -webkit-appearance: none;
+  }
+
+  .search-field input::placeholder { color: var(--label2); }
+  .search-field input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+  .search-clear {
+    display: none;
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 50%;
+    background: var(--label3);
+    color: var(--bg);
+    font-size: .7rem;
+    line-height: 20px;
+    padding: 0;
+  }
+
+  .search-field.has-text .search-clear { display: block; }
+
+  /* ---------- Gruppierte Listen ---------- */
+  .content { padding: 0 16px; }
+
+  .group-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 22px 16px 7px;
+    font-size: .8rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+    color: var(--label2);
+  }
+
+  .content .group-header { margin-left: 16px; margin-right: 16px; }
+
+  .group {
+    margin: 0 16px;
+    background: var(--cell);
+    border-radius: var(--radius);
+    overflow: hidden;
+    list-style: none;
+    padding: 0;
+  }
+
+  .group + .group { margin-top: 22px; }
+
+  .group-footer {
+    margin: 7px 32px 0;
+    font-size: .8rem;
+    line-height: 1.4;
+    color: var(--label2);
+  }
+
+  .group-footer:empty { display: none; }
+
+  .row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 46px;
+    padding: 6px 16px;
+    background: var(--cell);
+    color: var(--label);
+    width: 100%;
+    border: none;
+    text-align: left;
+    font-size: 1rem;
+  }
+
+  /* Trennlinie ab Textbeginn wie bei iOS */
+  .row + .row::before, .row + .row-form::before, .row-form + .row::before, .row-form + .row-form::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: var(--sep-inset, 16px);
+    border-top: .5px solid var(--sep);
+  }
+
+  .row.has-icon { --sep-inset: 58px; }
+  .row.has-avatar { --sep-inset: 68px; }
+  button.row, a.row, .row.tappable { cursor: pointer; }
+  button.row:active, a.row:active, .row.tappable:active { background: var(--cell-pressed); }
+
+  .row-text { flex: 1; min-width: 0; }
+  .row-title { font-size: 1rem; overflow-wrap: anywhere; }
+  .row-sub { margin-top: 1px; font-size: .82rem; color: var(--label2); overflow-wrap: anywhere; }
+  .row-value { color: var(--label2); font-size: 1rem; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+  .row-chevron { color: var(--label3); font-size: .85rem; }
+  .row.action { color: var(--tint); }
+  .row.action.center { justify-content: center; }
+  .row.destructive { color: var(--tint); }
+  .row.accent { color: var(--blue); }
+
+  /* Farbiges Symbolquadrat wie in den iOS-Einstellungen */
+  .sq-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    color: #fff;
+    font-size: 1.05rem;
     flex-shrink: 0;
   }
 
-  #topbar h1 {
-    margin: 0 0 8px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text);
+  .sq-green { background: #34c759; }
+  .sq-red { background: #ff3b30; }
+  .sq-orange { background: #ff9500; }
+  .sq-blue { background: #007aff; }
+  .sq-gray { background: #8e8e93; }
+  .sq-indigo { background: #5856d6; }
+
+  /* Formularzeilen */
+  .row-form {
+    position: relative;
+    display: block;
+    padding: 8px 16px 10px;
+    background: var(--cell);
   }
 
-  #searchInput {
-    width: 100%;
-    padding: 11px 14px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border2);
-    background: var(--panel);
-    color: var(--text);
-    font-size: 1rem;
-    min-height: 44px;
-  }
-
-  #searchInput::placeholder { color: var(--text3); }
-  #searchInput:focus { outline: none; border-color: var(--accent); }
-
-  /* Kurzwahl + Favoriten: nur oben auf der Seite sichtbar, scrollt mit der Liste weg.
-     Die Suche bleibt dagegen im #topbar fix (siehe dort). */
-  #topArea {
+  .row-form label, .row-label {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 10px 10px 0;
-    margin-bottom: 10px;
-  }
-
-  #topArea[hidden] { display: none; }
-
-  /* Kurzwahl: gleiche Kachel wie ein angepinnter Kontakt, erste Kachel im Raster */
-  .favorit-row[hidden] { display: none; }
-
-  .quickdial-suffix {
-    width: 100%;
-    min-width: 0;
-    padding: 3px 6px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border2);
-    background: var(--panel2);
-    color: var(--text);
-    font-size: 1rem;
-    line-height: 1.2;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .quickdial-suffix::placeholder { color: var(--text3); font-size: 0.8rem; }
-  .quickdial-suffix:focus { outline: none; border-color: var(--accent); }
-
-  .quickdial-call.disabled {
-    opacity: .35;
-    pointer-events: none;
-  }
-
-  /* Favoriten nebeneinander (Grid), ca. 2-3 pro Reihe; bei mehr Einträgen
-     vertikal scrollbar statt in die Höhe zu wachsen. */
-  .favoriten-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+    align-items: center;
     gap: 6px;
-    max-height: 190px;
-    overflow-y: auto;
+    font-size: .8rem;
+    color: var(--label2);
+    margin-bottom: 2px;
   }
 
-  /* Favoriten-Kacheln liegen direkt im Raster neben der Kurzwahl-Kachel */
-  #favoritenItems { display: contents; }
-
-  .favorit-row {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 8px 9px;
-  }
-
-  .favorit-name {
-    font-weight: 700;
-    font-size: 0.82rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .favorit-phone {
-    color: var(--text2);
-    font-size: 0.72rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .favorit-actions { display: flex; gap: 5px; margin-top: 2px; }
-
-  .icon-btn-sm {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
-    border-radius: var(--radius-sm);
-    background: var(--panel2);
-    border: none;
-    text-decoration: none;
-    font-size: 0.85rem;
-    cursor: pointer;
-    color: var(--text);
-  }
-
-  .icon-btn-sm:active { background: var(--border2); }
-
-  /* Main content */
-  #mainContent {
-    flex: 1 1 auto;
-    padding-bottom: 90px;
-  }
-
-  #listContainer { padding: 8px 10px 4px; }
-
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 12px;
-    margin-bottom: 8px;
-  }
-
-  .card-name {
-    font-weight: 700;
-    font-size: 1.02rem;
-    word-break: break-word;
-    margin-bottom: 4px;
-  }
-
-  .toggle-name {
-    cursor: pointer;
-    min-height: 28px;
-    display: flex;
-    align-items: center;
-  }
-
-  .toggle-name:active { color: var(--accent); }
-
-  .phone-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  .row-input, .row-form input:not([type=checkbox]), .row-form textarea {
+    display: block;
+    width: 100%;
     padding: 4px 0;
-  }
-
-  .phone-number {
-    color: var(--text2);
-    font-size: 0.95rem;
-    flex: 1;
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-
-  .card-note {
-    margin-top: 8px;
-    font-size: 0.85rem;
-    color: var(--text3);
-    word-break: break-word;
-  }
-
-  .card-details {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border);
-  }
-
-  .card-details[hidden] { display: none; }
-
-  .quelle-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .quelle-chip {
-    background: var(--panel2);
-    border-radius: var(--radius-sm);
-    padding: 4px 9px;
-    font-size: 0.85rem;
-    color: var(--text);
-  }
-
-  .quelle-chip strong {
-    font-weight: 700;
-    color: var(--accent-hover);
-  }
-
-  .quelle-datum {
-    color: var(--text3);
-    font-size: 0.78rem;
-  }
-
-  .detail-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
-
-  .detail-actions button {
-    flex: 1;
-    font-size: 0.85rem;
-    padding: 9px 10px;
-    min-height: 40px;
-  }
-
-  .icon-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    min-height: 40px;
-    border-radius: var(--radius-sm);
-    background: var(--panel2);
     border: none;
-    text-decoration: none;
-    font-size: 1.1rem;
+    outline: none;
+    background: transparent;
+    color: var(--label);
+    font-size: 1rem;
+    -webkit-appearance: none;
+  }
+
+  .row-form textarea { resize: vertical; min-height: 64px; }
+  .row-input::placeholder, .row-form input::placeholder, .row-form textarea::placeholder { color: var(--label3); }
+
+  /* iOS-Schalter */
+  .switch {
+    position: relative;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 51px;
+    height: 31px;
+    margin: 0;
+    border-radius: 999px;
+    background: var(--fill2);
+    flex-shrink: 0;
     cursor: pointer;
-    color: var(--text);
+    transition: background .2s;
   }
 
-  .icon-btn:active { background: var(--border2); }
-
-  .empty-state {
-    text-align: center;
-    color: var(--text3);
-    padding: 60px 24px;
-    font-size: 0.95rem;
-    line-height: 1.5;
-  }
-
-  /* FAB */
-  .fab {
-    position: fixed;
-    right: 18px;
-    bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 14px);
-    width: 56px;
-    height: 56px;
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 27px;
+    height: 27px;
     border-radius: 50%;
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    font-size: 1.8rem;
-    line-height: 1;
-    box-shadow: 0 4px 14px rgba(0,0,0,.4);
-    cursor: pointer;
-    z-index: 6;
+    background: #fff;
+    box-shadow: 0 3px 8px rgba(0,0,0,.15), 0 1px 1px rgba(0,0,0,.16);
+    transition: transform .2s cubic-bezier(.2,.8,.2,1);
   }
 
-  .fab:active { background: var(--accent2); }
+  .switch:checked { background: var(--green); }
+  .switch:checked::after { transform: translateX(20px); }
 
-  /* Bottom nav */
-  #bottomNav {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    display: flex;
-    background: var(--bg2);
-    border-top: 1px solid var(--border);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    z-index: 6;
-  }
-
-  #bottomNav button {
-    flex: 1;
-    background: none;
-    border: none;
-    padding: 10px 4px 8px;
-    min-height: 56px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    color: var(--text3);
-    font-size: 0.72rem;
-    cursor: pointer;
-  }
-
-  #bottomNav button[hidden] { display: none; }
-  #bottomNav button .nav-icon { font-size: 1.25rem; }
-  #bottomNav button.active { color: var(--accent); }
-
-  /* Settings view */
-  #einstellungenView { padding: calc(env(safe-area-inset-top, 0px) + 14px) 14px 4px; }
-
-  .settings-section {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px;
-    margin-bottom: 14px;
-  }
-
-  .settings-section h2 {
-    margin: 0 0 10px;
-    font-size: 0.95rem;
-    color: var(--text);
-  }
-
-  .settings-section p {
-    margin: 0 0 12px;
-    font-size: 0.85rem;
-    color: var(--text2);
-    line-height: 1.5;
-  }
-
-  .settings-sub {
-    margin: 18px 0 4px;
-    padding-top: 14px;
-    border-top: 1px solid var(--border);
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .settings-section h2 { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .settings-section .field-label { display: flex; align-items: center; gap: 6px; }
-
-  /* Kleiner i-Button: blendet den Erklärtext darunter ein/aus */
+  /* i-Button: Erklärtext ein-/ausblenden */
   .info-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 22px;
     height: 22px;
-    min-width: 22px;
     padding: 0;
-    border-radius: 50%;
-    border: 1px solid var(--border2);
-    background: transparent;
-    color: var(--text2);
-    font: italic 700 0.75rem/1 Georgia, "Times New Roman", serif;
+    border: none;
+    background: none;
+    color: var(--blue);
+    font-size: 1.15rem;
     cursor: pointer;
     position: relative;
+    flex-shrink: 0;
   }
 
-  /* größere Tippfläche ohne größeren Kreis */
   .info-btn::after { content: ""; position: absolute; inset: -11px; }
-  .info-btn[aria-expanded="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .info-btn[aria-expanded="true"] { color: var(--tint); }
 
   .info-text {
-    background: var(--card);
-    border-radius: var(--radius-sm);
-    padding: 10px 12px;
-    margin: 6px 0 10px;
-  }
-
-  .info-text[hidden] { display: none; }
-  .info-text p { margin: 0 0 6px; font-size: 0.8rem; color: var(--text2); line-height: 1.5; }
-  .info-text p:last-child { margin-bottom: 0; }
-  .info-text code { font-size: 0.75rem; overflow-wrap: anywhere; color: var(--text); }
-
-  .settings-status {
-    font-size: 0.78rem;
-    color: var(--text3);
-    margin: 6px 0 10px;
+    margin: 8px 16px 0;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    background: var(--fill);
+    font-size: .82rem;
     line-height: 1.45;
+    color: var(--label2);
   }
 
-  .settings-status:empty { display: none; }
+  .info-text p { margin: 0 0 6px; }
+  .info-text p:last-child { margin-bottom: 0; }
+  .info-text code { font-size: .78rem; overflow-wrap: anywhere; color: var(--label); }
+  .info-text strong { color: var(--label); font-weight: 600; }
 
-  .drop-sub { font-size: 0.75rem; color: var(--text3); }
-
-  .dept-list { list-style: none; margin: 6px 0 8px; padding: 0; }
-  .dept-list:empty { display: none; }
-
-  .dept-item {
-    display: flex;
+  /* ---------- Kontakte ---------- */
+  .avatar {
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #a5abb8, #858994);
+    color: #fff;
+    font-size: .95rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    flex-shrink: 0;
   }
 
-  .dept-item:last-child { border-bottom: none; }
-  .dept-text { flex: 1; min-width: 0; }
-  .dept-name { font-size: 0.9rem; font-weight: 600; word-break: break-word; }
-  .dept-meta { font-size: 0.75rem; color: var(--text3); overflow-wrap: anywhere; }
+  .avatar.lg { width: 96px; height: 96px; font-size: 2.3rem; font-weight: 500; }
 
-  .dept-form {
-    background: var(--card);
-    border-radius: var(--radius-sm);
-    padding: 0 12px;
-    margin-bottom: 10px;
+  .section-letter {
+    position: sticky;
+    top: calc(env(safe-area-inset-top, 0px) + 52px + 48px);
+    z-index: 3;
+    margin: 14px 16px 6px;
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--label2);
   }
 
-  .dept-form[open] { padding-bottom: 12px; }
-
-  .dept-form summary {
+  .circle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--fill);
+    color: var(--green);
+    font-size: 1rem;
+    flex-shrink: 0;
+    border: none;
+    padding: 0;
     cursor: pointer;
-    padding: 12px 0;
-    min-height: 44px;
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: var(--accent-hover);
-    list-style: none;
   }
 
-  .dept-form summary::-webkit-details-marker { display: none; }
+  .circle-btn.call { background: var(--green); color: #fff; }
+  .circle-btn.wa { background: var(--green-fill); color: var(--green); }
+  .circle-btn.disabled { opacity: .35; pointer-events: none; }
+  .circle-btn:active { transform: scale(.92); }
 
-  .settings-optional {
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    color: var(--text2);
-    background: var(--panel2);
-    border-radius: var(--radius-sm);
-    padding: 2px 7px;
-    margin-left: 6px;
-    vertical-align: middle;
-  }
-
-  .settings-hint {
-    font-size: 0.78rem;
-    color: var(--text3);
-    margin: -4px 0 12px;
+  .empty-state {
+    margin: 60px 32px;
+    text-align: center;
+    color: var(--label2);
+    font-size: .95rem;
     line-height: 1.5;
   }
 
-  .settings-separator {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 14px 0;
-  }
+  /* Favoriten + Kurzwahl als Kacheln */
+  #topArea { padding: 4px 16px 0; }
+  .tiles-header { margin: 8px 0 8px; font-size: 1.25rem; font-weight: 700; }
 
-  #dropZone {
-    border: 2px dashed var(--border2);
-    border-radius: var(--radius);
-    padding: 22px 12px;
-    text-align: center;
-    color: var(--text2);
-    font-size: 0.85rem;
-    margin-bottom: 10px;
-    cursor: pointer;
-  }
-
-  #dropZone.dragover {
-    border-color: var(--accent);
-    color: var(--text);
-    background: var(--panel2);
-  }
-
-  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
-
-  .btn-primary, .btn-secondary, .btn-danger {
-    border: none;
-    border-radius: var(--radius-sm);
-    padding: 11px 16px;
-    font-size: 0.92rem;
-    font-weight: 600;
-    cursor: pointer;
-    min-height: 44px;
-  }
-
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:active { background: var(--accent2); }
-
-  .btn-secondary { background: var(--panel2); color: var(--text); }
-  .btn-secondary:active { background: var(--border2); }
-
-  .btn-danger { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
-  .btn-danger:active { background: var(--accent); color: #fff; }
-
-  .about-line { font-size: 0.8rem; color: var(--text3); margin-top: 4px; }
-  .about-line a { color: var(--accent-hover); }
-
-  /* Bottom sheet dialog */
-  .sheet-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.55);
-    z-index: 20;
-    display: flex;
-    align-items: flex-end;
-  }
-
-  .sheet-overlay[hidden] { display: none; }
-
-  .bottom-sheet {
-    background: var(--panel);
-    width: 100%;
-    max-height: 88vh;
-    overflow-y: auto;
-    border-radius: 16px 16px 0 0;
-    padding: 10px 18px calc(20px + env(safe-area-inset-bottom, 0px));
-    animation: sheet-in .18s ease-out;
-  }
-
-  @keyframes sheet-in {
-    from { transform: translateY(16px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-
-  .sheet-handle {
-    width: 40px;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--border2);
-    margin: 6px auto 14px;
-  }
-
-  #sheetTitle { margin: 0 0 14px; font-size: 1.05rem; }
-
-  .field-label {
-    display: block;
-    font-size: 0.82rem;
-    color: var(--text2);
-    margin: 12px 0 6px;
-  }
-
-  .field-input, .field-textarea {
-    width: 100%;
-    padding: 11px 12px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border2);
-    background: var(--card);
-    color: var(--text);
-    font-size: 1rem;
-    min-height: 44px;
-  }
-
-  .field-input:focus, .field-textarea:focus { outline: none; border-color: var(--accent); }
-
-  .field-textarea { resize: vertical; min-height: 60px; }
-
-  .field-checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 16px 0 4px;
-    font-size: 0.88rem;
-    color: var(--text);
-  }
-
-  .field-checkbox-label input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    accent-color: var(--accent);
-  }
-
-  .phone-input-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-    align-items: center;
-  }
-
-  .phone-input-row .field-input { flex: 1; }
-
-  .remove-phone-btn {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    border-radius: var(--radius-sm);
-    background: var(--panel2);
-    border: none;
-    color: var(--text2);
-    font-size: 1rem;
-    cursor: pointer;
-  }
-
-  .sheet-actions {
-    display: flex;
+  .favoriten-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
     gap: 10px;
-    margin-top: 18px;
   }
 
-  .sheet-actions button { flex: 1; }
+  #favoritenItems { display: contents; }
 
-  #toast {
-    position: fixed;
-    left: 50%;
-    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
-    transform: translateX(-50%);
-    background: var(--panel2);
-    color: var(--text);
-    padding: 10px 16px;
-    border-radius: var(--radius-sm);
-    font-size: 0.85rem;
-    box-shadow: 0 4px 14px rgba(0,0,0,.4);
-    z-index: 30;
-    max-width: 88%;
+  .tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 12px 8px 10px;
+    border-radius: 16px;
+    background: var(--cell);
     text-align: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .2s;
   }
 
-  #toast.show { opacity: 1; }
+  .tile .avatar { width: 48px; height: 48px; font-size: 1.1rem; cursor: pointer; }
+  .tile-name { width: 100%; font-size: .82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile-actions { display: flex; gap: 8px; }
+  .tile-actions .circle-btn { width: 32px; height: 32px; font-size: .9rem; }
+  .tile.quickdial .sq-icon { width: 48px; height: 48px; border-radius: 50%; font-size: 1.35rem; }
 
-  /* Dienstplan: Ziehen zum Aktualisieren */
+  .quickdial-suffix {
+    width: 100%;
+    padding: 4px 6px;
+    border: none;
+    border-radius: 8px;
+    background: var(--fill);
+    color: var(--label);
+    font-size: 1rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    outline: none;
+  }
+
+  .quickdial-suffix::placeholder { color: var(--label3); font-size: .82rem; }
+
+  /* Kontakt-Detailseite */
+  .contact-hero { display: flex; flex-direction: column; align-items: center; padding: 8px 16px 18px; text-align: center; }
+  .contact-hero h2 { margin: 12px 0 2px; font-size: 1.75rem; font-weight: 600; overflow-wrap: anywhere; }
+  .contact-hero .row-sub { font-size: .95rem; }
+
+  .hero-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 0 16px;
+  }
+
+  .hero-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 4px 8px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--cell);
+    color: var(--tint);
+    font-size: .72rem;
+    cursor: pointer;
+  }
+
+  .hero-action .ico { font-size: 1.3rem; }
+  .hero-action.disabled { opacity: .4; pointer-events: none; }
+  .hero-action:active { background: var(--cell-pressed); }
+
+  /* ---------- Dienste ---------- */
+  .dp-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 18px;
+    margin: -4px 16px 10px;
+    font-size: .8rem;
+    color: var(--label2);
+  }
+
+  .dp-banner {
+    margin: 0 16px 14px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    background: var(--cell);
+    font-size: .88rem;
+    line-height: 1.45;
+  }
+
+  .dp-banner.warn { background: var(--warn-fill); }
+  .dp-banner.error { background: var(--tint-fill); }
+  .dp-banner strong { font-weight: 600; }
+  .dp-banner .inline-btn { display: inline-block; margin-top: 8px; padding: 0; border: none; background: none; color: var(--tint); font-weight: 600; cursor: pointer; }
+
+  #dpList { padding: 0 16px; }
+
+  .dp-card {
+    margin-bottom: 12px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: var(--cell);
+  }
+
+  .dp-card.dp-running { box-shadow: inset 0 0 0 2px var(--tint); }
+  .dp-card.dp-cancelled { opacity: .55; }
+  .dp-card.dp-cancelled .dp-title { text-decoration: line-through; }
+
+  .dp-date { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: .82rem; color: var(--label2); }
+
+  .dp-badge {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--fill);
+    color: var(--label);
+    font-size: .72rem;
+    font-weight: 600;
+  }
+
+  .dp-running .dp-badge { background: var(--tint); color: #fff; }
+  .dp-time { margin-top: 4px; font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .dp-title { font-size: 1rem; font-weight: 600; }
+
+  .dp-loc-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .dp-loc { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; font-size: .9rem; color: var(--label2); overflow-wrap: anywhere; }
+  .dp-loc .ico { color: var(--tint); font-size: .95rem; }
+  .dp-note { margin-top: 4px; font-size: .85rem; color: var(--label2); white-space: pre-line; }
+
+  .dp-portal-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: var(--tint-fill);
+    color: var(--tint);
+    font-size: .82rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .dp-portal-link .ico { font-size: .8rem; }
+
+  .dp-colleagues { margin: 12px -16px -14px; border-top: .5px solid var(--sep); }
+  .dp-colleague { position: relative; display: flex; align-items: center; gap: 10px; padding: 8px 16px; }
+  .dp-colleague + .dp-colleague::before { content: ""; position: absolute; top: 0; left: 66px; right: 0; border-top: .5px solid var(--sep); }
+  .dp-colleague .avatar { width: 38px; height: 38px; font-size: .85rem; }
+  .dp-colleague .avatar.unknown { background: var(--fill2); color: var(--label2); }
+  .dp-colleague-text { flex: 1; min-width: 0; }
+  .dp-colleague-name { font-size: .95rem; font-weight: 500; overflow-wrap: anywhere; }
+  .dp-colleague-sub { font-size: .78rem; color: var(--label2); overflow-wrap: anywhere; }
+
+  /* Ziehen zum Aktualisieren */
   .dp-pull {
     position: fixed;
     left: 50%;
@@ -686,13 +670,16 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 7px 14px;
+    padding: 8px 14px;
+    border: .5px solid var(--glass-border);
     border-radius: 999px;
-    background: var(--panel2);
-    color: var(--text);
-    font-size: 0.8rem;
+    background: var(--glass);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    color: var(--label);
+    font-size: .82rem;
     white-space: nowrap;
-    box-shadow: 0 4px 14px rgba(0,0,0,.4);
+    box-shadow: var(--shadow);
     pointer-events: none;
     opacity: 0;
     transform: translate(-50%, -60px);
@@ -700,369 +687,538 @@
   }
 
   .dp-pull.visible { opacity: 1; }
-  .dp-pull.ready { background: var(--accent); color: #fff; }
-
+  .dp-pull.ready { color: var(--tint); }
   .dp-pull-icon { display: inline-block; width: 1em; text-align: center; }
 
-  /* Dienstplan */
-  #diensteView { padding: calc(env(safe-area-inset-top, 0px) + 14px) 10px 4px; }
+  /* ---------- Einstellungen ---------- */
+  .dept-meta { font-size: .78rem; color: var(--label2); overflow-wrap: anywhere; }
+  .about-hero { display: flex; flex-direction: column; align-items: center; padding: 12px 16px 6px; text-align: center; }
+  .about-hero img { width: 84px; height: 84px; border-radius: 19px; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+  .about-hero h2 { margin: 12px 0 2px; font-size: 1.4rem; }
+  .about-hero p { margin: 0; color: var(--label2); font-size: .88rem; }
+  .drop-active { box-shadow: inset 0 0 0 2px var(--tint); }
 
-  .dp-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 0 4px;
-    margin-bottom: 6px;
+  /* ---------- Unterseiten (von rechts hereingeschoben) ---------- */
+  .page {
+    position: fixed;
+    inset: 0;
+    z-index: 8;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    background: var(--bg);
+    padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 32px);
+    transform: translateX(100%);
+    transition: transform .35s cubic-bezier(.2,.8,.2,1), filter .35s;
+    box-shadow: -12px 0 30px rgba(0,0,0,.12);
   }
 
-  .dp-header h2 { margin: 0; font-size: 1.1rem; }
+  .page.shown { transform: translateX(0); }
+  .page.covered { transform: translateX(-28%); filter: brightness(.88); }
+  .page.dragging, .tab-root.dragging { transition: none; }
+  .page .nav-bar { background: var(--bg); }
+  .page .nav-bar.scrolled { background: var(--material); }
+  .page-title { margin: 0 16px 6px; font-size: 1.6rem; font-weight: 700; }
 
-  .dp-refresh { padding: 8px 12px; min-height: 40px; font-size: 0.85rem; }
-  .dp-refresh:disabled { opacity: .5; }
-
-  .dp-status {
+  /* ---------- Tab-Leiste (schwebende Glas-Kapsel) ---------- */
+  #bottomNav {
+    position: fixed;
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+    z-index: 10;
     display: flex;
+    gap: 2px;
+    width: min(420px, calc(100% - 32px));
+    padding: 4px;
+    border: .5px solid var(--glass-border);
+    border-radius: 999px;
+    background: var(--glass);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    backdrop-filter: saturate(180%) blur(24px);
+    box-shadow: var(--shadow);
+    transform: translateX(-50%);
+  }
+
+  #bottomNav button {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    height: calc(var(--tabbar-h) - 10px);
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--label);
+    font-size: .64rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+  }
+
+  #bottomNav button .ico { font-size: 1.45rem; }
+  #bottomNav button.active { color: var(--tint); background: var(--fill); }
+
+  /* ---------- Sheet (Kontakt bearbeiten) ---------- */
+  .sheet-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: flex-end;
+    background: rgba(0,0,0,.35);
+    animation: fade-in .25s ease-out;
+  }
+
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+  .bottom-sheet {
+    width: 100%;
+    max-height: calc(100% - env(safe-area-inset-top, 0px) - 12px);
+    height: calc(100% - env(safe-area-inset-top, 0px) - 12px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 16px 16px 0 0;
+    background: var(--bg);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+    animation: sheet-in .35s cubic-bezier(.2,.8,.2,1);
+    transition: transform .3s cubic-bezier(.2,.8,.2,1);
+  }
+
+  .bottom-sheet.dragging { transition: none; }
+
+  @keyframes sheet-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  .sheet-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 8px;
-    min-height: 20px;
-    padding: 0 4px;
-    margin-bottom: 10px;
-    font-size: 0.78rem;
-    color: var(--text3);
+    padding: 8px 16px 10px;
+    background: var(--bg);
+    touch-action: none;
   }
 
-  .dp-spinner {
-    width: 14px;
-    height: 14px;
-    border: 2px solid var(--border2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: dp-spin .8s linear infinite;
-    flex-shrink: 0;
-  }
+  .sheet-handle { grid-column: 1 / -1; justify-self: center; width: 36px; height: 5px; margin-bottom: 8px; border-radius: 3px; background: var(--label3); }
+  #sheetTitle { margin: 0; font-size: 1rem; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sheet-head .glass-btn:last-child { justify-self: end; }
+  .sheet-head .glass-btn:first-of-type { justify-self: start; }
 
-  .dp-spinner[hidden] { display: none; }
+  .phone-input-row { display: flex; align-items: center; gap: 12px; }
+  .phone-input-row input { flex: 1; }
 
-  @keyframes dp-spin { to { transform: rotate(360deg); } }
-
-  .dp-banner {
-    border-radius: var(--radius);
-    padding: 10px 12px;
-    margin-bottom: 10px;
-    font-size: 0.85rem;
-    line-height: 1.45;
-    background: var(--panel);
-    border: 1px solid var(--border2);
-    color: var(--text);
-  }
-
-  .dp-banner[hidden] { display: none; }
-  .dp-banner.warn { border-color: #b8860b; background: #2f2a1c; }
-  .dp-banner.error { border-color: var(--accent); background: #2f1f1f; }
-  .dp-banner button { margin-top: 8px; }
-
-  .dp-card { border-left: 3px solid var(--border2); }
-  .dp-card.dp-running { border-left-color: var(--accent); }
-  .dp-card.dp-cancelled { opacity: .55; }
-  .dp-card.dp-cancelled .card-name { text-decoration: line-through; }
-
-  .dp-date {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.8rem;
-    color: var(--text2);
-    margin-bottom: 4px;
-  }
-
-  .dp-badge {
-    background: var(--panel2);
-    border-radius: var(--radius-sm);
-    padding: 1px 7px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  .dp-running .dp-badge { background: var(--accent); color: #fff; }
-
-  .dp-time {
-    font-size: 1.02rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    margin-bottom: 2px;
-  }
-
-  .dp-card .card-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 0; }
-
-  .dp-loc, .dp-note {
-    margin-top: 4px;
-    font-size: 0.85rem;
-    color: var(--text2);
-    word-break: break-word;
-  }
-
-  .dp-note { white-space: pre-line; color: var(--text3); }
-
-  .dp-loc-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 4px;
-  }
-
-  .dp-loc-row .dp-loc { flex: 1; min-width: 0; margin-top: 0; }
-
-  .dp-portal-link {
-    flex-shrink: 0;
+  .remove-phone-btn {
     display: inline-flex;
     align-items: center;
-    min-height: 32px;
-    padding: 5px 10px;
-    border-radius: var(--radius-sm);
-    background: var(--panel2);
-    color: var(--text);
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-decoration: none;
-    white-space: nowrap;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--tint);
+    color: #fff;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
   }
 
-  .dp-portal-link:active { background: var(--border2); }
-
-  .dp-colleagues {
-    margin-top: 10px;
-    padding-top: 6px;
-    border-top: 1px solid var(--border);
-  }
-
-  .dp-colleague {
-    display: flex;
+  .add-row .plus-dot {
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px 0;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--green);
+    color: #fff;
+    font-size: 1rem;
   }
 
-  .dp-colleague-text { flex: 1; min-width: 0; }
-
-  .dp-colleague-name {
-    font-size: 0.92rem;
-    font-weight: 600;
-    word-break: break-word;
+  /* ---------- Hinweis-Banner (Toast) ---------- */
+  #toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 22px);
+    z-index: 30;
+    max-width: calc(100% - 40px);
+    padding: 11px 18px;
+    border: .5px solid var(--glass-border);
+    border-radius: 999px;
+    background: var(--glass);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    backdrop-filter: saturate(180%) blur(24px);
+    box-shadow: var(--shadow);
+    color: var(--label);
+    font-size: .88rem;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 10px);
+    transition: opacity .2s, transform .25s cubic-bezier(.2,.8,.2,1);
   }
 
-  .dp-colleague-sub {
-    font-size: 0.78rem;
-    color: var(--text3);
-    overflow-wrap: anywhere;
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
   }
 
   @media (min-width: 720px) {
-    #app { max-width: 640px; margin: 0 auto; }
-    #bottomNav { max-width: 640px; margin: 0 auto; }
-    .fab { right: calc(50% - 320px + 18px); }
+    .tab-root, .page { max-width: 640px; margin: 0 auto; }
+    .page { left: 50%; right: auto; width: 640px; margin-left: -320px; }
   }
+
+  .glass-btn.info-btn { width: 40px; height: 40px; border: .5px solid var(--glass-border); background: var(--glass); color: var(--blue); font-size: 1.2rem; }
+  #phoneFields:not(:empty) + .row::before { content: ""; position: absolute; top: 0; right: 0; left: 16px; border-top: .5px solid var(--sep); }
+  .phone-input-row + .phone-input-row::before { left: 50px; }
+  .row a.row-text { color: inherit; }
 </style>
 </head>
 <body>
 
+<!-- Symbole (an SF Symbols angelehnt) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-phone" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25c1.1.37 2.3.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3C6.5 3 2 6.9 2 11.7c0 2.6 1.3 4.9 3.4 6.5l-.9 3.3 3.9-1.9c1.1.4 2.3.6 3.6.6 5.5 0 10-3.9 10-8.7S17.5 3 12 3z"/></symbol>
+  <symbol id="i-person" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4a3.6 3.6 0 1 1 0 7.2A3.6 3.6 0 0 1 12 6zm0 14a8 8 0 0 1-6.1-2.8c1-1.8 3.4-3 6.1-3s5.1 1.2 6.1 3A8 8 0 0 1 12 20z"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><path fill="currentColor" d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2zM5 9v11h14V9zm2 2h3v3H7z"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path fill="currentColor" d="M19.14 12.94a7.1 7.1 0 0 0 0-1.88l2.03-1.58a.49.49 0 0 0 .12-.62l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.4h-3.84a.48.48 0 0 0-.48.4l-.36 2.54a7.3 7.3 0 0 0-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87a.48.48 0 0 0 .12.62l2.03 1.58a7.3 7.3 0 0 0 0 1.88l-2.03 1.58a.49.49 0 0 0-.12.62l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.04.7 1.62.94l.36 2.54c.05.24.24.4.48.4h3.84c.24 0 .44-.16.48-.4l.36-2.54a7 7 0 0 0 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.62zM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path class="ico-stroke" d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 24 24"><path class="ico-stroke" d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-chev-l" viewBox="0 0 24 24"><path class="ico-stroke" d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path class="ico-stroke" d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle class="ico-stroke" cx="10.5" cy="10.5" r="6.5"/><path class="ico-stroke" d="M15.5 15.5L20 20"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path class="ico-stroke" d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.8z"/></symbol>
+  <symbol id="i-star-fill" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.8z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path class="ico-stroke" d="M7 17L17 7M9 7h8v8"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle class="ico-stroke" cx="12" cy="12" r="9" style="stroke-width:1.8"/><path class="ico-stroke" d="M12 11v6" style="stroke-width:2"/><circle cx="12" cy="7.6" r="1.25" fill="currentColor"/></symbol>
+  <symbol id="i-import" viewBox="0 0 24 24"><path class="ico-stroke" d="M12 3v12m-4.5-4.5L12 15l4.5-4.5M5 20h14"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><path fill="currentColor" d="M4 21V6l8-4 8 4v15h-6v-5h-4v5zm4-11h2V8H8zm6 0h2V8h-2zm-6 4h2v-2H8zm6 0h2v-2h-2z"/></symbol>
+  <symbol id="i-keypad" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="6" cy="5" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="6" cy="11" r="2"/><circle cx="12" cy="11" r="2"/><circle cx="18" cy="11" r="2"/><circle cx="6" cy="17" r="2"/><circle cx="12" cy="17" r="2"/><circle cx="18" cy="17" r="2"/><circle cx="12" cy="22" r="1.6"/></g></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V7a3 3 0 0 0-6 0z"/></symbol>
+  <symbol id="i-safari" viewBox="0 0 24 24"><circle class="ico-stroke" cx="12" cy="12" r="9" style="stroke-width:1.8"/><path fill="currentColor" d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+</svg>
+
 <div id="app">
-  <header id="topbar">
-    <h1>RKTel</h1>
-    <input id="searchInput" type="search" inputmode="search" placeholder="Suche nach Name, Nummer, Dienststelle…" autocomplete="off">
-  </header>
-
-  <main id="mainContent">
-    <div id="kontakteView">
-      <div id="topArea" hidden>
-        <div class="favoriten-list">
-          <div id="quickDialCard" class="favorit-row" hidden>
-            <div class="favorit-name">Einsatzmittel</div>
-            <input id="quickDialSuffix" class="quickdial-suffix" type="text" inputmode="numeric" maxlength="8" placeholder="Nr." aria-label="Einsatzmittel-Nummer" autocomplete="off">
-            <div class="favorit-actions">
-              <a id="quickDialCallBtn" class="icon-btn-sm quickdial-call disabled" title="Einsatzmittel anrufen">📞</a>
-            </div>
-          </div>
-          <div id="favoritenItems"></div>
-        </div>
+  <!-- ===== Tab: Kontakte ===== -->
+  <section class="tab-root" id="kontakteView" data-tab="kontakte">
+    <header class="nav-bar">
+      <div class="nav-side"></div>
+      <div class="nav-title">Kontakte</div>
+      <div class="nav-side right">
+        <button id="fabAdd" class="glass-btn icon-only" type="button" aria-label="Kontakt hinzufügen"><svg class="ico"><use href="#i-plus"/></svg></button>
       </div>
-      <div id="listContainer"></div>
+    </header>
+    <h1 class="large-title">Kontakte</h1>
+    <div class="search-wrap">
+      <label class="search-field" id="searchField">
+        <svg class="ico"><use href="#i-search"/></svg>
+        <input id="searchInput" type="search" inputmode="search" enterkeyhint="search" placeholder="Name, Nummer, Dienststelle" autocomplete="off" aria-label="Kontakte durchsuchen">
+        <button type="button" class="search-clear" id="searchClear" aria-label="Suche löschen">✕</button>
+      </label>
     </div>
-
-    <div id="diensteView" hidden>
-      <div id="dpPull" class="dp-pull" aria-hidden="true"><span class="dp-pull-icon" id="dpPullIcon">↓</span><span id="dpPullText">Zum Aktualisieren ziehen</span></div>
-      <div class="dp-header">
-        <h2>Dienstplan</h2>
-        <button id="dpRefreshBtn" class="btn-secondary dp-refresh" type="button">↻ Aktualisieren</button>
-      </div>
-      <div class="dp-status" aria-live="polite">
-        <span id="dpSpinner" class="dp-spinner" hidden></span>
-        <span id="dpStatusText"></span>
-      </div>
-      <div id="dpBanner" class="dp-banner" role="status" hidden></div>
-      <div id="dpList"></div>
-    </div>
-
-    <div id="einstellungenView" hidden>
-      <section class="settings-section">
-        <h2>📞 Telefonbuch <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoImport" aria-label="Info zum PDF-Import">i</button></h2>
-        <div class="settings-hint info-text" id="infoImport" hidden>
-          <p>Telefonliste im Online Dienstplan unter <strong>Downloads → Mitarbeiter → Telefonnummern</strong> als PDF exportieren und hier importieren. Mehrere Listen sind möglich – Kontakte werden anhand des Namens zusammengeführt.</p>
-          <p>Qualifikationszusätze in Klammern und E-Mail-Adressen werden verworfen, Dienststelle und Erstellungsdatum automatisch erkannt. Die Verarbeitung erfolgt vollständig auf diesem Gerät – nichts wird hochgeladen.</p>
-        </div>
-        <div id="dropZone" role="button" tabindex="0">PDF-Telefonliste auswählen<br><span class="drop-sub">oder hierher ziehen</span></div>
-        <input type="file" id="fileInput" accept="application/pdf" multiple hidden>
-      </section>
-
-      <section class="settings-section">
-        <h2>🗓️ Dienstplan <span class="settings-optional">optional</span> <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoDienstplan" aria-label="Info zum Dienstplan">i</button></h2>
-        <div class="settings-hint info-text" id="infoDienstplan" hidden>
-          <p>Zusatzfunktion: zeigt deine kommenden Dienste aus dem Online Dienstplan samt eingeteilten Kollegen mit Anruf- und WhatsApp-Button. Für das Telefonbuch nicht nötig – der Tab „Dienste“ erscheint erst, wenn hier ein Kalender verbunden ist.</p>
-          <p>Geladen wird über deinen eigenen Cloudflare Worker (Einrichtung siehe README). Der private Kalenderlink bleibt als Secret im Worker – hier werden nur Worker-Adresse und Zugangsschlüssel gespeichert.</p>
-        </div>
-
-        <h3 class="settings-sub">Verbindung</h3>
-        <label class="field-label" for="dpUrlInput">Worker-Adresse</label>
-        <input class="field-input" id="dpUrlInput" type="url" inputmode="url" placeholder="https://rktel-dienstplan.<name>.workers.dev" autocomplete="off" autocapitalize="off" spellcheck="false">
-        <label class="field-label" for="dpTokenInput">Zugangsschlüssel <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoToken" aria-label="Info zum Zugangsschlüssel">i</button></label>
-        <div class="settings-hint info-text" id="infoToken" hidden>
-          <p>Muss mit dem Secret ACCESS_TOKEN im Worker übereinstimmen (mind. 32 Zeichen). „Neuen Schlüssel erzeugen“ erstellt einen sicheren Zufallsschlüssel und kopiert ihn – dann im Worker als Secret hinterlegen und hier speichern.</p>
-        </div>
-        <input class="field-input" id="dpTokenInput" type="password" placeholder="Zugangsschlüssel (ACCESS_TOKEN)" autocomplete="off" autocapitalize="off" spellcheck="false">
-        <p class="settings-status" id="dpTokenHint"></p>
-        <div class="btn-row">
-          <button id="dpSaveBtn" class="btn-primary" type="button">Speichern &amp; laden</button>
-          <button id="dpGenTokenBtn" class="btn-secondary" type="button">Neuen Schlüssel erzeugen</button>
-        </div>
-
-        <h3 class="settings-sub">Dienststellen <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoDept" aria-label="Info zu Dienststellen">i</button></h3>
-        <div class="settings-hint info-text" id="infoDept" hidden>
-          <p>Mit eingetragenen Dienststellen erscheint in jeder Dienstkarte der Button „Dienstplan ↗“, der den Tag im Online Dienstplan öffnet.</p>
-          <p><strong>ID finden:</strong> Im Online Dienstplan auf der Startseite in den Tagesdienstplan der Dienststelle klicken – die Zahl ganz am Ende der Adresse ist die ID, z. B. <code>…-0000-000000000000-<strong>123</strong></code>.</p>
-          <p><strong>Zuordnung:</strong> Der Ort eines Dienstes wird mit dem Namen verglichen; „RKZ“ und „West“ werden dabei ignoriert. Passt das nicht, unter „Ausnahmeregeln“ weitere Ortsbezeichnungen eintragen, z. B. „MINA West“ für die Dienststelle „MINA“.</p>
-          <p>Alternativ eine JSON-Liste importieren: <code>{"abteilungen": [{"name": "MINA", "deptId": "57", "aliases": ["MINA West"]}]}</code></p>
-        </div>
-        <ul class="dept-list" id="dpDeptList"></ul>
-        <details class="dept-form" id="dpDeptForm">
-          <summary id="dpDeptFormTitle">+ Dienststelle hinzufügen</summary>
-          <label class="field-label" for="dpDeptName">Name</label>
-          <input class="field-input" id="dpDeptName" placeholder="z. B. MINA" autocomplete="off">
-          <label class="field-label" for="dpDeptId">ID</label>
-          <input class="field-input" id="dpDeptId" inputmode="numeric" pattern="[0-9]*" placeholder="z. B. 123" autocomplete="off">
-          <label class="field-label" for="dpDeptAliases">Ausnahmeregeln (optional)</label>
-          <input class="field-input" id="dpDeptAliases" placeholder="z. B. MINA West, MINA RKZ" autocomplete="off">
-          <p class="settings-status">Weitere Ortsbezeichnungen aus dem Dienstplan, die zu dieser Dienststelle gehören – kommagetrennt.</p>
-          <div class="btn-row">
-            <button id="dpDeptSaveBtn" class="btn-primary" type="button">Hinzufügen</button>
-            <button id="dpDeptCancelBtn" class="btn-secondary" type="button" hidden>Abbrechen</button>
-          </div>
-        </details>
-        <div class="btn-row">
-          <button id="dpDeptImportBtn" class="btn-secondary" type="button">JSON importieren</button>
-          <button id="dpDeptClearBtn" class="btn-secondary" type="button" hidden>Alle entfernen</button>
-        </div>
-        <input type="file" id="dpDeptFile" accept="application/json,.json" hidden>
-        <div id="dpSafariRow" hidden>
-          <label class="field-checkbox-label" for="dpPortalSafari">
-            <input type="checkbox" id="dpPortalSafari">
-            Portal-Links in Safari öffnen
-            <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoSafari" aria-label="Info zu Safari-Links">i</button>
-          </label>
-          <div class="settings-hint info-text" id="infoSafari" hidden>
-            <p>Öffnet „Dienstplan ↗“ in Safari statt im eingebetteten Fenster der App – dort bleibst du im Portal angemeldet. Nutzt ein inoffizielles iOS-Schema (ab iOS 17); passiert beim Tippen nichts, diese Option ausschalten.</p>
+    <div id="topArea" hidden>
+      <div class="tiles-header">Favoriten</div>
+      <div class="favoriten-list">
+        <div id="quickDialCard" class="tile quickdial" hidden>
+          <span class="sq-icon sq-orange"><svg class="ico"><use href="#i-keypad"/></svg></span>
+          <input id="quickDialSuffix" class="quickdial-suffix" type="text" inputmode="numeric" maxlength="8" placeholder="Einsatzmittel" aria-label="Einsatzmittel-Nummer" autocomplete="off">
+          <div class="tile-actions">
+            <a id="quickDialCallBtn" class="circle-btn call disabled" aria-label="Einsatzmittel anrufen"><svg class="ico"><use href="#i-phone"/></svg></a>
           </div>
         </div>
-
-        <h3 class="settings-sub">Gespeicherte Dienstplandaten</h3>
-        <p class="settings-status" id="dpDataInfo"></p>
-        <div class="btn-row">
-          <button id="dpClearDataBtn" class="btn-secondary" type="button">Dienstplandaten löschen</button>
-          <button id="dpForgetBtn" class="btn-danger" type="button">Zugang entfernen</button>
-        </div>
-      </section>
-
-      <section class="settings-section">
-        <h2>☎️ Kurzwahl <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoKurzwahl" aria-label="Info zur Kurzwahl">i</button></h2>
-        <div class="settings-hint info-text" id="infoKurzwahl" hidden>
-          <p>Mit einer Basisnummer erscheint auf der Kontakte-Seite eine Kachel „Einsatzmittel“: Die eingegebene Nummer wird angehängt, z. B. Basisnummer + 1825. Leer lassen, um die Kachel auszublenden.</p>
-        </div>
-        <label class="field-label" for="quickDialBaseInput">Basisnummer Einsatzmittel</label>
-        <input class="field-input" id="quickDialBaseInput" type="tel" inputmode="tel" placeholder="z. B. +43664XXXXXXX" autocomplete="off">
-      </section>
-
-      <section class="settings-section">
-        <h2>💾 Daten <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoDaten" aria-label="Info zur Datenhaltung">i</button></h2>
-        <div class="settings-hint info-text" id="infoDaten" hidden>
-          <p>Alle Daten werden nur lokal auf diesem Gerät gespeichert. Es gibt keine Übertragung an Dritte – einzige Ausnahme ist der Abruf des Dienstplans über deinen eigenen Worker. „Alle Daten löschen“ entfernt alle Kontakte unwiderruflich.</p>
-        </div>
-        <div class="btn-row">
-          <button id="exportBtn" class="btn-secondary">JSON exportieren</button>
-          <button id="resetBtn" class="btn-danger">Alle Daten löschen</button>
-        </div>
-      </section>
-
-      <section class="settings-section">
-        <h2>Über</h2>
-        <p class="about-line" id="contactCountLine"></p>
-        <button id="installBtn" class="btn-secondary" type="button" hidden>📲 Als App installieren</button>
-        <p class="about-line">RKTel · Progressive Web App · privates Eigenprojekt, kein Angebot des ÖRK.</p>
-        <p class="about-line">Anleitung &amp; Datenschutz im <a href="https://github.com/VitusHg/rktel#readme" target="_blank" rel="noopener">README auf GitHub</a>.</p>
-      </section>
+        <div id="favoritenItems"></div>
+      </div>
     </div>
-  </main>
+    <div id="listContainer"></div>
+  </section>
 
-  <button id="fabAdd" class="fab" title="Kontakt hinzufügen">+</button>
+  <!-- ===== Tab: Dienste ===== -->
+  <section class="tab-root" id="diensteView" data-tab="dienste" hidden>
+    <div id="dpPull" class="dp-pull" aria-hidden="true"><span class="dp-pull-icon" id="dpPullIcon">↓</span><span id="dpPullText">Zum Aktualisieren ziehen</span></div>
+    <header class="nav-bar">
+      <div class="nav-side"></div>
+      <div class="nav-title">Dienste</div>
+      <div class="nav-side right">
+        <button id="dpRefreshBtn" class="glass-btn icon-only" type="button" aria-label="Dienstplan aktualisieren"><svg class="ico" id="dpRefreshIcon"><use href="#i-refresh"/></svg></button>
+      </div>
+    </header>
+    <h1 class="large-title">Dienste</h1>
+    <div class="dp-status" aria-live="polite"><span id="dpStatusText"></span></div>
+    <div id="dpBanner" class="dp-banner" role="status" hidden></div>
+    <div id="dpList"></div>
+  </section>
 
-  <nav id="bottomNav">
-    <button data-tab="kontakte" class="active">
-      <span class="nav-icon">📞</span>
-      <span>Kontakte</span>
-    </button>
-    <button data-tab="dienste" hidden>
-      <span class="nav-icon">🗓️</span>
-      <span>Dienste</span>
-    </button>
-    <button data-tab="einstellungen">
-      <span class="nav-icon">⚙️</span>
-      <span>Einstellungen</span>
-    </button>
-  </nav>
+  <!-- ===== Tab: Einstellungen ===== -->
+  <section class="tab-root" id="einstellungenView" data-tab="einstellungen" hidden>
+    <header class="nav-bar">
+      <div class="nav-side"></div>
+      <div class="nav-title">Einstellungen</div>
+      <div class="nav-side right"></div>
+    </header>
+    <h1 class="large-title">Einstellungen</h1>
+
+    <div class="group-header">Telefonbuch <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoImport" aria-label="Info zum PDF-Import"><svg class="ico"><use href="#i-info"/></svg></button></div>
+    <div class="group">
+      <button class="row has-icon" id="dropZone" type="button">
+        <span class="sq-icon sq-green"><svg class="ico"><use href="#i-import"/></svg></span>
+        <span class="row-text"><span class="row-title">Telefonliste importieren</span><span class="row-sub" style="display:block">PDF aus dem Online Dienstplan</span></span>
+        <svg class="ico row-chevron"><use href="#i-chev-r"/></svg>
+      </button>
+    </div>
+    <div class="info-text" id="infoImport" hidden>
+      <p>Im Online Dienstplan unter <strong>Downloads → Mitarbeiter → Telefonnummern</strong> das PDF exportieren und hier auswählen. Mehrere Listen sind möglich – Kontakte werden anhand des Namens zusammengeführt.</p>
+      <p>Qualifikationszusätze in Klammern und E-Mail-Adressen werden verworfen. Die Verarbeitung erfolgt vollständig auf diesem Gerät – nichts wird hochgeladen.</p>
+    </div>
+    <input type="file" id="fileInput" accept="application/pdf" multiple hidden>
+
+    <div class="group" style="margin-top:22px">
+      <button class="row has-icon" type="button" data-push="pageDienstplan">
+        <span class="sq-icon sq-red"><svg class="ico"><use href="#i-calendar"/></svg></span>
+        <span class="row-text row-title">Dienstplan</span>
+        <span class="row-value" id="setDienstplanValue"></span>
+        <svg class="ico row-chevron"><use href="#i-chev-r"/></svg>
+      </button>
+      <button class="row has-icon" type="button" data-push="pageKurzwahl">
+        <span class="sq-icon sq-orange"><svg class="ico"><use href="#i-keypad"/></svg></span>
+        <span class="row-text row-title">Kurzwahl</span>
+        <span class="row-value" id="setKurzwahlValue"></span>
+        <svg class="ico row-chevron"><use href="#i-chev-r"/></svg>
+      </button>
+    </div>
+
+    <div class="group" style="margin-top:22px">
+      <button class="row has-icon" type="button" data-push="pageDaten">
+        <span class="sq-icon sq-blue"><svg class="ico"><use href="#i-lock"/></svg></span>
+        <span class="row-text row-title">Daten &amp; Datenschutz</span>
+        <svg class="ico row-chevron"><use href="#i-chev-r"/></svg>
+      </button>
+      <button class="row has-icon" type="button" data-push="pageUeber">
+        <span class="sq-icon sq-gray"><svg class="ico"><use href="#i-info"/></svg></span>
+        <span class="row-text row-title">Über RKTel</span>
+        <svg class="ico row-chevron"><use href="#i-chev-r"/></svg>
+      </button>
+    </div>
+    <p class="group-footer" id="contactCountLine"></p>
+  </section>
 </div>
 
-<div id="dialogOverlay" class="sheet-overlay" hidden>
-  <div class="bottom-sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
-    <div class="sheet-handle"></div>
-    <h2 id="sheetTitle">Kontakt hinzufügen</h2>
-    <form id="contactForm">
-      <label class="field-label" for="fieldName">Name</label>
-      <input class="field-input" id="fieldName" required>
+<!-- ===== Unterseite: Kontakt ===== -->
+<div class="page" id="pageContact" data-tab="kontakte" hidden>
+  <header class="nav-bar">
+    <div class="nav-side"><button class="glass-btn icon-only" type="button" data-back aria-label="Zurück"><svg class="ico"><use href="#i-chev-l"/></svg></button></div>
+    <div class="nav-title" id="contactNavTitle"></div>
+    <div class="nav-side right"><button class="glass-btn" type="button" id="contactEditBtn">Bearbeiten</button></div>
+  </header>
+  <div id="contactDetail"></div>
+</div>
 
-      <label class="field-label" for="fieldDienststelle">Dienststelle</label>
-      <input class="field-input" id="fieldDienststelle">
+<!-- ===== Unterseite: Dienstplan ===== -->
+<div class="page" id="pageDienstplan" data-tab="einstellungen" hidden>
+  <header class="nav-bar inline">
+    <div class="nav-side"><button class="glass-btn icon-only" type="button" data-back aria-label="Zurück"><svg class="ico"><use href="#i-chev-l"/></svg></button></div>
+    <div class="nav-title">Dienstplan</div>
+    <div class="nav-side right"><button type="button" class="glass-btn icon-only info-btn-glass info-btn" aria-expanded="false" aria-controls="infoDienstplan" aria-label="Info zum Dienstplan"><svg class="ico"><use href="#i-info"/></svg></button></div>
+  </header>
+  <div class="info-text" id="infoDienstplan" hidden>
+    <p><strong>Optional.</strong> Zeigt deine kommenden Dienste aus dem Online Dienstplan samt eingeteilten Kollegen mit Anruf- und WhatsApp-Button. Der Tab „Dienste“ erscheint erst, wenn hier ein Kalender verbunden ist.</p>
+    <p>Geladen wird über deinen eigenen Cloudflare Worker (Einrichtung siehe README). Der private Kalenderlink bleibt als Secret im Worker – hier werden nur Worker-Adresse und Zugangsschlüssel gespeichert.</p>
+  </div>
 
-      <label class="field-label">Telefonnummern</label>
-      <div id="phoneFields"></div>
-      <button type="button" id="addPhoneBtn" class="btn-secondary">+ Nummer</button>
+  <div class="group-header">Verbindung</div>
+  <div class="group">
+    <div class="row-form">
+      <label for="dpUrlInput">Worker-Adresse</label>
+      <input id="dpUrlInput" type="url" inputmode="url" placeholder="https://rktel-dienstplan.<name>.workers.dev" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="row-form">
+      <label for="dpTokenInput">Zugangsschlüssel <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoToken" aria-label="Info zum Zugangsschlüssel"><svg class="ico"><use href="#i-info"/></svg></button></label>
+      <input id="dpTokenInput" type="password" placeholder="ACCESS_TOKEN" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+  </div>
+  <p class="group-footer" id="dpTokenHint"></p>
+  <div class="info-text" id="infoToken" hidden>
+    <p>Muss mit dem Secret ACCESS_TOKEN im Worker übereinstimmen (mind. 32 Zeichen). „Neuen Schlüssel erzeugen“ erstellt einen sicheren Zufallsschlüssel und kopiert ihn – dann im Worker als Secret hinterlegen und hier speichern.</p>
+  </div>
+  <div class="group" style="margin-top:22px">
+    <button id="dpSaveBtn" class="row action" type="button"><span class="row-text" style="font-weight:600">Speichern &amp; laden</span></button>
+    <button id="dpGenTokenBtn" class="row action" type="button"><span class="row-text">Neuen Schlüssel erzeugen</span></button>
+  </div>
 
-      <label class="field-label" for="fieldNote">Notiz</label>
-      <textarea class="field-textarea" id="fieldNote"></textarea>
+  <div class="group" style="margin-top:22px">
+    <button class="row has-icon" type="button" data-push="pageDienststellen">
+      <span class="sq-icon sq-blue"><svg class="ico"><use href="#i-building"/></svg></span>
+      <span class="row-text row-title">Dienststellen</span>
+      <span class="row-value" id="setDeptValue"></span>
+      <svg class="ico row-chevron"><use href="#i-chev-r"/></svg>
+    </button>
+    <div class="row has-icon" id="dpSafariRow" hidden>
+      <span class="sq-icon sq-blue"><svg class="ico"><use href="#i-safari"/></svg></span>
+      <label class="row-text row-title" for="dpPortalSafari">Links in Safari öffnen</label>
+      <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoSafari" aria-label="Info zu Safari-Links"><svg class="ico"><use href="#i-info"/></svg></button>
+      <input type="checkbox" class="switch" id="dpPortalSafari">
+    </div>
+  </div>
+  <div class="info-text" id="infoSafari" hidden>
+    <p>Öffnet „Dienstplan ↗“ in Safari statt im eingebetteten Fenster der App – dort bleibst du im Online Dienstplan angemeldet. Nutzt ein inoffizielles iOS-Schema (ab iOS 17); passiert beim Tippen nichts, diese Option ausschalten.</p>
+  </div>
 
-      <label class="field-checkbox-label" for="fieldPinned">
-        <input type="checkbox" id="fieldPinned">
-        📌 Anpinnen (erscheint oben auf der Kontakte-Seite)
-      </label>
-
-      <div class="sheet-actions">
-        <button type="button" id="cancelBtn" class="btn-secondary">Abbrechen</button>
-        <button type="submit" class="btn-primary">Speichern</button>
-      </div>
-    </form>
+  <div class="group-header">Gespeicherte Daten</div>
+  <div class="group">
+    <div class="row"><span class="row-text row-sub" id="dpDataInfo" style="font-size:.9rem"></span></div>
+    <button id="dpClearDataBtn" class="row action" type="button"><span class="row-text">Dienstplandaten löschen</span></button>
+    <button id="dpForgetBtn" class="row destructive" type="button"><span class="row-text">Zugang entfernen</span></button>
   </div>
 </div>
 
-<div id="toast"></div>
+<!-- ===== Unterseite: Dienststellen ===== -->
+<div class="page" id="pageDienststellen" data-tab="einstellungen" hidden>
+  <header class="nav-bar inline">
+    <div class="nav-side"><button class="glass-btn icon-only" type="button" data-back aria-label="Zurück"><svg class="ico"><use href="#i-chev-l"/></svg></button></div>
+    <div class="nav-title">Dienststellen</div>
+    <div class="nav-side right"><button type="button" class="glass-btn icon-only info-btn" aria-expanded="false" aria-controls="infoDept" aria-label="Info zu Dienststellen"><svg class="ico"><use href="#i-info"/></svg></button></div>
+  </header>
+  <div class="info-text" id="infoDept" hidden>
+    <p>Mit eingetragenen Dienststellen erscheint in jeder Dienstkarte der Button „Dienstplan ↗“, der den Tag im Online Dienstplan öffnet.</p>
+    <p><strong>ID finden:</strong> Im Online Dienstplan auf der Startseite in den Tagesdienstplan der Dienststelle klicken – die Zahl ganz am Ende der Adresse ist die ID, z. B. <code>…-0000-000000000000-<strong>123</strong></code>.</p>
+    <p><strong>Zuordnung:</strong> Der Ort eines Dienstes wird mit dem Namen verglichen; „RKZ“ und „West“ werden ignoriert. Passt das nicht, unter „Ausnahmeregeln“ weitere Ortsbezeichnungen eintragen, z. B. „MINA West“ für die Dienststelle „MINA“.</p>
+  </div>
+
+  <div class="group-header" id="dpDeptListHeader">Eingetragen</div>
+  <ul class="group" id="dpDeptList"></ul>
+
+  <div class="group-header" id="dpDeptFormTitle">Neue Dienststelle</div>
+  <div class="group" id="dpDeptForm">
+    <div class="row-form">
+      <label for="dpDeptName">Name</label>
+      <input id="dpDeptName" placeholder="z. B. MINA" autocomplete="off">
+    </div>
+    <div class="row-form">
+      <label for="dpDeptId">ID</label>
+      <input id="dpDeptId" inputmode="numeric" pattern="[0-9]*" placeholder="z. B. 123" autocomplete="off">
+    </div>
+    <div class="row-form">
+      <label for="dpDeptAliases">Ausnahmeregeln (optional)</label>
+      <input id="dpDeptAliases" placeholder="z. B. MINA West, MINA RKZ" autocomplete="off">
+    </div>
+    <button id="dpDeptSaveBtn" class="row action" type="button"><span class="row-text" style="font-weight:600">Hinzufügen</span></button>
+    <button id="dpDeptCancelBtn" class="row action" type="button" hidden><span class="row-text">Abbrechen</span></button>
+    <button id="dpDeptDeleteBtn" class="row destructive" type="button" hidden><span class="row-text">Dienststelle löschen</span></button>
+  </div>
+  <p class="group-footer">Ausnahmeregeln: weitere Ortsbezeichnungen aus dem Dienstplan, die zu dieser Dienststelle gehören – kommagetrennt.</p>
+
+  <div class="group" style="margin-top:22px">
+    <button id="dpDeptImportBtn" class="row action" type="button"><span class="row-text">JSON-Liste importieren</span></button>
+    <button id="dpDeptClearBtn" class="row destructive" type="button" hidden><span class="row-text">Alle entfernen</span></button>
+  </div>
+  <input type="file" id="dpDeptFile" accept="application/json,.json" hidden>
+</div>
+
+<!-- ===== Unterseite: Kurzwahl ===== -->
+<div class="page" id="pageKurzwahl" data-tab="einstellungen" hidden>
+  <header class="nav-bar inline">
+    <div class="nav-side"><button class="glass-btn icon-only" type="button" data-back aria-label="Zurück"><svg class="ico"><use href="#i-chev-l"/></svg></button></div>
+    <div class="nav-title">Kurzwahl</div>
+    <div class="nav-side right"></div>
+  </header>
+  <div class="group-header">Basisnummer Einsatzmittel</div>
+  <div class="group">
+    <div class="row-form">
+      <input id="quickDialBaseInput" type="tel" inputmode="tel" placeholder="z. B. +43664XXXXXXX" autocomplete="off" aria-label="Basisnummer Einsatzmittel">
+    </div>
+  </div>
+  <p class="group-footer">Mit Basisnummer erscheint bei den Favoriten eine Kachel, in die nur noch die Endnummer getippt wird, z. B. Basisnummer + 1825. Leer lassen zum Ausblenden.</p>
+</div>
+
+<!-- ===== Unterseite: Daten & Datenschutz ===== -->
+<div class="page" id="pageDaten" data-tab="einstellungen" hidden>
+  <header class="nav-bar inline">
+    <div class="nav-side"><button class="glass-btn icon-only" type="button" data-back aria-label="Zurück"><svg class="ico"><use href="#i-chev-l"/></svg></button></div>
+    <div class="nav-title">Daten &amp; Datenschutz</div>
+    <div class="nav-side right"></div>
+  </header>
+  <div class="group-header">Kontakte</div>
+  <div class="group">
+    <button id="exportBtn" class="row action" type="button"><span class="row-text">Als JSON exportieren</span></button>
+    <button id="resetBtn" class="row destructive" type="button"><span class="row-text">Alle Kontakte löschen</span></button>
+  </div>
+  <div class="group-header">Datenschutz</div>
+  <div class="info-text" style="margin-top:0">
+    <p>Alle Daten bleiben nur auf diesem Gerät. Es gibt keine Analyse- oder Tracking-Skripte und keinen Server, der deine Kontakte sieht – einzige Verbindung nach außen ist der Abruf des Dienstplans über deinen eigenen Worker.</p>
+    <p>Es handelt sich um Kontaktdaten und Dienstzeiten deiner Kolleginnen und Kollegen: Gerät sperren, nichts weitergeben, Daten bei Gerätewechsel löschen.</p>
+  </div>
+</div>
+
+<!-- ===== Unterseite: Über ===== -->
+<div class="page" id="pageUeber" data-tab="einstellungen" hidden>
+  <header class="nav-bar inline">
+    <div class="nav-side"><button class="glass-btn icon-only" type="button" data-back aria-label="Zurück"><svg class="ico"><use href="#i-chev-l"/></svg></button></div>
+    <div class="nav-title">Über RKTel</div>
+    <div class="nav-side right"></div>
+  </header>
+  <div class="about-hero">
+    <img src="icons/icon-192.png" alt="">
+    <h2>RKTel</h2>
+    <p>Telefonbuch &amp; Dienste · Progressive Web App</p>
+  </div>
+  <div class="group" style="margin-top:18px">
+    <button id="installBtn" class="row action" type="button" hidden><span class="row-text">Als App installieren</span></button>
+    <a class="row action" href="https://github.com/VitusHg/rktel#readme" target="_blank" rel="noopener"><span class="row-text">Anleitung (README)</span><svg class="ico row-chevron"><use href="#i-ext"/></svg></a>
+  </div>
+  <p class="group-footer">Privates Eigenprojekt – kein Angebot des ÖRK und nicht mit dem Online Dienstplan verbunden.</p>
+</div>
+
+<!-- ===== Tab-Leiste ===== -->
+<nav id="bottomNav" aria-label="Bereiche">
+  <button data-tab="kontakte" class="active" type="button"><svg class="ico"><use href="#i-person"/></svg><span>Kontakte</span></button>
+  <button data-tab="dienste" type="button" hidden><svg class="ico"><use href="#i-calendar"/></svg><span>Dienste</span></button>
+  <button data-tab="einstellungen" type="button"><svg class="ico"><use href="#i-gear"/></svg><span>Einstellungen</span></button>
+</nav>
+
+<!-- ===== Sheet: Kontakt hinzufügen/bearbeiten ===== -->
+<div id="dialogOverlay" class="sheet-overlay" hidden>
+  <form class="bottom-sheet" id="contactForm" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-head" id="sheetHead">
+      <div class="sheet-handle"></div>
+      <button type="button" id="cancelBtn" class="glass-btn">Abbrechen</button>
+      <h2 id="sheetTitle">Neuer Kontakt</h2>
+      <button type="submit" class="glass-btn tinted" style="font-weight:600">Sichern</button>
+    </div>
+
+    <div class="group" style="margin-top:8px">
+      <div class="row-form"><label for="fieldName">Name</label><input id="fieldName" required autocomplete="off"></div>
+      <div class="row-form"><label for="fieldDienststelle">Dienststelle</label><input id="fieldDienststelle" autocomplete="off"></div>
+    </div>
+
+    <div class="group-header">Telefonnummern</div>
+    <div class="group" id="phoneGroup">
+      <div id="phoneFields"></div>
+      <button type="button" id="addPhoneBtn" class="row add-row"><span class="plus-dot">+</span><span class="row-text">Telefonnummer hinzufügen</span></button>
+    </div>
+
+    <div class="group-header">Notiz</div>
+    <div class="group">
+      <div class="row-form"><textarea id="fieldNote" aria-label="Notiz"></textarea></div>
+    </div>
+
+    <div class="group" style="margin-top:22px">
+      <div class="row">
+        <label class="row-text row-title" for="fieldPinned">Favorit</label>
+        <input type="checkbox" class="switch" id="fieldPinned">
+      </div>
+    </div>
+  </form>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
 
 <script id="pdfjs-lib">
 /**
@@ -1130,7 +1286,8 @@
     contacts: [],
     search: "",
     activeTab: "kontakte",
-    quickDialBase: ""
+    quickDialBase: "",
+    openContactId: null
   };
 
   function loadContacts() {
@@ -1140,6 +1297,7 @@
     } catch (e) {
       state.contacts = [];
     }
+    if (!Array.isArray(state.contacts)) state.contacts = [];
   }
 
   function saveContacts() {
@@ -1159,7 +1317,7 @@
   }
 
   function saveQuickDialBase() {
-    localStorage.setItem(QUICKDIAL_BASE_KEY, state.quickDialBase);
+    try { localStorage.setItem(QUICKDIAL_BASE_KEY, state.quickDialBase); } catch (e) { /* ignorieren */ }
   }
 
   function escHtml(str) {
@@ -1187,60 +1345,47 @@
     return "tel:" + String(phone).replace(/\s+/g, "");
   }
 
-  // ---------- Rendering ----------
-
-  function quellenChipsHtml(c) {
-    var chips = [];
-    if (c.dienststelle && c.dienststelle.trim()) {
-      chips.push({ name: c.dienststelle.trim(), datum: "" });
-    }
-    (c.quellen || []).forEach(function (q) {
-      chips.push({ name: q.dienststelle, datum: q.datum || "" });
-    });
-    if (!chips.length) return "";
-    return (
-      '<div class="quelle-chips">' +
-      chips.map(function (q) {
-        return (
-          '<span class="quelle-chip"><strong>' + escHtml(q.name) + "</strong>" +
-          (q.datum ? '<span class="quelle-datum"> · ' + escHtml(q.datum) + "</span>" : "") +
-          "</span>"
-        );
-      }).join("") +
-      "</div>"
-    );
+  function icon(name) {
+    return '<svg class="ico" aria-hidden="true"><use href="#i-' + name + '"/></svg>';
   }
 
-  var expandedIds = new Set();
+  // Initialen wie im iOS-Kontaktbild: erster Buchstabe der ersten beiden Namensteile
+  function initials(name) {
+    var parts = String(name || "").replace(/\([^)]*\)/g, " ").trim().split(/\s+/).filter(Boolean);
+    var s = parts.slice(0, 2).map(function (p) { return p.charAt(0); }).join("");
+    return (s || "?").toUpperCase();
+  }
 
-  function contactCardHtml(c) {
-    var expanded = expandedIds.has(c.id);
-    var phonesHtml = c.phones.map(function (p) {
-      return (
-        '<div class="phone-row">' +
-        '<span class="phone-number">' + escHtml(p) + "</span>" +
-        '<a class="icon-btn" href="' + telHref(p) + '" title="Anrufen">📞</a>' +
-        '<a class="icon-btn" href="https://wa.me/' + waNumber(p) + '" target="_blank" rel="noopener" title="WhatsApp">💬</a>' +
-        "</div>"
-      );
-    }).join("");
+  function callBtnHtml(phone, label, extraCls) {
+    return '<a class="circle-btn call' + (extraCls || "") + '" href="' + escHtml(telHref(phone)) + '" aria-label="' + escHtml(label) + ' anrufen">' + icon("phone") + "</a>";
+  }
 
-    var detailsHtml =
-      '<div class="card-details"' + (expanded ? "" : " hidden") + ">" +
-      quellenChipsHtml(c) +
-      (c.note ? '<div class="card-note">' + escHtml(c.note) + "</div>" : "") +
-      '<div class="detail-actions">' +
-      '<button class="btn-secondary edit-btn" data-id="' + c.id + '">✏️ Bearbeiten</button>' +
-      '<button class="btn-danger delete-btn" data-id="' + c.id + '">🗑️ Löschen</button>' +
-      "</div>" +
-      "</div>";
+  function waBtnHtml(phone, label) {
+    return '<a class="circle-btn wa" href="https://wa.me/' + waNumber(phone) + '" target="_blank" rel="noopener" aria-label="WhatsApp an ' + escHtml(label) + '">' + icon("msg") + "</a>";
+  }
 
+  function findContact(id) {
+    return state.contacts.filter(function (c) { return c.id === id; })[0] || null;
+  }
+
+  // ---------- Kontaktliste ----------
+
+  function sectionLetter(name) {
+    var ch = String(name || "").trim().charAt(0).toUpperCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g, "");
+    return /[A-Z]/.test(ch) ? ch : "#";
+  }
+
+  function contactRowHtml(c) {
+    var phone = (c.phones && c.phones[0]) || "";
+    var sub = phone || c.dienststelle || "";
     return (
-      '<article class="card" data-id="' + c.id + '">' +
-      '<div class="card-name toggle-name" data-id="' + c.id + '">' + (c.pinned ? "📌 " : "") + escHtml(c.name) + "</div>" +
-      phonesHtml +
-      detailsHtml +
-      "</article>"
+      '<li class="row has-avatar tappable" data-contact="' + escHtml(c.id) + '">' +
+      '<span class="avatar">' + escHtml(initials(c.name)) + "</span>" +
+      '<span class="row-text"><span class="row-title" style="display:block">' + escHtml(c.name) + "</span>" +
+      (sub ? '<span class="row-sub" style="display:block">' + escHtml(sub) + "</span>" : "") + "</span>" +
+      (phone ? callBtnHtml(phone, c.name) : "") +
+      "</li>"
     );
   }
 
@@ -1252,8 +1397,8 @@
       if (!term) return true;
       if (c.name.toLowerCase().indexOf(term) !== -1) return true;
       if ((c.dienststelle || "").toLowerCase().indexOf(term) !== -1) return true;
-      if ((c.quellen || []).some(function (q) { return q.dienststelle.toLowerCase().indexOf(term) !== -1; })) return true;
-      if (c.phones.some(function (p) { return p.toLowerCase().indexOf(term) !== -1; })) return true;
+      if ((c.quellen || []).some(function (q) { return (q.dienststelle || "").toLowerCase().indexOf(term) !== -1; })) return true;
+      if ((c.phones || []).some(function (p) { return p.toLowerCase().indexOf(term) !== -1; })) return true;
       return false;
     });
 
@@ -1261,41 +1406,332 @@
     if (!filtered.length) {
       html = term
         ? '<p class="empty-state">Keine Treffer für „' + escHtml(state.search) + '“.</p>'
-        : '<p class="empty-state">Noch keine Kontakte.<br>Tippe auf + zum Hinzufügen oder importiere eine PDF-Liste unter Einstellungen.</p>';
+        : '<p class="empty-state">Noch keine Kontakte.<br>Tippe auf + oder importiere die Telefonliste unter Einstellungen.</p>';
     } else {
-      // Immer flach und rein alphabetisch, keine Gruppierung nach Dienststelle
-      var flat = filtered.slice().sort(function (a, b) { return a.name.localeCompare(b.name, "de"); });
-      html = flat.map(contactCardHtml).join("");
+      // Alphabetisch mit Buchstaben-Abschnitten wie in der iOS-Kontakte-App
+      var sorted = filtered.slice().sort(function (a, b) { return a.name.localeCompare(b.name, "de"); });
+      var sections = [];
+      sorted.forEach(function (c) {
+        var letter = sectionLetter(c.name);
+        var last = sections[sections.length - 1];
+        if (!last || last.letter !== letter) sections.push({ letter: letter, items: [c] });
+        else last.items.push(c);
+      });
+      html = sections.map(function (s) {
+        return '<div class="section-letter">' + s.letter + '</div><ul class="group">' + s.items.map(contactRowHtml).join("") + "</ul>";
+      }).join("");
     }
 
     document.getElementById("listContainer").innerHTML = html;
     var countLine = document.getElementById("contactCountLine");
-    if (countLine) countLine.textContent = state.contacts.length + " Kontakt(e) gespeichert.";
+    if (countLine) countLine.textContent = state.contacts.length + " Kontakt(e) auf diesem Gerät gespeichert.";
+    if (state.openContactId) renderContactDetail();
   }
 
-  // ---------- Tabs ----------
+  // ---------- Kontakt-Detailseite ----------
+
+  function renderContactDetail() {
+    var c = findContact(state.openContactId);
+    var el = document.getElementById("contactDetail");
+    if (!c) {
+      el.innerHTML = '<p class="empty-state">Kontakt nicht gefunden.</p>';
+      return;
+    }
+    document.getElementById("contactNavTitle").textContent = c.name;
+    var phones = c.phones || [];
+    var first = phones[0];
+    var sources = [];
+    if (c.dienststelle && c.dienststelle.trim()) sources.push({ name: c.dienststelle.trim(), datum: "" });
+    (c.quellen || []).forEach(function (q) { sources.push({ name: q.dienststelle, datum: q.datum || "" }); });
+
+    el.innerHTML =
+      '<div class="contact-hero">' +
+      '<span class="avatar lg">' + escHtml(initials(c.name)) + "</span>" +
+      "<h2>" + escHtml(c.name) + "</h2>" +
+      (sources.length ? '<div class="row-sub">' + escHtml(sources[0].name) + "</div>" : "") +
+      "</div>" +
+      '<div class="hero-actions">' +
+      '<a class="hero-action' + (first ? "" : " disabled") + '" ' + (first ? 'href="' + escHtml(telHref(first)) + '"' : "") + ">" + icon("phone") + "Anrufen</a>" +
+      '<a class="hero-action' + (first ? "" : " disabled") + '" ' + (first ? 'href="https://wa.me/' + waNumber(first) + '" target="_blank" rel="noopener"' : "") + ">" + icon("msg") + "WhatsApp</a>" +
+      '<button type="button" class="hero-action" data-action="toggle-pin">' + icon(c.pinned ? "star-fill" : "star") + (c.pinned ? "Favorit" : "Zu Favoriten") + "</button>" +
+      "</div>" +
+      (phones.length
+        ? '<div class="group" style="margin-top:22px">' + phones.map(function (p, i) {
+            return (
+              '<div class="row">' +
+              '<a class="row-text" href="' + escHtml(telHref(p)) + '"><span class="row-sub" style="display:block;margin:0">' + (i === 0 ? "Mobil" : "Telefon") + "</span>" +
+              '<span class="row-title" style="display:block;color:var(--blue)">' + escHtml(p) + "</span></a>" +
+              waBtnHtml(p, c.name) +
+              "</div>"
+            );
+          }).join("") + "</div>"
+        : "") +
+      (sources.length
+        ? '<div class="group-header">Quellen</div><div class="group">' + sources.map(function (q) {
+            return '<div class="row"><span class="row-text">' + escHtml(q.name) + "</span>" +
+              (q.datum ? '<span class="row-value">' + escHtml(q.datum) + "</span>" : "") + "</div>";
+          }).join("") + "</div>"
+        : "") +
+      (c.note ? '<div class="group-header">Notiz</div><div class="group"><div class="row"><span class="row-text" style="white-space:pre-line">' + escHtml(c.note) + "</span></div></div>" : "") +
+      '<div class="group" style="margin-top:22px"><button type="button" class="row destructive" data-action="delete-contact"><span class="row-text">Kontakt löschen</span></button></div>';
+  }
+
+  function openContact(id) {
+    state.openContactId = id;
+    renderContactDetail();
+    pushPage("pageContact");
+  }
+
+  document.getElementById("contactDetail").addEventListener("click", function (e) {
+    var c = findContact(state.openContactId);
+    if (!c) return;
+    var action = e.target.closest("[data-action]");
+    if (!action) return;
+    if (action.dataset.action === "toggle-pin") {
+      c.pinned = !c.pinned;
+      saveContacts();
+      renderList();
+      showToast(c.pinned ? "Zu Favoriten hinzugefügt." : "Aus Favoriten entfernt.");
+    } else if (action.dataset.action === "delete-contact") {
+      if (!confirm("„" + c.name + "“ wirklich löschen?")) return;
+      state.contacts = state.contacts.filter(function (x) { return x.id !== c.id; });
+      saveContacts();
+      goBack();
+      state.openContactId = null;
+      renderList();
+      showToast("Kontakt gelöscht.");
+    }
+  });
+
+  document.getElementById("contactEditBtn").addEventListener("click", function () {
+    var c = findContact(state.openContactId);
+    if (c) openDialog(c);
+  });
+
+  document.getElementById("listContainer").addEventListener("click", function (e) {
+    if (e.target.closest("a")) return; // Anrufen-Button direkt
+    var row = e.target.closest("[data-contact]");
+    if (row) openContact(row.dataset.contact);
+  });
+
+  // ---------- Navigation: Tabs + Unterseiten (wie iOS) ----------
 
   var TAB_VIEWS = { kontakte: "kontakteView", dienste: "diensteView", einstellungen: "einstellungenView" };
+  var stacks = { kontakte: [], dienste: [], einstellungen: [] };
+
+  function currentStack() { return stacks[state.activeTab]; }
+
+  // Element unter der obersten Seite: vorherige Unterseite oder die Tab-Seite
+  function layerBelow(stack, index) {
+    return index > 0 ? document.getElementById(stack[index - 1]) : document.getElementById(TAB_VIEWS[state.activeTab]);
+  }
+
+  function pushPage(id) {
+    var stack = currentStack();
+    if (stack[stack.length - 1] === id) return;
+    var page = document.getElementById(id);
+    var below = layerBelow(stack, stack.length);
+    stack.push(id);
+    page.hidden = false;
+    page.scrollTop = 0;
+    page.classList.remove("shown", "covered");
+    void page.offsetWidth; // Startposition übernehmen, damit die Animation läuft
+    page.classList.add("shown");
+    below.classList.add("covered");
+    syncBackHandler();
+  }
+
+  function popPage(animated) {
+    var stack = currentStack();
+    if (!stack.length) return;
+    var id = stack.pop();
+    var page = document.getElementById(id);
+    var below = layerBelow(stack, stack.length);
+    below.classList.remove("covered", "dragging");
+    below.style.transform = "";
+    below.style.filter = "";
+    page.classList.remove("dragging");
+    page.style.transform = "";
+    page.classList.remove("shown");
+    var finish = function () {
+      if (stack.indexOf(id) !== -1) return; // inzwischen erneut geöffnet
+      page.hidden = true;
+      if (id === "pageContact") state.openContactId = null;
+    };
+    if (animated === false) finish(); else setTimeout(finish, 360);
+    syncBackHandler();
+  }
+
+  // Zwischenseiten still entfernen, nur die oberste gleitet sichtbar zurück
+  function popToRoot() {
+    var stack = currentStack();
+    while (stack.length > 1) {
+      var mid = document.getElementById(stack.splice(stack.length - 2, 1)[0]);
+      mid.hidden = true;
+      mid.classList.remove("shown", "covered");
+    }
+    popPage();
+  }
+
+  function goBack() {
+    if (!dialogOverlay.hidden) { closeDialog(); return; }
+    popPage();
+  }
 
   function setActiveTab(tab) {
+    var prev = state.activeTab;
     state.activeTab = tab;
-    var isKontakte = tab === "kontakte";
     Object.keys(TAB_VIEWS).forEach(function (key) {
       document.getElementById(TAB_VIEWS[key]).hidden = key !== tab;
     });
+    // Unterseiten gehören zu ihrem Tab und bleiben dort erhalten (wie bei iOS)
+    document.querySelectorAll(".page").forEach(function (p) {
+      var mine = p.dataset.tab === tab && stacks[tab].indexOf(p.id) !== -1;
+      p.hidden = !mine;
+      if (mine) p.classList.add("shown");
+    });
     if (tab === "dienste") renderDienste();
+    if (tab === "einstellungen") renderSettingsRoot();
     document.documentElement.classList.toggle("dp-ptr-active", tab === "dienste");
-    document.getElementById("topbar").style.display = isKontakte ? "" : "none";
-    document.getElementById("fabAdd").style.display = isKontakte ? "" : "none";
     document.querySelectorAll("#bottomNav button").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.tab === tab);
+      btn.setAttribute("aria-current", btn.dataset.tab === tab ? "page" : "false");
     });
+    if (prev !== tab) window.scrollTo(0, 0);
+    syncBackHandler();
   }
 
   document.getElementById("bottomNav").addEventListener("click", function (e) {
     var btn = e.target.closest("button[data-tab]");
-    if (btn) setActiveTab(btn.dataset.tab);
+    if (!btn) return;
+    var tab = btn.dataset.tab;
+    if (tab !== state.activeTab) { setActiveTab(tab); return; }
+    // Erneutes Tippen auf den aktiven Tab: zurück zur Startseite bzw. nach oben
+    if (currentStack().length) { popToRoot(); return; }
+    if (window.scrollY > 0) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (tab === "kontakte") {
+      document.getElementById("searchInput").focus();
+    }
   });
+
+  document.addEventListener("click", function (e) {
+    var push = e.target.closest("[data-push]");
+    if (push) { pushPage(push.dataset.push); return; }
+    if (e.target.closest("[data-back]")) goBack();
+  });
+
+  // Zurück-Taste/-Geste (Android) und Browser-Zurück: ein Verlaufseintrag,
+  // solange eine Unterseite oder das Sheet offen ist.
+  var backArmed = false, ignoreNextPop = false;
+
+  function anythingOpen() {
+    return !dialogOverlay.hidden || currentStack().length > 0;
+  }
+
+  function syncBackHandler() {
+    var open = anythingOpen();
+    try {
+      if (open && !backArmed) {
+        history.pushState({ rktelNav: true }, "");
+        backArmed = true;
+      } else if (!open && backArmed) {
+        backArmed = false;
+        ignoreNextPop = true;
+        history.back();
+      }
+    } catch (e) { /* ignorieren */ }
+  }
+
+  window.addEventListener("popstate", function () {
+    if (ignoreNextPop) { ignoreNextPop = false; return; }
+    backArmed = false;
+    if (anythingOpen()) goBack();
+    syncBackHandler();
+  });
+
+  // Großer Titel -> kompakte Titelleiste beim Scrollen
+  if ("IntersectionObserver" in window) {
+    document.querySelectorAll(".tab-root").forEach(function (root) {
+      var title = root.querySelector(".large-title");
+      var bar = root.querySelector(".nav-bar");
+      if (!title || !bar) return;
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) { bar.classList.toggle("scrolled", !en.isIntersecting); });
+      }, { rootMargin: "-60px 0px 0px 0px" }).observe(title);
+    });
+  }
+
+  document.querySelectorAll(".page").forEach(function (page) {
+    var bar = page.querySelector(".nav-bar");
+    page.addEventListener("scroll", function () { bar.classList.toggle("scrolled", page.scrollTop > 4); }, { passive: true });
+  });
+
+  // Wischen nach rechts: zurück zur übergeordneten Seite (mit dem Finger mitgeführt)
+  (function setupSwipeBack() {
+    var page = null, below = null, startX = 0, startY = 0, lastX = 0, lastT = 0, velocity = 0, active = false, decided = false;
+
+    document.addEventListener("touchstart", function (e) {
+      page = null;
+      if (e.touches.length !== 1 || !dialogOverlay.hidden) return;
+      var stack = currentStack();
+      if (!stack.length) return;
+      var top = document.getElementById(stack[stack.length - 1]);
+      if (!top.contains(e.target)) return;
+      if (e.target.closest("input, textarea, .switch")) return;
+      page = top;
+      below = layerBelow(stack, stack.length - 1);
+      startX = lastX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      lastT = Date.now();
+      velocity = 0;
+      active = false;
+      decided = false;
+    }, { passive: true });
+
+    document.addEventListener("touchmove", function (e) {
+      if (!page) return;
+      var x = e.touches[0].clientX, y = e.touches[0].clientY;
+      var dx = x - startX, dy = y - startY;
+      if (!decided) {
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+        decided = true;
+        // nur waagrechtes Wischen nach rechts, ab dem linken Rand oder deutlich waagrecht
+        active = dx > 0 && Math.abs(dx) > Math.abs(dy) * 1.4;
+        if (!active) { page = null; return; }
+        page.classList.add("dragging");
+        below.classList.add("dragging");
+      }
+      if (!active) return;
+      if (e.cancelable) e.preventDefault();
+      var now = Date.now();
+      velocity = (x - lastX) / Math.max(1, now - lastT);
+      lastX = x;
+      lastT = now;
+      var w = window.innerWidth;
+      var d = Math.max(0, dx);
+      page.style.transform = "translateX(" + d + "px)";
+      var p = Math.min(1, d / w);
+      below.style.transform = "translateX(" + (-28 + 28 * p) + "%)";
+      below.style.filter = "brightness(" + (0.88 + 0.12 * p) + ")";
+    }, { passive: false });
+
+    function end() {
+      if (!page || !active) { page = null; return; }
+      var dx = lastX - startX;
+      var done = dx > window.innerWidth * 0.35 || velocity > 0.45;
+      page.classList.remove("dragging");
+      below.classList.remove("dragging");
+      page.style.transform = "";
+      below.style.transform = "";
+      below.style.filter = "";
+      if (done) popPage();
+      page = null;
+    }
+
+    document.addEventListener("touchend", end);
+    document.addEventListener("touchcancel", end);
+  })();
 
   // ---------- Kurzwahl Einsatzmittel + Favoriten ----------
 
@@ -1316,17 +1752,13 @@
     }
   }
 
-  function favoritRowHtml(c) {
+  function favoritTileHtml(c) {
     var phone = (c.phones && c.phones[0]) || "";
     return (
-      '<div class="favorit-row">' +
-      '<div class="favorit-name">' + escHtml(c.name) + "</div>" +
-      (phone ? '<div class="favorit-phone">' + escHtml(phone) + "</div>" : "") +
-      (phone ?
-        '<div class="favorit-actions">' +
-        '<a class="icon-btn-sm" href="' + telHref(phone) + '" title="Anrufen">📞</a>' +
-        '<a class="icon-btn-sm" href="https://wa.me/' + waNumber(phone) + '" target="_blank" rel="noopener" title="WhatsApp">💬</a>' +
-        "</div>" : "") +
+      '<div class="tile">' +
+      '<span class="avatar" data-contact="' + escHtml(c.id) + '" role="button" aria-label="' + escHtml(c.name) + ' öffnen">' + escHtml(initials(c.name)) + "</span>" +
+      '<div class="tile-name">' + escHtml(c.name) + "</div>" +
+      (phone ? '<div class="tile-actions">' + callBtnHtml(phone, c.name) + waBtnHtml(phone, c.name) + "</div>" : "") +
       "</div>"
     );
   }
@@ -1338,10 +1770,16 @@
     var pinned = state.contacts.filter(function (c) { return c.pinned; })
       .slice()
       .sort(function (a, b) { return a.name.localeCompare(b.name, "de"); });
-    favoritenListEl.innerHTML = pinned.map(favoritRowHtml).join("");
+    favoritenListEl.innerHTML = pinned.map(favoritTileHtml).join("");
 
-    topAreaEl.hidden = !(state.quickDialBase || pinned.length);
+    // Bei aktiver Suche nur die Trefferliste zeigen
+    topAreaEl.hidden = !!state.search.trim() || !(state.quickDialBase || pinned.length);
   }
+
+  favoritenListEl.addEventListener("click", function (e) {
+    var av = e.target.closest("[data-contact]");
+    if (av) openContact(av.dataset.contact);
+  });
 
   quickDialSuffixEl.addEventListener("input", function () {
     try { localStorage.setItem(QUICKDIAL_SUFFIX_KEY, quickDialSuffixEl.value.trim()); } catch (e) { /* ignorieren */ }
@@ -1352,14 +1790,29 @@
     state.quickDialBase = e.target.value.trim();
     saveQuickDialBase();
     renderTopArea();
+    renderSettingsRoot();
     showToast("Gespeichert.");
   });
 
-  // ---------- Search ----------
+  // ---------- Suche ----------
 
-  document.getElementById("searchInput").addEventListener("input", function (e) {
-    state.search = e.target.value;
+  var searchInputEl = document.getElementById("searchInput");
+
+  function onSearchChanged() {
+    state.search = searchInputEl.value;
+    document.getElementById("searchField").classList.toggle("has-text", !!searchInputEl.value);
     renderList();
+  }
+
+  searchInputEl.addEventListener("input", onSearchChanged);
+  document.getElementById("searchClear").addEventListener("click", function (e) {
+    e.preventDefault();
+    searchInputEl.value = "";
+    onSearchChanged();
+    searchInputEl.focus();
+  });
+  searchInputEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") searchInputEl.blur(); // Tastatur schließen
   });
 
   // ---------- Toast ----------
@@ -1373,7 +1826,7 @@
     toastTimer = setTimeout(function () { el.classList.remove("show"); }, 3200);
   }
 
-  // ---------- Dialog ----------
+  // ---------- Sheet: Kontakt hinzufügen/bearbeiten ----------
 
   var dialogOverlay = document.getElementById("dialogOverlay");
   var contactForm = document.getElementById("contactForm");
@@ -1382,10 +1835,10 @@
 
   function addPhoneRow(value) {
     var row = document.createElement("div");
-    row.className = "phone-input-row";
+    row.className = "row-form phone-input-row";
     row.innerHTML =
-      '<input class="field-input phone-input" placeholder="+43…" value="' + escHtml(value || "") + '">' +
-      '<button type="button" class="remove-phone-btn">✕</button>';
+      '<button type="button" class="remove-phone-btn" aria-label="Nummer entfernen">−</button>' +
+      '<input class="phone-input" type="tel" inputmode="tel" placeholder="Telefonnummer" value="' + escHtml(value || "") + '">';
     row.querySelector(".remove-phone-btn").addEventListener("click", function () {
       if (phoneFieldsEl.children.length > 1) {
         row.remove();
@@ -1394,13 +1847,16 @@
       }
     });
     phoneFieldsEl.appendChild(row);
+    return row;
   }
 
-  document.getElementById("addPhoneBtn").addEventListener("click", function () { addPhoneRow(""); });
+  document.getElementById("addPhoneBtn").addEventListener("click", function () {
+    addPhoneRow("").querySelector("input").focus();
+  });
 
   function openDialog(contact) {
     editingId = contact ? contact.id : null;
-    document.getElementById("sheetTitle").textContent = contact ? "Kontakt bearbeiten" : "Kontakt hinzufügen";
+    document.getElementById("sheetTitle").textContent = contact ? "Bearbeiten" : "Neuer Kontakt";
     document.getElementById("fieldName").value = contact ? contact.name : "";
     document.getElementById("fieldDienststelle").value = contact ? contact.dienststelle || "" : "";
     document.getElementById("fieldNote").value = contact ? contact.note || "" : "";
@@ -1408,29 +1864,64 @@
     phoneFieldsEl.innerHTML = "";
     var phones = contact && contact.phones && contact.phones.length ? contact.phones : [""];
     phones.forEach(function (p) { addPhoneRow(p); });
+    sheetEl.style.transform = "";
     dialogOverlay.hidden = false;
-    // Zurück-Taste/-Geste (Android) schließt den Dialog statt die App
-    try { history.pushState({ rktelSheet: true }, ""); } catch (e) { /* ignorieren */ }
-    setTimeout(function () { document.getElementById("fieldName").focus(); }, 50);
+    sheetEl.scrollTop = 0;
+    syncBackHandler();
+    if (!contact) setTimeout(function () { document.getElementById("fieldName").focus(); }, 350);
   }
 
-  function closeDialog(fromHistory) {
+  function closeDialog() {
     if (dialogOverlay.hidden) return;
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     dialogOverlay.hidden = true;
     editingId = null;
-    if (fromHistory !== true && history.state && history.state.rktelSheet) history.back();
+    syncBackHandler();
   }
 
-  window.addEventListener("popstate", function () { closeDialog(true); });
+  var sheetEl = contactForm;
 
   document.getElementById("fabAdd").addEventListener("click", function () { openDialog(null); });
   document.getElementById("cancelBtn").addEventListener("click", function () { closeDialog(); });
   dialogOverlay.addEventListener("click", function (e) { if (e.target === dialogOverlay) closeDialog(); });
 
+  // Sheet nach unten wischen schließt es (am Kopfbereich anfassen)
+  (function setupSheetDrag() {
+    var head = document.getElementById("sheetHead");
+    var startY = null, dy = 0;
+    head.addEventListener("touchstart", function (e) {
+      if (e.target.closest("button")) return;
+      startY = e.touches[0].clientY;
+      dy = 0;
+      sheetEl.classList.add("dragging");
+    }, { passive: true });
+    head.addEventListener("touchmove", function (e) {
+      if (startY === null) return;
+      dy = Math.max(0, e.touches[0].clientY - startY);
+      sheetEl.style.transform = "translateY(" + dy + "px)";
+    }, { passive: true });
+    function end() {
+      if (startY === null) return;
+      startY = null;
+      sheetEl.classList.remove("dragging");
+      if (dy > 120) {
+        sheetEl.style.transform = "translateY(100%)";
+        setTimeout(closeDialog, 250);
+      } else {
+        sheetEl.style.transform = "";
+      }
+    }
+    head.addEventListener("touchend", end);
+    head.addEventListener("touchcancel", end);
+  })();
+
   contactForm.addEventListener("submit", function (e) {
     e.preventDefault();
     var name = document.getElementById("fieldName").value.trim();
-    if (!name) return;
+    if (!name) {
+      showToast("Bitte einen Namen eingeben.");
+      return;
+    }
     var dienststelle = document.getElementById("fieldDienststelle").value.trim();
     var note = document.getElementById("fieldNote").value.trim();
     var pinned = document.getElementById("fieldPinned").checked;
@@ -1439,7 +1930,7 @@
     }).filter(Boolean);
 
     if (editingId) {
-      var existing = state.contacts.find(function (c) { return c.id === editingId; });
+      var existing = findContact(editingId);
       if (existing) {
         existing.name = name;
         existing.dienststelle = dienststelle;
@@ -1455,29 +1946,6 @@
     renderList();
     closeDialog();
     showToast("Gespeichert.");
-  });
-
-  document.getElementById("listContainer").addEventListener("click", function (e) {
-    var nameEl = e.target.closest(".toggle-name");
-    var editBtn = e.target.closest(".edit-btn");
-    var delBtn = e.target.closest(".delete-btn");
-    if (nameEl) {
-      var id = nameEl.dataset.id;
-      if (expandedIds.has(id)) expandedIds.delete(id); else expandedIds.add(id);
-      renderList();
-    } else if (editBtn) {
-      var c = state.contacts.find(function (x) { return x.id === editBtn.dataset.id; });
-      if (c) openDialog(c);
-    } else if (delBtn) {
-      var c2 = state.contacts.find(function (x) { return x.id === delBtn.dataset.id; });
-      if (c2 && confirm('"' + c2.name + '" wirklich löschen?')) {
-        state.contacts = state.contacts.filter(function (x) { return x.id !== c2.id; });
-        expandedIds.delete(c2.id);
-        saveContacts();
-        renderList();
-        showToast("Kontakt gelöscht.");
-      }
-    }
   });
 
   // ---------- Export / Reset ----------
@@ -1499,7 +1967,7 @@
       state.contacts = [];
       saveContacts();
       renderList();
-      showToast("Alle Daten gelöscht.");
+      showToast("Alle Kontakte gelöscht.");
     }
   });
 
@@ -1515,21 +1983,23 @@
     e.target.value = "";
   });
 
+  // Ziehen & Ablegen (Desktop) auf die gesamte Einstellungsseite
+  var settingsRootEl = document.getElementById("einstellungenView");
   ["dragenter", "dragover"].forEach(function (evt) {
-    dropZone.addEventListener(evt, function (e) {
+    settingsRootEl.addEventListener(evt, function (e) {
       e.preventDefault();
-      dropZone.classList.add("dragover");
+      dropZone.classList.add("drop-active");
     });
   });
 
   ["dragleave", "drop"].forEach(function (evt) {
-    dropZone.addEventListener(evt, function (e) {
+    settingsRootEl.addEventListener(evt, function (e) {
       e.preventDefault();
-      dropZone.classList.remove("dragover");
+      dropZone.classList.remove("drop-active");
     });
   });
 
-  dropZone.addEventListener("drop", function (e) {
+  settingsRootEl.addEventListener("drop", function (e) {
     if (e.dataTransfer.files && e.dataTransfer.files.length) handlePdfFiles(e.dataTransfer.files);
   });
 
@@ -1735,7 +2205,7 @@
     loading: false,
     lastError: null,   // { code, message }
     generation: 0,     // erhöht sich bei Zugangsänderung -> veraltete Antworten verwerfen
-    departments: []    // importierte Dienststellen [{ name, deptId }] für Portal-Links
+    departments: []    // Dienststellen [{ name, deptId, aliases }] für Portal-Links
   };
 
   function dpLoadState() {
@@ -1791,9 +2261,14 @@
     dpRefresher.refresh(false);
   }
 
+  function dpOpenSettings() {
+    setActiveTab("einstellungen");
+    if (currentStack().indexOf("pageDienstplan") === -1) pushPage("pageDienstplan");
+  }
+
   function dpManualRefresh() {
     if (!dpIsConfigured()) {
-      setActiveTab("einstellungen");
+      dpOpenSettings();
       showToast("Bitte zuerst den Dienstplan-Zugang einrichten.");
       return;
     }
@@ -1818,7 +2293,8 @@
       var matches = matchContacts(name);
       if (!matches.length) {
         rows.push(
-          '<div class="dp-colleague"><div class="dp-colleague-text">' +
+          '<div class="dp-colleague"><span class="avatar unknown">' + escHtml(initials(name)) + "</span>" +
+          '<div class="dp-colleague-text">' +
           '<div class="dp-colleague-name">' + escHtml(name) + "</div>" +
           '<div class="dp-colleague-sub">Nicht im Telefonbuch</div>' +
           "</div></div>"
@@ -1829,12 +2305,13 @@
         var phone = c.phones[0];
         var sub = phone + (matches.length > 1 ? " · " + c.name : "");
         rows.push(
-          '<div class="dp-colleague"><div class="dp-colleague-text">' +
+          '<div class="dp-colleague"><span class="avatar">' + escHtml(initials(name)) + "</span>" +
+          '<div class="dp-colleague-text">' +
           '<div class="dp-colleague-name">' + escHtml(name) + "</div>" +
           '<div class="dp-colleague-sub">' + escHtml(sub) + "</div>" +
           "</div>" +
-          '<a class="icon-btn" href="' + telHref(phone) + '" title="' + escHtml(name) + ' anrufen">📞</a>' +
-          '<a class="icon-btn" href="https://wa.me/' + waNumber(phone) + '" target="_blank" rel="noopener" title="WhatsApp an ' + escHtml(name) + '">💬</a>' +
+          callBtnHtml(phone, name) +
+          waBtnHtml(phone, name) +
           "</div>"
         );
       });
@@ -1843,11 +2320,11 @@
   }
 
   function dpPortalLinkHtml(url, dept) {
-    var title = ' title="Dienstplan ' + escHtml(dept.name) + ' öffnen"';
+    var label = ' aria-label="Dienstplan ' + escHtml(dept.name) + ' öffnen">Dienstplan' + icon("ext") + "</a>";
     if (dpPortalInSafari()) {
-      return '<a class="dp-portal-link" href="' + escHtml(DP.safariHref(url)) + '"' + title + ">Dienstplan ↗</a>";
+      return '<a class="dp-portal-link" href="' + escHtml(DP.safariHref(url)) + '"' + label;
     }
-    return '<a class="dp-portal-link" href="' + escHtml(url) + '" target="_blank" rel="noopener noreferrer"' + title + ">Dienstplan ↗</a>";
+    return '<a class="dp-portal-link" href="' + escHtml(url) + '" target="_blank" rel="noopener noreferrer"' + label;
   }
 
   function dpLocationHtml(o, matchDepartment) {
@@ -1856,7 +2333,7 @@
     var url = dept ? DP.portalUrl(DP.occurrenceDateKey(o), dept.deptId) : null;
     return (
       '<div class="dp-loc-row">' +
-      '<div class="dp-loc">📍 ' + escHtml(o.location) + "</div>" +
+      '<div class="dp-loc">' + icon("pin") + "<span>" + escHtml(o.location) + "</span></div>" +
       (url ? dpPortalLinkHtml(url, dept) : "") +
       "</div>"
     );
@@ -1864,7 +2341,7 @@
 
   function dpCardHtml(o, now, matchContacts, matchDepartment) {
     var f = DP.formatOccurrence(o, now);
-    var cls = "card dp-card" + (f.running ? " dp-running" : "") + (o.cancelled ? " dp-cancelled" : "");
+    var cls = "dp-card" + (f.running ? " dp-running" : "") + (o.cancelled ? " dp-cancelled" : "");
     var badge = o.cancelled ? "Abgesagt" : f.relative;
     return (
       '<article class="' + cls + '">' +
@@ -1872,7 +2349,7 @@
       (badge ? '<span class="dp-badge">' + escHtml(badge) + "</span>" : "") +
       "</div>" +
       '<div class="dp-time">' + escHtml(f.timeLabel) + "</div>" +
-      '<div class="card-name">' + escHtml(o.title) + "</div>" +
+      '<div class="dp-title">' + escHtml(o.title) + "</div>" +
       dpLocationHtml(o, matchDepartment) +
       (o.note ? '<div class="dp-note">' + escHtml(o.note) + "</div>" : "") +
       dpColleaguesHtml(o, matchContacts) +
@@ -1886,30 +2363,31 @@
     var online = navigator.onLine !== false;
     var stand = dp.cache ? DP.formatTimestamp(dp.cache.fetchedAt) : "";
 
-    document.getElementById("dpSpinner").hidden = !dp.loading;
-    document.getElementById("dpRefreshBtn").disabled = dp.loading;
+    var refreshBtn = document.getElementById("dpRefreshBtn");
+    refreshBtn.disabled = dp.loading;
+    document.getElementById("dpRefreshIcon").classList.toggle("spin", dp.loading);
     document.getElementById("dpStatusText").textContent = dp.loading
-      ? "Wird aktualisiert…" + (stand ? " · Stand: " + stand : "")
-      : stand ? "Zuletzt aktualisiert: " + stand : (configured ? "Noch nicht geladen." : "");
+      ? "Wird aktualisiert…"
+      : stand ? "Aktualisiert: " + stand : (configured ? "Noch nicht geladen." : "");
 
     var banner = document.getElementById("dpBanner");
     var bannerHtml = "", bannerCls = "";
-    var standHinweis = dp.cache ? " Angezeigt wird der zuletzt geladene Stand vom " + escHtml(stand) + "." : "";
+    var standHinweis = dp.cache ? " Angezeigt wird der Stand vom " + escHtml(stand) + "." : "";
     if (!configured) {
-      bannerHtml = "Der Dienstplan ist noch nicht eingerichtet. Trage die Adresse deines Cloudflare Workers und deinen Zugangsschlüssel in den Einstellungen ein." +
-        '<br><button type="button" class="btn-secondary" data-action="dp-settings">Zu den Einstellungen</button>';
+      bannerHtml = "Der Dienstplan ist noch nicht eingerichtet." +
+        '<br><button type="button" class="inline-btn" data-action="dp-settings">Jetzt einrichten</button>';
     } else if (dp.lastError && dp.lastError.code === "storage") {
       bannerCls = "warn";
-      bannerHtml = "⚠️ " + escHtml(dp.lastError.message);
+      bannerHtml = escHtml(dp.lastError.message);
     } else if (dp.lastError && (dp.lastError.code === "offline" || !online)) {
       bannerCls = dp.cache ? "warn" : "error";
-      bannerHtml = "📴 <strong>Keine Internetverbindung.</strong>" + (standHinweis || " Es wurde noch kein Dienstplan geladen.");
+      bannerHtml = "<strong>Keine Internetverbindung.</strong>" + (standHinweis || " Es wurde noch kein Dienstplan geladen.");
     } else if (dp.lastError) {
       bannerCls = "error";
-      bannerHtml = "⚠️ <strong>Aktualisierung fehlgeschlagen:</strong> " + escHtml(dp.lastError.message) + standHinweis;
+      bannerHtml = "<strong>Aktualisierung fehlgeschlagen:</strong> " + escHtml(dp.lastError.message) + standHinweis;
     } else if (!online && dp.cache) {
       bannerCls = "warn";
-      bannerHtml = "📴 <strong>Offline.</strong>" + standHinweis;
+      bannerHtml = "<strong>Offline.</strong>" + standHinweis;
     }
     banner.className = "dp-banner" + (bannerCls ? " " + bannerCls : "");
     banner.innerHTML = bannerHtml;
@@ -1925,40 +2403,48 @@
         ? upcoming.map(function (o) { return dpCardHtml(o, now, matchContacts, matchDepartment); }).join("")
         : '<p class="empty-state">Keine kommenden Dienste im Kalender.</p>';
     } else if (configured && !dp.loading && !dp.lastError) {
-      listHtml = '<p class="empty-state">Noch keine Daten – tippe auf „Aktualisieren“.</p>';
+      listHtml = '<p class="empty-state">Noch keine Daten – nach unten ziehen zum Laden.</p>';
     }
     document.getElementById("dpList").innerHTML = listHtml;
 
     renderDpSettings();
   }
 
+  function renderSettingsRoot() {
+    document.getElementById("setDienstplanValue").textContent = dpIsConfigured() ? "Verbunden" : "Aus";
+    document.getElementById("setKurzwahlValue").textContent = state.quickDialBase || "Aus";
+  }
+
   function renderDpSettings() {
     document.getElementById("dpTokenHint").textContent = dp.config && dp.config.token
-      ? "✓ Zugangsschlüssel gespeichert – zum Ändern neu eingeben, sonst leer lassen."
+      ? "Ein Zugangsschlüssel ist gespeichert – zum Ändern neu eingeben, sonst leer lassen."
       : "";
     renderDeptList();
+    document.getElementById("setDeptValue").textContent = dp.departments.length ? String(dp.departments.length) : "Keine";
     document.getElementById("dpDeptClearBtn").hidden = !dp.departments.length;
     document.getElementById("dpSafariRow").hidden = !DP.isIOS();
     document.getElementById("dpPortalSafari").checked = dpPortalInSafari();
     document.getElementById("dpDataInfo").textContent = dp.cache
-      ? "Lokal gespeichert: " + dp.cache.occurrences.length + " Termin(e), Stand " + DP.formatTimestamp(dp.cache.fetchedAt) + "."
+      ? dp.cache.occurrences.length + " Termin(e) gespeichert, Stand " + DP.formatTimestamp(dp.cache.fetchedAt) + "."
       : "Keine Dienstplandaten auf diesem Gerät gespeichert.";
+    renderSettingsRoot();
   }
 
   function renderDeptList() {
+    var has = dp.departments.length > 0;
+    document.getElementById("dpDeptListHeader").hidden = !has;
+    document.getElementById("dpDeptList").hidden = !has;
     document.getElementById("dpDeptList").innerHTML = dp.departments.map(function (d) {
       var aliases = d.aliases && d.aliases.length ? " · auch: " + d.aliases.join(", ") : "";
       return (
-        '<li class="dept-item">' +
-        '<div class="dept-text"><div class="dept-name">' + escHtml(d.name) + "</div>" +
+        '<li class="row tappable" data-dept-edit="' + escHtml(d.deptId) + '">' +
+        '<div class="row-text"><div class="row-title">' + escHtml(d.name) + "</div>" +
         '<div class="dept-meta">ID ' + escHtml(d.deptId) + escHtml(aliases) + "</div></div>" +
-        '<button type="button" class="icon-btn-sm" data-dept-edit="' + escHtml(d.deptId) + '" title="Bearbeiten" aria-label="' + escHtml(d.name) + ' bearbeiten">✏️</button>' +
-        '<button type="button" class="icon-btn-sm" data-dept-delete="' + escHtml(d.deptId) + '" title="Löschen" aria-label="' + escHtml(d.name) + ' löschen">🗑️</button>' +
+        icon("chev-r").replace('class="ico"', 'class="ico row-chevron"') +
         "</li>"
       );
     }).join("");
   }
-
 
   // Der Tab "Dienste" ist nur sichtbar, solange ein Kalender verbunden ist.
   function dpUpdateTabVisibility() {
@@ -1979,7 +2465,7 @@
   document.getElementById("dpRefreshBtn").addEventListener("click", dpManualRefresh);
 
   document.getElementById("dpBanner").addEventListener("click", function (e) {
-    if (e.target.closest('[data-action="dp-settings"]')) setActiveTab("einstellungen");
+    if (e.target.closest('[data-action="dp-settings"]')) dpOpenSettings();
   });
 
   document.getElementById("dpSaveBtn").addEventListener("click", function () {
@@ -2011,6 +2497,7 @@
     dpUrlInput.value = url;
     dpTokenInput.value = "";
     dpTokenInput.type = "password";
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     dpUpdateTabVisibility();
     setActiveTab("dienste");
     dpRefresher.refresh(true).then(function (r) {
@@ -2047,7 +2534,6 @@
   }
 
   var dpDeptFile = document.getElementById("dpDeptFile");
-  var dpDeptForm = document.getElementById("dpDeptForm");
   var dpDeptNameEl = document.getElementById("dpDeptName");
   var dpDeptIdEl = document.getElementById("dpDeptId");
   var dpDeptAliasesEl = document.getElementById("dpDeptAliases");
@@ -2058,9 +2544,10 @@
     dpDeptNameEl.value = "";
     dpDeptIdEl.value = "";
     dpDeptAliasesEl.value = "";
-    document.getElementById("dpDeptFormTitle").textContent = "+ Dienststelle hinzufügen";
-    document.getElementById("dpDeptSaveBtn").textContent = "Hinzufügen";
+    document.getElementById("dpDeptFormTitle").textContent = "Neue Dienststelle";
+    document.querySelector("#dpDeptSaveBtn .row-text").textContent = "Hinzufügen";
     document.getElementById("dpDeptCancelBtn").hidden = true;
+    document.getElementById("dpDeptDeleteBtn").hidden = true;
   }
 
   document.getElementById("dpDeptSaveBtn").addEventListener("click", function () {
@@ -2083,36 +2570,36 @@
     if (!editing) list.push(dept);
     if (!dpSaveDepartments(list)) return;
     dpResetDeptForm();
-    dpDeptForm.open = false;
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     showToast(editing ? "Dienststelle gespeichert." : "Dienststelle hinzugefügt.");
   });
 
-  document.getElementById("dpDeptCancelBtn").addEventListener("click", function () {
-    dpResetDeptForm();
-    dpDeptForm.open = false;
+  document.getElementById("dpDeptCancelBtn").addEventListener("click", dpResetDeptForm);
+
+  document.getElementById("dpDeptDeleteBtn").addEventListener("click", function () {
+    var d = dp.departments.filter(function (x) { return x.deptId === dpEditingDeptId; })[0];
+    if (!d || !confirm("Dienststelle „" + d.name + "“ entfernen?")) return;
+    if (dpSaveDepartments(dp.departments.filter(function (x) { return x !== d; }))) {
+      dpResetDeptForm();
+      showToast("Dienststelle entfernt.");
+    }
   });
 
+  // Tippen auf eine Dienststelle: zum Bearbeiten ins Formular laden
   document.getElementById("dpDeptList").addEventListener("click", function (e) {
-    var editBtn = e.target.closest("[data-dept-edit]");
-    var delBtn = e.target.closest("[data-dept-delete]");
-    if (editBtn) {
-      var d = dp.departments.filter(function (x) { return x.deptId === editBtn.dataset.deptEdit; })[0];
-      if (!d) return;
-      dpEditingDeptId = d.deptId;
-      dpDeptNameEl.value = d.name;
-      dpDeptIdEl.value = d.deptId;
-      dpDeptAliasesEl.value = (d.aliases || []).join(", ");
-      document.getElementById("dpDeptFormTitle").textContent = "Dienststelle bearbeiten";
-      document.getElementById("dpDeptSaveBtn").textContent = "Speichern";
-      document.getElementById("dpDeptCancelBtn").hidden = false;
-      dpDeptForm.open = true;
-      dpDeptForm.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    } else if (delBtn) {
-      var d2 = dp.departments.filter(function (x) { return x.deptId === delBtn.dataset.deptDelete; })[0];
-      if (!d2 || !confirm("Dienststelle „" + d2.name + "“ entfernen?")) return;
-      if (dpEditingDeptId === d2.deptId) dpResetDeptForm();
-      if (dpSaveDepartments(dp.departments.filter(function (x) { return x !== d2; }))) showToast("Dienststelle entfernt.");
-    }
+    var row = e.target.closest("[data-dept-edit]");
+    if (!row) return;
+    var d = dp.departments.filter(function (x) { return x.deptId === row.dataset.deptEdit; })[0];
+    if (!d) return;
+    dpEditingDeptId = d.deptId;
+    dpDeptNameEl.value = d.name;
+    dpDeptIdEl.value = d.deptId;
+    dpDeptAliasesEl.value = (d.aliases || []).join(", ");
+    document.getElementById("dpDeptFormTitle").textContent = "Dienststelle bearbeiten";
+    document.querySelector("#dpDeptSaveBtn .row-text").textContent = "Speichern";
+    document.getElementById("dpDeptCancelBtn").hidden = false;
+    document.getElementById("dpDeptDeleteBtn").hidden = false;
+    document.getElementById("dpDeptFormTitle").scrollIntoView({ block: "start", behavior: "smooth" });
   });
 
   document.getElementById("dpDeptImportBtn").addEventListener("click", function () { dpDeptFile.click(); });
@@ -2159,11 +2646,12 @@
   });
 
   document.getElementById("dpForgetBtn").addEventListener("click", function () {
-    if (!confirm("Worker-Adresse, Zugangsschlüssel, Dienstplandaten und Dienststellen-Liste von diesem Gerät entfernen?")) return;
+    if (!confirm("Worker-Adresse, Zugangsschlüssel, Dienstplandaten und Dienststellen von diesem Gerät entfernen?")) return;
     dp.generation++;
     dp.config = null;
     dp.departments = [];
     dpRemoveCache();
+    dpResetDeptForm();
     try { localStorage.removeItem(DP_DEPTS_KEY); } catch (e) { /* ignorieren */ }
     try { localStorage.removeItem(DP_ZUGANG_KEY); } catch (e) { /* ignorieren */ }
     dpUrlInput.value = "";
@@ -2198,10 +2686,6 @@
     if (!target) return;
     target.hidden = !target.hidden;
     btn.setAttribute("aria-expanded", target.hidden ? "false" : "true");
-  });
-
-  dropZone.addEventListener("keydown", function (e) {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); }
   });
 
   // ---------- Dienste: Ziehen zum Aktualisieren ----------
@@ -2306,6 +2790,7 @@
   dpUpdateTabVisibility();
   setActiveTab(dpIsConfigured() ? "dienste" : "kontakte");
   renderDienste();
+  renderSettingsRoot();
   dpAutoRefresh();
 
   if (window.pdfjsLib) initPdfWorker();
