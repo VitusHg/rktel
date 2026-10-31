@@ -593,7 +593,9 @@
     text-align: center;
   }
 
-  .tile .avatar { width: 48px; height: 48px; font-size: 1.1rem; cursor: pointer; }
+  .tile .avatar { width: 48px; height: 48px; font-size: 1.1rem; }
+  .tile.tappable { cursor: pointer; }
+  .tile.tappable:active { background: var(--cell-pressed); }
   .tile-name { width: 100%; font-size: .82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tile-actions { display: flex; gap: 8px; }
   .tile-actions .circle-btn { width: 32px; height: 32px; font-size: .9rem; }
@@ -781,6 +783,21 @@
   }
 
   .page.shown { transform: translateX(0); }
+
+  /* Unterseiten/Sheet immer minimal scrollbar, damit iOS Wischbewegungen nie an
+     die Seite darunter weiterreicht */
+  .page::before, .bottom-sheet::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: calc(100% + 1px);
+    pointer-events: none;
+  }
+
+  /* Solange etwas darüber liegt, scrollt die Hauptseite nicht mit */
+  html.scroll-locked, html.scroll-locked body { overflow: hidden; overscroll-behavior: none; }
   .page.covered { transform: translateX(-28%); filter: brightness(.88); }
   .page.dragging, .tab-root.dragging { transition: none; }
   .page .nav-bar { background: var(--bg); }
@@ -842,6 +859,7 @@
   @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
   .bottom-sheet {
+    position: relative;
     width: 100%;
     max-height: calc(100% - env(safe-area-inset-top, 0px) - 12px);
     height: calc(100% - env(safe-area-inset-top, 0px) - 12px);
@@ -2071,7 +2089,12 @@
       btn.classList.toggle("active", btn.dataset.tab === tab);
       btn.setAttribute("aria-current", btn.dataset.tab === tab ? "page" : "false");
     });
-    if (prev !== tab) window.scrollTo(0, 0);
+    if (prev !== tab) {
+      // Sperre gilt pro Tab: neu ansetzen, sonst würde die alte Position übernommen
+      lockedScrollY = null;
+      document.documentElement.classList.remove("scroll-locked");
+      window.scrollTo(0, 0);
+    }
     syncBackHandler();
   }
 
@@ -2103,7 +2126,61 @@
     return !dialogOverlay.hidden || currentStack().length > 0;
   }
 
+  // Hauptseite einfrieren, solange eine Unterseite, das Sheet oder die
+  // Einrichtung darüber liegt. Sonst scrollt iOS z. B. beim Tippen in ein
+  // Eingabefeld die Seite darunter mit und zwei Seiten "kleben" aneinander.
+  var lockedScrollY = null;
+
+  function updateScrollLock() {
+    var ob = document.getElementById("onboarding");
+    var locked = !!(anythingOpen() || (ob && !ob.hidden));
+    if (locked && lockedScrollY === null) lockedScrollY = window.scrollY || 0;
+    if (!locked) lockedScrollY = null;
+    document.documentElement.classList.toggle("scroll-locked", locked);
+  }
+
+  // Auch erzwungenes Scrollen (z. B. iOS beim Fokussieren eines Felds)
+  // sofort zurücksetzen, solange gesperrt ist
+  window.addEventListener("scroll", function () {
+    if (lockedScrollY !== null && window.scrollY !== lockedScrollY) window.scrollTo(0, lockedScrollY);
+  }, { passive: true });
+
+  // Sichtbaren Zustand aus dem Navigationsstapel herstellen (Sicherheitsnetz,
+  // falls eine Animation oder Geste unterbrochen wurde)
+  var settleTimer = null;
+  function settleNav() {
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(function () {
+      if (document.querySelector(".page.dragging")) return; // Geste läuft noch
+      var tab = state.activeTab;
+      var stack = stacks[tab];
+      var root = document.getElementById(TAB_VIEWS[tab]);
+      root.classList.toggle("covered", stack.length > 0);
+      root.classList.remove("dragging");
+      root.style.transform = "";
+      root.style.filter = "";
+      document.querySelectorAll(".page").forEach(function (p) {
+        var idx = p.dataset.tab === tab ? stack.indexOf(p.id) : -1;
+        p.style.transform = "";
+        p.style.filter = "";
+        p.classList.remove("dragging");
+        if (idx === -1) {
+          p.hidden = true;
+          p.classList.remove("shown", "covered");
+          if (p.id === "pageContact" && stacks.kontakte.indexOf("pageContact") === -1) state.openContactId = null;
+        } else {
+          p.hidden = false;
+          p.classList.add("shown");
+          p.classList.toggle("covered", idx < stack.length - 1);
+        }
+      });
+      updateScrollLock();
+    }, 420);
+  }
+
   function syncBackHandler() {
+    updateScrollLock();
+    settleNav();
     var open = anythingOpen();
     try {
       if (open && !backArmed) {
@@ -2229,8 +2306,8 @@
   function favoritTileHtml(c) {
     var phone = (c.phones && c.phones[0]) || "";
     return (
-      '<div class="tile">' +
-      '<span class="avatar" data-contact="' + escHtml(c.id) + '" role="button" aria-label="' + escHtml(c.name) + ' öffnen">' + escHtml(initials(c.name)) + "</span>" +
+      '<div class="tile tappable" data-contact="' + escHtml(c.id) + '" role="button" aria-label="' + escHtml(c.name) + ' öffnen">' +
+      '<span class="avatar">' + escHtml(initials(c.name)) + "</span>" +
       '<div class="tile-name">' + escHtml(c.name) + "</div>" +
       (phone ? '<div class="tile-actions">' + callBtnHtml(phone, c.name) + waBtnHtml(phone, c.name) + "</div>" : "") +
       "</div>"
@@ -2251,6 +2328,7 @@
   }
 
   favoritenListEl.addEventListener("click", function (e) {
+    if (e.target.closest("a")) return; // Anrufen/WhatsApp direkt
     var av = e.target.closest("[data-contact]");
     if (av) openContact(av.dataset.contact);
   });
@@ -3363,6 +3441,7 @@
     obBuild();
     obEl.classList.remove("closing");
     obEl.hidden = false;
+    updateScrollLock();
     obShow(0);
   }
 
@@ -3372,6 +3451,7 @@
     setTimeout(function () {
       obEl.hidden = true;
       obEl.classList.remove("closing");
+      updateScrollLock();
       obSteps.forEach(function (st) { st.classList.remove("active", "before"); });
       if (after) after();
     }, 350);
