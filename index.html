@@ -1336,6 +1336,61 @@
 
   /* Buchstaben-Überschrift mit Hintergrund, damit nichts durchscheint */
   .section-letter { background: var(--bg); margin: 0; padding: 14px 16px 6px; }
+
+  /* Filter nach Dienststelle */
+  .filter-chips {
+    display: flex;
+    gap: 8px;
+    padding: 2px 16px 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex-shrink: 0;
+    padding: 6px 13px;
+    border: none;
+    border-radius: 999px;
+    background: var(--fill);
+    color: var(--label);
+    font-size: .85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .filter-chip .count { margin-left: 5px; color: var(--label2); font-weight: 400; }
+  .filter-chip[aria-pressed="true"] { background: var(--tint); color: #fff; }
+  .filter-chip[aria-pressed="true"] .count { color: rgba(255,255,255,.8); }
+
+  /* Hinweis auf doppelte Kontakte */
+  .dup-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: calc(100% - 32px);
+    margin: 0 16px 6px;
+    padding: 10px 14px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--cell);
+    color: var(--label);
+    font-size: .9rem;
+    text-align: left;
+    cursor: pointer;
+  }
+  .dup-banner .dup-ico { color: var(--orange); font-size: 1.05rem; }
+  .dup-banner .row-text { flex: 1; }
+  .dup-banner:active { background: var(--cell-pressed); }
+
+  /* Auswahl in einer Dubletten-Gruppe */
+  .dup-choice { cursor: pointer; }
+  .dup-choice input { width: 20px; height: 20px; margin: 0; accent-color: var(--tint); flex-shrink: 0; }
+
+  /* Platz für die A–Z-Leiste, damit sie keine Buttons verdeckt */
+  .has-az #topArea { padding-right: 26px; }
+  .has-az #listContainer .group { margin-right: 26px; }
 </style>
 </head>
 <body>
@@ -1387,6 +1442,8 @@
       </label>
       <button type="button" class="search-cancel" id="searchCancel">Abbrechen</button>
     </div>
+    <div class="filter-chips" id="deptChips" role="toolbar" aria-label="Nach Dienststelle filtern" hidden></div>
+    <button type="button" class="dup-banner" id="dupBanner" hidden></button>
     <div id="topArea" hidden>
       <div class="tiles-header">Favoriten</div>
       <div class="favoriten-list">
@@ -1488,6 +1545,17 @@
     <div class="nav-side right"><button class="glass-btn" type="button" id="contactEditBtn">Bearbeiten</button></div>
   </header>
   <div id="contactDetail"></div>
+</div>
+
+<!-- ===== Unterseite: Doppelte Kontakte ===== -->
+<div class="page" id="pageDuplicates" data-tab="kontakte" hidden>
+  <header class="nav-bar inline">
+    <div class="nav-side"><button class="glass-btn icon-only" type="button" data-back aria-label="Zurück"><svg class="ico"><use href="#i-chev-l"/></svg></button></div>
+    <div class="nav-title">Doppelte Kontakte</div>
+    <div class="nav-side right"></div>
+  </header>
+  <p class="group-footer" style="margin-top:10px">Diese Einträge sehen nach derselben Person aus. Wähle den Namen, der bleiben soll – Nummern, Dienststellen, Notizen und Favorit werden zusammengeführt.</p>
+  <div id="dupList"></div>
 </div>
 
 <!-- ===== Unterseite: Dienstplan ===== -->
@@ -1641,6 +1709,7 @@
   </header>
   <div class="group-header">Kontakte</div>
   <div class="group">
+    <button class="row action" type="button" id="dupSettingsBtn"><span class="row-text">Doppelte Kontakte prüfen</span><span class="row-value" id="dupSettingsValue"></span></button>
     <button id="exportBtn" class="row action" type="button"><span class="row-text">Als JSON exportieren</span></button>
     <button id="resetBtn" class="row destructive" type="button"><span class="row-text">Alle Kontakte löschen</span></button>
   </div>
@@ -1862,6 +1931,7 @@
     contacts: [],
     search: "",
     activeTab: "kontakte",
+    deptFilter: "",
     quickDialBase: "",
     openContactId: null
   };
@@ -1980,11 +2050,42 @@
     );
   }
 
+  // Alle Dienststellen eines Kontakts (eigene Angabe + importierte Listen)
+  function deptNamesOf(c) {
+    var names = [];
+    if (c.dienststelle && c.dienststelle.trim()) names.push(c.dienststelle.trim());
+    (c.quellen || []).forEach(function (q) {
+      if (q.dienststelle && names.indexOf(q.dienststelle) === -1) names.push(q.dienststelle);
+    });
+    return names;
+  }
+
+  // Filter-Chips, sobald Kontakte aus mindestens zwei Dienststellen stammen
+  function renderDeptChips() {
+    var counts = {};
+    state.contacts.forEach(function (c) {
+      deptNamesOf(c).forEach(function (n) { counts[n] = (counts[n] || 0) + 1; });
+    });
+    var names = Object.keys(counts).sort(function (a, b) { return a.localeCompare(b, "de"); });
+    if (state.deptFilter && !counts[state.deptFilter]) state.deptFilter = "";
+    var el = document.getElementById("deptChips");
+    el.hidden = names.length < 2;
+    if (el.hidden) { state.deptFilter = ""; el.innerHTML = ""; return; }
+    function chip(value, label, count) {
+      return '<button type="button" class="filter-chip" data-dept="' + escHtml(value) + '" aria-pressed="' + (state.deptFilter === value ? "true" : "false") + '">' +
+        escHtml(label) + (count != null ? '<span class="count">' + count + "</span>" : "") + "</button>";
+    }
+    el.innerHTML = chip("", "Alle") + names.map(function (n) { return chip(n, n, counts[n]); }).join("");
+  }
+
   function renderList() {
+    renderDeptChips();
     renderTopArea();
+    renderDupBanner();
 
     var term = state.search.trim().toLowerCase();
     var filtered = state.contacts.filter(function (c) {
+      if (state.deptFilter && deptNamesOf(c).indexOf(state.deptFilter) === -1) return false;
       if (!term) return true;
       if (c.name.toLowerCase().indexOf(term) !== -1) return true;
       if ((c.dienststelle || "").toLowerCase().indexOf(term) !== -1) return true;
@@ -1998,8 +2099,10 @@
     var letters = [];
     if (!filtered.length) {
       html = term
-        ? '<p class="empty-state">Keine Treffer für „' + escHtml(state.search) + '“.</p>'
-        : '<p class="empty-state">Noch keine Kontakte.<br>Tippe auf + oder importiere die Telefonliste unter Einstellungen.</p>';
+        ? '<p class="empty-state">Keine Treffer für „' + escHtml(state.search) + '“' + (state.deptFilter ? " in „" + escHtml(state.deptFilter) + "“" : "") + ".</p>"
+        : state.deptFilter
+          ? '<p class="empty-state">Keine Kontakte in „' + escHtml(state.deptFilter) + '“.</p>'
+          : '<p class="empty-state">Noch keine Kontakte.<br>Tippe auf + oder importiere die Telefonliste unter Einstellungen.</p>';
     } else {
       // Alphabetisch mit Buchstaben-Abschnitten wie in der iOS-Kontakte-App
       var sorted = filtered.slice().sort(function (a, b) { return a.name.localeCompare(b.name, "de"); });
@@ -2022,10 +2125,198 @@
     var az = document.getElementById("azIndex");
     az.innerHTML = letters.map(function (l) { return '<span data-az="' + l + '">' + l + "</span>"; }).join("");
     az.hidden = !!term || letters.length < 5;
+    document.getElementById("kontakteView").classList.toggle("has-az", !az.hidden);
     var countLine = document.getElementById("contactCountLine");
     if (countLine) countLine.textContent = state.contacts.length + " Kontakt(e) auf diesem Gerät gespeichert.";
     if (state.openContactId) renderContactDetail();
   }
+
+  // ---------- Doppelte Kontakte ----------
+
+  var DUP_IGNORE_KEY = "rktelDublettenIgnoriertV1";
+
+  // Nummer vergleichbar machen: 0660…, +43 660…, 0043 660… -> 43660…
+  function phoneKey(p) {
+    var d = String(p || "").replace(/[^\d+]/g, "");
+    if (d.indexOf("+") === 0) d = d.slice(1);
+    else if (d.indexOf("00") === 0) d = d.slice(2);
+    else if (d.charAt(0) === "0") d = "43" + d.slice(1);
+    d = d.replace(/\D/g, "");
+    return d.length >= 7 ? d : "";
+  }
+
+  // Name unabhängig von Reihenfolge, Groß/Klein, Umlautschreibweise, Klammern
+  function nameKey(n) {
+    var t = String(n || "").replace(/\([^)]*\)/g, " ").toLowerCase().replace(/ß/g, "ss")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/ae/g, "a").replace(/oe/g, "o").replace(/ue/g, "u")
+      .split(/[\s,.\-]+/).filter(function (x) { return x.length > 1; }).sort();
+    return t.length >= 2 ? t.join(" ") : "";
+  }
+
+  function loadDupIgnored() {
+    try { var v = JSON.parse(localStorage.getItem(DUP_IGNORE_KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+  }
+
+  function groupKey(ids) { return ids.slice().sort().join("|"); }
+
+  // Gruppen von Kontakten mit gleicher Nummer oder gleichem Namen
+  function findDuplicateGroups() {
+    var parent = {};
+    function find(x) { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; }
+    function union(a, b) { parent[find(a)] = find(b); }
+    var reasons = {};
+    var byKey = {};
+    state.contacts.forEach(function (c) {
+      parent[c.id] = c.id;
+      (c.phones || []).forEach(function (p) {
+        var k = phoneKey(p);
+        if (k) (byKey["p:" + k] = byKey["p:" + k] || []).push(c.id);
+      });
+      var nk = nameKey(c.name);
+      if (nk) (byKey["n:" + nk] = byKey["n:" + nk] || []).push(c.id);
+    });
+    Object.keys(byKey).forEach(function (k) {
+      var ids = byKey[k].filter(function (id, i, arr) { return arr.indexOf(id) === i; });
+      if (ids.length < 2) return;
+      for (var i = 1; i < ids.length; i++) union(ids[0], ids[i]);
+      reasons[k] = ids;
+    });
+    var groups = {};
+    state.contacts.forEach(function (c) {
+      var r = find(c.id);
+      (groups[r] = groups[r] || []).push(c);
+    });
+    var ignored = loadDupIgnored();
+    return Object.keys(groups).map(function (r) { return groups[r]; })
+      .filter(function (g) { return g.length > 1; })
+      .map(function (g) {
+        var ids = g.map(function (c) { return c.id; });
+        var why = [];
+        Object.keys(reasons).forEach(function (k) {
+          if (reasons[k].some(function (id) { return ids.indexOf(id) !== -1; })) {
+            var label = k.indexOf("p:") === 0 ? "gleiche Nummer" : "gleicher Name";
+            if (why.indexOf(label) === -1) why.push(label);
+          }
+        });
+        return { key: groupKey(ids), contacts: g, why: why };
+      })
+      .filter(function (g) { return ignored.indexOf(g.key) === -1; });
+  }
+
+  // Zusammenführen: gewählter Name bleibt, alles andere wird vereint
+  function mergeContactGroup(keepId, ids) {
+    var keep = findContact(keepId);
+    if (!keep) return;
+    var others = state.contacts.filter(function (c) { return ids.indexOf(c.id) !== -1 && c.id !== keepId; });
+    var seenPhones = (keep.phones || []).map(phoneKey);
+    keep.phones = (keep.phones || []).slice();
+    keep.quellen = (keep.quellen || []).slice();
+    var notes = keep.note ? [keep.note] : [];
+    others.forEach(function (o) {
+      (o.phones || []).forEach(function (p) {
+        var k = phoneKey(p) || p;
+        if (seenPhones.indexOf(k) === -1) { seenPhones.push(k); keep.phones.push(p); }
+      });
+      (o.quellen || []).forEach(function (q) {
+        if (!keep.quellen.some(function (x) { return x.dienststelle === q.dienststelle && x.datum === q.datum; })) keep.quellen.push(q);
+      });
+      if (o.dienststelle && !keep.dienststelle) keep.dienststelle = o.dienststelle;
+      else if (o.dienststelle && o.dienststelle !== keep.dienststelle &&
+        !keep.quellen.some(function (x) { return x.dienststelle === o.dienststelle; })) keep.quellen.push({ dienststelle: o.dienststelle, datum: "" });
+      if (o.note && notes.indexOf(o.note) === -1) notes.push(o.note);
+      if (o.pinned) keep.pinned = true;
+    });
+    keep.note = notes.join("\n");
+    state.contacts = state.contacts.filter(function (c) { return others.indexOf(c) === -1; });
+    if (others.some(function (o) { return o.id === state.openContactId; })) state.openContactId = keep.id;
+    saveContacts();
+  }
+
+  function renderDupBanner() {
+    var n = findDuplicateGroups().length;
+    var banner = document.getElementById("dupBanner");
+    banner.hidden = !n || !!state.search.trim() || !!state.deptFilter;
+    banner.innerHTML = '<svg class="ico dup-ico"><use href="#i-person"/></svg><span class="row-text">' +
+      (n === 1 ? "1 möglicher doppelter Kontakt" : n + " mögliche doppelte Kontakte") +
+      '</span><svg class="ico row-chevron"><use href="#i-chev-r"/></svg>';
+    var v = document.getElementById("dupSettingsValue");
+    if (v) v.textContent = n ? String(n) : "Keine";
+    if (!document.getElementById("pageDuplicates").hidden) renderDuplicates();
+  }
+
+  function renderDuplicates() {
+    var groups = findDuplicateGroups();
+    var el = document.getElementById("dupList");
+    if (!groups.length) {
+      el.innerHTML = '<p class="empty-state">Keine doppelten Kontakte gefunden.</p>';
+      return;
+    }
+    el.innerHTML = groups.map(function (g, gi) {
+      // Vorschlag: der Eintrag mit den meisten Angaben bleibt
+      var best = g.contacts.slice().sort(function (a, b) {
+        return ((b.phones || []).length + deptNamesOf(b).length) - ((a.phones || []).length + deptNamesOf(a).length);
+      })[0];
+      return (
+        '<div class="group-header">' + escHtml(g.why.join(" · ")) + "</div>" +
+        '<div class="group" data-dup-group="' + escHtml(g.key) + '">' +
+        g.contacts.map(function (c) {
+          var meta = (c.phones || []).join(", ") + (deptNamesOf(c).length ? " · " + deptNamesOf(c).join(", ") : "");
+          return (
+            '<label class="row has-avatar dup-choice">' +
+            avatarHtml(c.name) +
+            '<span class="row-text"><span class="row-title" style="display:block">' + escHtml(c.name) + "</span>" +
+            '<span class="row-sub" style="display:block">' + escHtml(meta || "keine Nummer") + "</span></span>" +
+            '<input type="radio" name="dup' + gi + '" value="' + escHtml(c.id) + '"' + (c === best ? " checked" : "") + ' aria-label="' + escHtml(c.name) + ' behalten">' +
+            "</label>"
+          );
+        }).join("") +
+        '<button type="button" class="row action" data-dup-merge="' + escHtml(g.key) + '"><span class="row-text" style="font-weight:600">Zusammenführen</span></button>' +
+        '<button type="button" class="row" data-dup-ignore="' + escHtml(g.key) + '"><span class="row-text" style="color:var(--label2)">Keine doppelten Einträge</span></button>' +
+        "</div>"
+      );
+    }).join("");
+  }
+
+  function openDuplicates() {
+    renderDuplicates();
+    pushPageHere("pageDuplicates");
+  }
+
+  document.getElementById("dupBanner").addEventListener("click", openDuplicates);
+  document.getElementById("dupSettingsBtn").addEventListener("click", openDuplicates);
+
+  document.getElementById("dupList").addEventListener("click", function (e) {
+    var merge = e.target.closest("[data-dup-merge]");
+    var ignore = e.target.closest("[data-dup-ignore]");
+    if (merge) {
+      var box = merge.closest("[data-dup-group]");
+      var ids = box.dataset.dupGroup.split("|");
+      var chosen = box.querySelector("input:checked");
+      if (!chosen) return;
+      mergeContactGroup(chosen.value, ids);
+      renderList();
+      renderDienste();
+      renderDuplicates();
+      showToast(ids.length + " Einträge zusammengeführt.");
+    } else if (ignore) {
+      var list = loadDupIgnored();
+      list.push(ignore.dataset.dupIgnore);
+      try { localStorage.setItem(DUP_IGNORE_KEY, JSON.stringify(list)); } catch (err) { /* ignorieren */ }
+      renderList();
+      renderDuplicates();
+      showToast("Wird nicht mehr als doppelt angezeigt.");
+    }
+  });
+
+  // Filter-Chips
+  document.getElementById("deptChips").addEventListener("click", function (e) {
+    var chip = e.target.closest("[data-dept]");
+    if (!chip) return;
+    state.deptFilter = state.deptFilter === chip.dataset.dept ? "" : chip.dataset.dept;
+    renderList();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
 
   // ---------- Kontakt-Detailseite ----------
 
@@ -2140,14 +2431,13 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
   }
 
-  // Die Kontaktkarte kann in jedem Tab geöffnet werden (Kontakte, Dienste)
-  function openContact(id) {
-    state.openContactId = id;
-    renderContactDetail();
-    var page = document.getElementById("pageContact");
+  // Unterseite im aktuellen Tab öffnen, auch wenn sie gerade in einem
+  // anderen Tab offen ist (Kontaktkarte, doppelte Kontakte)
+  function pushPageHere(id) {
+    var page = document.getElementById(id);
     var tab = state.activeTab;
     Object.keys(stacks).forEach(function (t) {
-      var k = stacks[t].indexOf("pageContact");
+      var k = stacks[t].indexOf(id);
       if (t === tab || k === -1) return;
       stacks[t].splice(k, 1);
       var below = stacks[t].length ? document.getElementById(stacks[t][stacks[t].length - 1]) : document.getElementById(TAB_VIEWS[t]);
@@ -2155,8 +2445,15 @@
     });
     page.dataset.tab = tab;
     var stack = stacks[tab];
-    if (stack[stack.length - 1] === "pageContact") { page.scrollTop = 0; return; }
-    pushPage("pageContact");
+    if (stack[stack.length - 1] === id) { page.scrollTop = 0; return; }
+    pushPage(id);
+  }
+
+  // Die Kontaktkarte kann in jedem Tab geöffnet werden (Kontakte, Dienste)
+  function openContact(id) {
+    state.openContactId = id;
+    renderContactDetail();
+    pushPageHere("pageContact");
   }
 
   document.getElementById("contactDetail").addEventListener("click", function (e) {
@@ -2325,9 +2622,11 @@
     var tab = btn.dataset.tab;
     if (tab !== state.activeTab) { setActiveTab(tab); return; }
     // Erneutes Tippen auf den aktiven Tab: zurück zur Hauptansicht des Tabs
-    if (tab === "kontakte" && (searchWasActive || searchIsActive())) {
-      // aktive Suche wird zurückgesetzt (wie bei iOS)
+    if (tab === "kontakte" && (searchWasActive || searchIsActive() || state.deptFilter)) {
+      // aktive Suche und Filter werden zurückgesetzt (wie bei iOS)
+      state.deptFilter = "";
       resetSearch();
+      renderList();
       if (currentStack().length) popToRoot();
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -2550,7 +2849,7 @@
     favoritenListEl.innerHTML = pinned.map(favoritTileHtml).join("");
 
     // Bei aktiver Suche nur die Trefferliste zeigen
-    topAreaEl.hidden = !!state.search.trim() || !(state.quickDialBase || pinned.length);
+    topAreaEl.hidden = !!state.search.trim() || !!state.deptFilter || !(state.quickDialBase || pinned.length);
   }
 
   favoritenListEl.addEventListener("click", function (e) {
@@ -2962,11 +3261,26 @@
   function extractHeaderInfo(rows, fallbackName, fallbackDate) {
     var dienststelle = "";
     var datum = "";
-    rows.forEach(function (raw) {
-      var line = raw.replace(/\s+/g, " ").trim();
+    var lines = rows.map(function (raw) { return raw.replace(/\s+/g, " ").trim(); });
+    lines.forEach(function (line, i) {
       if (!dienststelle) {
-        var m1 = line.match(/^TELEFON\s+(.+)$/i);
-        if (m1) dienststelle = m1[1].trim();
+        var m1 = line.match(/^TELEFON\b\s*(.*)$/i);
+        if (m1) {
+          // Lange Namen stehen in der Kopfzeile über mehrere Zeilen, z. B.
+          // "TELEFON HARTBERG" / "AMBULANZDIENSTE" -> "HARTBERG AMBULANZDIENSTE"
+          var parts = m1[1].trim() ? [m1[1].trim()] : [];
+          // steht "TELEFON" mittig neben dem Namen, liegt dessen erste Zeile davor
+          for (var b = i - 1; b >= 0 && b >= i - 2; b--) {
+            if (/^[A-ZÄÖÜ][A-ZÄÖÜß .&\/-]*$/.test(lines[b]) && lines[b].length <= 60) parts.unshift(lines[b]);
+            else break;
+          }
+          for (var k = i + 1; k < lines.length && k <= i + 3; k++) {
+            var next = lines[k];
+            if (!next || /^Name\b/i.test(next) || /[\d@]/.test(next) || next.length > 60) break;
+            parts.push(next);
+          }
+          dienststelle = parts.join(" ").trim();
+        }
       }
       if (!datum) {
         var m2 = line.match(/Online erstellt am\s+(.+?)\.\s*Seite/i);
@@ -3029,6 +3343,11 @@
         ex.phones = Array.from(new Set(ex.phones.concat(nc.phones)));
         if (!ex.quellen) ex.quellen = [];
         nc.quellen.forEach(function (q) {
+          // Früher abgeschnittene Angabe derselben Liste ("HARTBERG" statt
+          // "HARTBERG AMBULANZDIENSTE", gleiches Datum) durch die volle ersetzen
+          ex.quellen = ex.quellen.filter(function (eq) {
+            return !(eq.datum === q.datum && q.dienststelle.indexOf(eq.dienststelle + " ") === 0);
+          });
           var exists = ex.quellen.some(function (eq) { return eq.dienststelle === q.dienststelle && eq.datum === q.datum; });
           if (!exists) ex.quellen.push(q);
         });
@@ -3060,7 +3379,8 @@
         var buf = await file.arrayBuffer();
         var pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
         var rows = await extractPdfRows(pdf);
-        var fallbackName = file.name.replace(/\.pdf$/i, "");
+        // Dateiname als Rückfall, z. B. "Telefonnummern_Hartberg Ambulanzdienste.pdf"
+        var fallbackName = file.name.replace(/\.pdf$/i, "").replace(/^Telefonnummern[_\s-]*/i, "").replace(/_/g, " ").trim();
         var quelle = extractHeaderInfo(rows, fallbackName, formatFileDate(file.lastModified));
         var imported = parseImportedRows(rows, quelle);
 
