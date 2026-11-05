@@ -169,8 +169,6 @@ Statische Dateien ohne Build-Schritt, geeignet für GitHub Pages:
 - `sw.js`, `manifest.json` – Offline-Fähigkeit und Installation
 - `worker/` – Cloudflare Worker (`src/index.js`, `wrangler.toml`)
 
-Tests (Node ≥ 20, ohne Abhängigkeiten, nur fiktive Daten): `npm test`
-
 ## Kontakt
 
 Fragen oder Feedback: vitus[at]duck.com
