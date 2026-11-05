@@ -1014,13 +1014,9 @@
   html[data-theme="classic"] .dp-badge { border-radius: 5px; }
 
   /* Buttons eckiger, ohne Farbkreise */
-  html[data-theme="classic"] .avatar { background: var(--fill); color: var(--label2); }
   html[data-theme="classic"] .circle-btn { border-radius: 5px; background: var(--fill); }
-  html[data-theme="classic"] .circle-btn.call { background: var(--fill); color: var(--green); }
-  html[data-theme="classic"] .circle-btn.wa { background: var(--fill); color: #25d366; }
   html[data-theme="classic"] .tile.quickdial .sq-icon { border-radius: 8px; }
   html[data-theme="classic"] .tile.quickdial { border-color: var(--tint); }
-  html[data-theme="classic"] .sq-icon { background: var(--fill) !important; color: var(--tint); }
   html[data-theme="classic"] .switch:checked { background: var(--tint); }
   html[data-theme="classic"] .search-field { border: 1px solid var(--fill2); border-radius: 8px; background: #2e2e2e; }
   html[data-theme="classic"] .info-btn { color: var(--label2); }
@@ -1264,6 +1260,177 @@
   .ob-check path { stroke-dasharray: 30; stroke-dashoffset: 30; }
   .ob-step.active .ob-check path { animation: ob-draw .6s ease-out .5s forwards; }
   @keyframes ob-draw { to { stroke-dashoffset: 0; } }
+
+  /* ---------- Farbe & Bewegung ---------- */
+  :root { --glow1: rgba(255,59,48,.16); --glow2: rgba(88,86,214,.13); --wa: #25d366; --yellow: #ffcc00; }
+  :root[data-theme="ios-dark"] { --glow1: rgba(255,69,58,.24); --glow2: rgba(94,92,230,.22); }
+  @media (prefers-color-scheme: dark) { :root[data-theme="ios"] { --glow1: rgba(255,69,58,.24); --glow2: rgba(94,92,230,.22); } }
+  :root[data-theme="classic"] { --glow1: rgba(211,47,47,.3); --glow2: rgba(255,112,67,.12); }
+
+  /* farbiger Schimmer hinter den Titeln */
+  .tab-root { position: relative; isolation: isolate; }
+  .tab-root::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 340px;
+    background:
+      radial-gradient(90% 100% at 0% 0%, var(--glow1), transparent 70%),
+      radial-gradient(80% 90% at 100% 0%, var(--glow2), transparent 70%);
+    pointer-events: none;
+  }
+  /* Suche: durchsichtig über dem Farbschimmer, angeheftet mit Glas-Hintergrund */
+  .search-wrap { background: transparent; transition: background .2s; }
+  .nav-bar.scrolled + .large-title + .search-wrap {
+    background: var(--material);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  .section-letter { color: var(--tint); }
+  .avatar { text-shadow: 0 1px 2px rgba(0,0,0,.18); }
+  .avatar.unknown { background: transparent !important; border: 1.5px dashed var(--label3); color: var(--label2); text-shadow: none; }
+  .row.tappable:active, .tile.tappable:active, .dp-colleague.tappable:active { transform: scale(.985); }
+  .row.tappable, .tile.tappable, .dp-colleague.tappable { transition: transform .12s, background .12s; }
+
+  .circle-btn.call { background: linear-gradient(135deg, #4cd964, #2fb350); color: #fff; box-shadow: 0 3px 10px rgba(52,199,89,.35); }
+  .circle-btn.wa { background: rgba(37,211,102,.16); color: var(--wa); }
+
+  /* Kontaktkarte */
+  #pageContact .nav-bar:not(.scrolled) { background: transparent !important; border-bottom-color: transparent !important; box-shadow: none; }
+  #pageContact .nav-bar { position: sticky; }
+  .contact-hero {
+    position: relative;
+    margin-top: calc(-1 * (env(safe-area-inset-top, 0px) + 52px));
+    padding: calc(env(safe-area-inset-top, 0px) + 60px) 16px 20px;
+    overflow: hidden;
+  }
+  .contact-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(160deg, var(--h1), var(--h2));
+    opacity: .38;
+    -webkit-mask-image: linear-gradient(#000 35%, transparent);
+    mask-image: linear-gradient(#000 35%, transparent);
+  }
+  #contactDetail { position: relative; isolation: isolate; }
+  .avatar.xl {
+    width: 112px;
+    height: 112px;
+    font-size: 2.6rem;
+    font-weight: 600;
+    border: 4px solid var(--bg);
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  }
+  .page.shown .avatar.xl { animation: hero-pop .55s cubic-bezier(.3,1.4,.5,1) .12s both; }
+  @keyframes hero-pop { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+  .contact-hero h2 { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; font-size: 1.85rem; font-weight: 700; }
+  .hero-star { color: var(--yellow); font-size: 1.1rem; }
+  .hero-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; }
+  .hero-chip { padding: 4px 10px; border-radius: 999px; background: var(--cell); color: var(--label2); font-size: .78rem; font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+
+  .hero-actions { grid-template-columns: repeat(4, 1fr); }
+  .hero-action { gap: 6px; padding: 12px 4px 10px; color: var(--label); font-weight: 500; text-decoration: none; }
+  .hero-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.05rem;
+  }
+  .hero-action .hero-icon .ico { font-size: 1.15rem; }
+  .act-call .hero-icon { background: linear-gradient(135deg, #4cd964, #2fb350); }
+  .act-sms .hero-icon { background: linear-gradient(135deg, #5ac8fa, #007aff); }
+  .act-wa .hero-icon { background: linear-gradient(135deg, #3ee07e, #1ebe5d); }
+  .act-fav .hero-icon { background: var(--fill); color: var(--label2); }
+  .act-fav.on .hero-icon { background: linear-gradient(135deg, #ffd60a, #ff9f0a); color: #fff; }
+  .phone-link { color: var(--blue); }
+  .duty-row { --sep-inset: 40px; }
+  .duty-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--dp); flex-shrink: 0; box-shadow: 0 0 0 4px color-mix(in srgb, var(--dp) 22%, transparent); }
+
+  /* Dienste */
+  .dp-card { position: relative; overflow: hidden; padding-left: 20px; }
+  .dp-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--dp); }
+  .dp-card::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 90px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--dp) 14%, transparent), transparent);
+    pointer-events: none;
+  }
+  .dp-card > * { position: relative; z-index: 1; }
+  .dp-colleagues { margin-left: -20px; }
+  .dp-chip {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 3px 10px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--dp) 16%, transparent);
+    color: var(--dp);
+    font-size: .9rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+  }
+  .dp-badge.b-now { background: var(--tint); color: #fff; }
+  .dp-badge.b-today { background: #ff9500; color: #fff; }
+  .dp-badge.b-tomorrow { background: #007aff; color: #fff; }
+  .dp-badge.b-cancel { background: var(--fill2); color: var(--label2); }
+  .live-dot { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: #fff; vertical-align: 1px; animation: live 1.4s ease-in-out infinite; }
+  @keyframes live { 50% { opacity: .25; transform: scale(.7); } }
+  .dp-card.dp-running { box-shadow: 0 0 0 2px var(--tint), 0 8px 24px color-mix(in srgb, var(--tint) 25%, transparent); }
+  .add-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--tint-fill);
+    color: var(--tint);
+    font-size: .8rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .add-chip .ico { font-size: .8rem; }
+  .dp-colleague.tappable { cursor: pointer; }
+  .dp-colleague.tappable:active { background: var(--cell-pressed); }
+
+  /* Favoriten-Kacheln mit Farbe */
+  .tile .avatar { box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+  .tile.quickdial .sq-icon { background: linear-gradient(135deg, #ffb340, #ff9500) !important; box-shadow: 0 4px 12px rgba(255,149,0,.35); }
+
+  /* Einblenden beim Tabwechsel */
+  .animate-in > * { animation: item-in .45s cubic-bezier(.2,.8,.2,1) both; }
+  .animate-in > :nth-child(2) { animation-delay: .04s; } .animate-in > :nth-child(3) { animation-delay: .08s; }
+  .animate-in > :nth-child(4) { animation-delay: .12s; } .animate-in > :nth-child(5) { animation-delay: .16s; }
+  .animate-in > :nth-child(6) { animation-delay: .2s; } .animate-in > :nth-child(n+7) { animation-delay: .24s; }
+  @keyframes item-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+  /* Klassisch: RK-rote Kopfzeile statt Grau */
+  html[data-theme="classic"] .tab-root > .nav-bar {
+    background: linear-gradient(135deg, #b71c1c, #e53935);
+    border-bottom: none;
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(183,28,28,.35);
+  }
+  html[data-theme="classic"] .tab-root > .nav-bar .glass-btn { background: rgba(255,255,255,.2); color: #fff; }
+  html[data-theme="classic"] #fabAdd { background: #fff; color: #c62828; }
+  html[data-theme="classic"] .search-wrap { background: var(--bg); }
+  html[data-theme="classic"] #bottomNav button.active { color: #ff5252; box-shadow: inset 0 3px 0 #e53935; }
+  html[data-theme="classic"] .dp-card { border-left: none; }
+  html[data-theme="classic"] .dp-card.dp-running { border-color: var(--tint); }
+  html[data-theme="classic"] .circle-btn.call { background: linear-gradient(135deg, #43a047, #2e7d32); color: #fff; }
+  html[data-theme="classic"] .circle-btn.wa { background: rgba(37,211,102,.15); color: var(--wa); }
+  html[data-theme="classic"] .hero-action { border: 1px solid var(--sep); }
+  html[data-theme="classic"] #pageContact .nav-bar:not(.scrolled) .nav-title { opacity: 0; }
 </style>
 </head>
 <body>
@@ -1292,6 +1459,7 @@
   <symbol id="i-brush" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3a9 9 0 0 0 0 18c1.1 0 1.8-.8 1.8-1.8 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-1 .8-1.8 1.8-1.8H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8zM6.5 12a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path class="ico-stroke" d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
   <symbol id="i-share" viewBox="0 0 24 24"><path class="ico-stroke" d="M12 3v12M8 7l4-4 4 4M7 11H6a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></symbol>
+  <symbol id="i-bubble" viewBox="0 0 24 24"><path class="ico-stroke" d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z"/></symbol>
   <symbol id="i-safari" viewBox="0 0 24 24"><circle class="ico-stroke" cx="12" cy="12" r="9" style="stroke-width:1.8"/><path fill="currentColor" d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
 </svg>
 
@@ -1848,6 +2016,30 @@
     return (s || "?").toUpperCase();
   }
 
+  // Farbe pro Person, stabil aus dem Namen (Reihenfolge der Namensteile egal),
+  // wie die bunten Kontaktbilder auf dem iPhone
+  var AVATAR_COLORS = [
+    ["#ff6b6b", "#e03131"], ["#ffa94d", "#f76707"], ["#fcc419", "#f08c00"], ["#69db7c", "#2f9e44"],
+    ["#38d9a9", "#0ca678"], ["#4dabf7", "#1c7ed6"], ["#748ffc", "#4263eb"], ["#9775fa", "#7048e8"],
+    ["#f783ac", "#d6336c"], ["#66d9e8", "#1098ad"]
+  ];
+
+  function hashStr(str) {
+    var h = 0;
+    for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+    return Math.abs(h);
+  }
+
+  function personColors(name) {
+    var key = String(name || "").toLowerCase().replace(/\([^)]*\)|,.*$/g, " ").split(/\s+/).filter(Boolean).sort().join(" ");
+    return AVATAR_COLORS[hashStr(key) % AVATAR_COLORS.length];
+  }
+
+  function avatarHtml(name, extraCls) {
+    var c = personColors(name);
+    return '<span class="avatar' + (extraCls || "") + '" style="background:linear-gradient(135deg,' + c[0] + "," + c[1] + ')">' + escHtml(initials(name)) + "</span>";
+  }
+
   function callBtnHtml(phone, label, extraCls) {
     return '<a class="circle-btn call' + (extraCls || "") + '" href="' + escHtml(telHref(phone)) + '" aria-label="' + escHtml(label) + ' anrufen">' + icon("phone") + "</a>";
   }
@@ -1873,7 +2065,7 @@
     var sub = phone || c.dienststelle || "";
     return (
       '<li class="row has-avatar tappable" data-contact="' + escHtml(c.id) + '">' +
-      '<span class="avatar">' + escHtml(initials(c.name)) + "</span>" +
+      avatarHtml(c.name) +
       '<span class="row-text"><span class="row-title" style="display:block">' + escHtml(c.name) + "</span>" +
       (sub ? '<span class="row-sub" style="display:block">' + escHtml(sub) + "</span>" : "") + "</span>" +
       (phone ? waBtnHtml(phone, c.name) + callBtnHtml(phone, c.name) : "") +
@@ -1922,6 +2114,15 @@
 
   // ---------- Kontakt-Detailseite ----------
 
+  // Kommende Dienste, in denen diese Person eingeteilt ist
+  function sharedDuties(c) {
+    if (!DP || !dp.cache) return [];
+    var match = DP.createContactMatcher([c]);
+    return dpUpcoming().filter(function (o) {
+      return !o.cancelled && (o.colleagues || []).some(function (n) { return match(n).length > 0; });
+    }).slice(0, 4);
+  }
+
   function renderContactDetail() {
     var c = findContact(state.openContactId);
     var el = document.getElementById("contactDetail");
@@ -1932,45 +2133,90 @@
     document.getElementById("contactNavTitle").textContent = c.name;
     var phones = c.phones || [];
     var first = phones[0];
+    var colors = personColors(c.name);
     var sources = [];
     if (c.dienststelle && c.dienststelle.trim()) sources.push({ name: c.dienststelle.trim(), datum: "" });
-    (c.quellen || []).forEach(function (q) { sources.push({ name: q.dienststelle, datum: q.datum || "" }); });
+    (c.quellen || []).forEach(function (q) {
+      if (!sources.some(function (s2) { return s2.name === q.dienststelle && s2.datum === (q.datum || ""); })) {
+        sources.push({ name: q.dienststelle, datum: q.datum || "" });
+      }
+    });
+    var chips = [];
+    sources.forEach(function (q) { if (q.name && chips.indexOf(q.name) === -1) chips.push(q.name); });
+
+    function action(cls, iconName, label, attrs, enabled) {
+      return '<a class="hero-action ' + cls + (enabled ? "" : " disabled") + '" ' + (enabled ? attrs : "") + ">" +
+        '<span class="hero-icon">' + icon(iconName) + "</span>" + label + "</a>";
+    }
+
+    var duties = sharedDuties(c);
+    var now = Date.now();
 
     el.innerHTML =
-      '<div class="contact-hero">' +
-      '<span class="avatar lg">' + escHtml(initials(c.name)) + "</span>" +
-      "<h2>" + escHtml(c.name) + "</h2>" +
-      (sources.length ? '<div class="row-sub">' + escHtml(sources[0].name) + "</div>" : "") +
+      '<div class="contact-hero" style="--h1:' + colors[0] + ";--h2:" + colors[1] + '">' +
+      avatarHtml(c.name, " xl") +
+      "<h2>" + escHtml(c.name) + (c.pinned ? ' <span class="hero-star" aria-label="Favorit">' + icon("star-fill") + "</span>" : "") + "</h2>" +
+      (chips.length ? '<div class="hero-chips">' + chips.slice(0, 3).map(function (n) { return '<span class="hero-chip">' + escHtml(n) + "</span>"; }).join("") + "</div>" : "") +
       "</div>" +
       '<div class="hero-actions">' +
-      '<a class="hero-action' + (first ? "" : " disabled") + '" ' + (first ? 'href="' + escHtml(telHref(first)) + '"' : "") + ">" + icon("phone") + "Anrufen</a>" +
-      '<a class="hero-action' + (first ? "" : " disabled") + '" ' + (first ? 'href="https://wa.me/' + waNumber(first) + '" target="_blank" rel="noopener"' : "") + ">" + icon("msg") + "WhatsApp</a>" +
-      '<button type="button" class="hero-action" data-action="toggle-pin">' + icon(c.pinned ? "star-fill" : "star") + (c.pinned ? "Favorit" : "Zu Favoriten") + "</button>" +
+      action("act-call", "phone", "Anrufen", 'href="' + escHtml(telHref(first || "")) + '"', !!first) +
+      action("act-sms", "bubble", "SMS", 'href="sms:' + escHtml(String(first || "").replace(/\s+/g, "")) + '"', !!first) +
+      action("act-wa", "msg", "WhatsApp", 'href="https://wa.me/' + waNumber(first || "") + '" target="_blank" rel="noopener"', !!first) +
+      '<button type="button" class="hero-action act-fav' + (c.pinned ? " on" : "") + '" data-action="toggle-pin"><span class="hero-icon">' + icon(c.pinned ? "star-fill" : "star") + "</span>" + (c.pinned ? "Favorit" : "Favorit +") + "</button>" +
       "</div>" +
       (phones.length
-        ? '<div class="group" style="margin-top:22px">' + phones.map(function (p, i) {
+        ? '<div class="group-header">Telefon</div><div class="group">' + phones.map(function (p, idx) {
             return (
               '<div class="row">' +
-              '<a class="row-text" href="' + escHtml(telHref(p)) + '"><span class="row-sub" style="display:block;margin:0">' + (i === 0 ? "Mobil" : "Telefon") + "</span>" +
-              '<span class="row-title" style="display:block;color:var(--blue)">' + escHtml(p) + "</span></a>" +
-              waBtnHtml(p, c.name) +
+              '<a class="row-text" href="' + escHtml(telHref(p)) + '"><span class="row-sub" style="display:block;margin:0">' + (idx === 0 ? "Mobil" : "Telefon " + (idx + 1)) + "</span>" +
+              '<span class="row-title phone-link" style="display:block">' + escHtml(p) + "</span></a>" +
+              waBtnHtml(p, c.name) + callBtnHtml(p, c.name) +
               "</div>"
+            );
+          }).join("") + "</div>"
+        : '<div class="group" style="margin-top:22px"><button type="button" class="row action" data-action="edit"><span class="row-text">Telefonnummer hinzufügen</span></button></div>') +
+      (duties.length
+        ? '<div class="group-header">Gemeinsame Dienste</div><div class="group">' + duties.map(function (o) {
+            var f = DP.formatOccurrence(o, now);
+            return (
+              '<button type="button" class="row tappable duty-row" data-action="show-dienste" style="--dp:' + dutyColor(o.title) + '">' +
+              '<span class="duty-dot"></span>' +
+              '<span class="row-text"><span class="row-title" style="display:block">' + escHtml(f.dateLabel) + " · " + escHtml(f.timeLabel) + "</span>" +
+              '<span class="row-sub" style="display:block">' + escHtml(o.title) + (o.location ? " · " + escHtml(o.location) : "") + "</span></span>" +
+              (f.relative ? '<span class="dp-badge ' + badgeClass(f, o) + '">' + escHtml(f.relative) + "</span>" : "") +
+              "</button>"
             );
           }).join("") + "</div>"
         : "") +
       (sources.length
-        ? '<div class="group-header">Quellen</div><div class="group">' + sources.map(function (q) {
+        ? '<div class="group-header">Dienststellen</div><div class="group">' + sources.map(function (q) {
             return '<div class="row"><span class="row-text">' + escHtml(q.name) + "</span>" +
               (q.datum ? '<span class="row-value">' + escHtml(q.datum) + "</span>" : "") + "</div>";
           }).join("") + "</div>"
         : "") +
       (c.note ? '<div class="group-header">Notiz</div><div class="group"><div class="row"><span class="row-text" style="white-space:pre-line">' + escHtml(c.note) + "</span></div></div>" : "") +
-      '<div class="group" style="margin-top:22px"><button type="button" class="row destructive" data-action="delete-contact"><span class="row-text">Kontakt löschen</span></button></div>';
+      '<div class="group" style="margin-top:22px">' +
+      '<button type="button" class="row action" data-action="edit"><span class="row-text">Kontakt bearbeiten</span></button>' +
+      '<button type="button" class="row destructive" data-action="delete-contact"><span class="row-text">Kontakt löschen</span></button>' +
+      "</div>";
   }
 
+  // Die Kontaktkarte kann in jedem Tab geöffnet werden (Kontakte, Dienste)
   function openContact(id) {
     state.openContactId = id;
     renderContactDetail();
+    var page = document.getElementById("pageContact");
+    var tab = state.activeTab;
+    Object.keys(stacks).forEach(function (t) {
+      var k = stacks[t].indexOf("pageContact");
+      if (t === tab || k === -1) return;
+      stacks[t].splice(k, 1);
+      var below = stacks[t].length ? document.getElementById(stacks[t][stacks[t].length - 1]) : document.getElementById(TAB_VIEWS[t]);
+      below.classList.remove("covered");
+    });
+    page.dataset.tab = tab;
+    var stack = stacks[tab];
+    if (stack[stack.length - 1] === "pageContact") { page.scrollTop = 0; return; }
     pushPage("pageContact");
   }
 
@@ -1983,6 +2229,7 @@
       c.pinned = !c.pinned;
       saveContacts();
       renderList();
+      renderDienste();
       showToast(c.pinned ? "Zu Favoriten hinzugefügt." : "Aus Favoriten entfernt.");
     } else if (action.dataset.action === "delete-contact") {
       if (!confirm("„" + c.name + "“ wirklich löschen?")) return;
@@ -1991,7 +2238,13 @@
       goBack();
       state.openContactId = null;
       renderList();
+      renderDienste();
       showToast("Kontakt gelöscht.");
+    } else if (action.dataset.action === "edit") {
+      openDialog(c);
+    } else if (action.dataset.action === "show-dienste") {
+      if (state.activeTab === "dienste") goBack();
+      else setActiveTab("dienste");
     }
   });
 
@@ -2075,6 +2328,16 @@
     popPage();
   }
 
+  // Inhalte beim Tabwechsel kurz nacheinander einblenden
+  function animateIn(el) {
+    if (!el) return;
+    el.classList.remove("animate-in");
+    void el.offsetWidth;
+    el.classList.add("animate-in");
+    clearTimeout(el._animTimer);
+    el._animTimer = setTimeout(function () { el.classList.remove("animate-in"); }, 800);
+  }
+
   function setActiveTab(tab) {
     var prev = state.activeTab;
     state.activeTab = tab;
@@ -2096,6 +2359,7 @@
       btn.setAttribute("aria-current", btn.dataset.tab === tab ? "page" : "false");
     });
     if (prev !== tab) {
+      animateIn(document.getElementById(tab === "dienste" ? "dpList" : tab === "kontakte" ? "listContainer" : "einstellungenView"));
       // Sperre gilt pro Tab: neu ansetzen, sonst würde die alte Position übernommen
       lockedScrollY = null;
       document.documentElement.classList.remove("scroll-locked");
@@ -2277,7 +2541,8 @@
     function end() {
       if (!page || !active) { page = null; return; }
       var dx = lastX - startX;
-      var done = dx > window.innerWidth * 0.35 || velocity > 0.45;
+      // weit genug gezogen oder schnell gewischt (mit Mindestweg gegen Fehlauslösung)
+      var done = dx > window.innerWidth * 0.35 || (velocity > 0.45 && dx > 60);
       page.classList.remove("dragging");
       below.classList.remove("dragging");
       page.style.transform = "";
@@ -2314,7 +2579,7 @@
     var phone = (c.phones && c.phones[0]) || "";
     return (
       '<div class="tile tappable" data-contact="' + escHtml(c.id) + '" role="button" aria-label="' + escHtml(c.name) + ' öffnen">' +
-      '<span class="avatar">' + escHtml(initials(c.name)) + "</span>" +
+      avatarHtml(c.name) +
       '<div class="tile-name">' + escHtml(c.name) + "</div>" +
       (phone ? '<div class="tile-actions">' + callBtnHtml(phone, c.name) + waBtnHtml(phone, c.name) + "</div>" : "") +
       "</div>"
@@ -2473,10 +2738,10 @@
     addPhoneRow("").querySelector("input").focus();
   });
 
-  function openDialog(contact) {
+  function openDialog(contact, prefill) {
     editingId = contact ? contact.id : null;
     document.getElementById("sheetTitle").textContent = contact ? "Bearbeiten" : "Neuer Kontakt";
-    document.getElementById("fieldName").value = contact ? contact.name : "";
+    document.getElementById("fieldName").value = contact ? contact.name : (prefill && prefill.name) || "";
     document.getElementById("fieldDienststelle").value = contact ? contact.dienststelle || "" : "";
     document.getElementById("fieldNote").value = contact ? contact.note || "" : "";
     document.getElementById("fieldPinned").checked = contact ? !!contact.pinned : false;
@@ -2487,7 +2752,11 @@
     dialogOverlay.hidden = false;
     sheetEl.scrollTop = 0;
     syncBackHandler();
-    if (!contact) setTimeout(function () { document.getElementById("fieldName").focus(); }, 350);
+    if (!contact) {
+      // Mit vorgegebenem Namen gleich zur Telefonnummer springen
+      var target = prefill && prefill.name ? phoneFieldsEl.querySelector(".phone-input") : document.getElementById("fieldName");
+      setTimeout(function () { target.focus(); }, 350);
+    }
   }
 
   function closeDialog() {
@@ -2563,8 +2832,10 @@
 
     saveContacts();
     renderList();
+    var wasEditing = !!editingId;
+    renderDienste(); // Kollegen im Dienstplan sofort mit Telefonnummer zeigen
     closeDialog();
-    showToast("Gespeichert.");
+    showToast(wasEditing ? "Gespeichert." : "Kontakt angelegt.");
   });
 
   // ---------- Export / Reset ----------
@@ -2916,6 +3187,32 @@
     });
   }
 
+  // Farbe je Dienstart (Fahrzeug), sonst stabil aus dem Titel
+  var DUTY_COLORS = [
+    [/\b(RTW|RTW-C|ITW)\b/i, "#ff3b30"], [/\b(NEF|NAW|NA)\b/i, "#ff9500"], [/\b(KTW|BKTW)\b/i, "#007aff"],
+    [/\b(SEW|SEG|KIT|PSD)\b/i, "#af52de"], [/(Ausbildung|Fortbildung|Kurs|Schulung)/i, "#34c759"],
+    [/(Dienstführ|Leitstelle|Disponent|ELRD)/i, "#5856d6"]
+  ];
+  var DUTY_FALLBACK = ["#ff2d55", "#5ac8fa", "#ffcc00", "#30b0c7", "#a2845e", "#64d2ff"];
+
+  function dutyColor(title) {
+    for (var k = 0; k < DUTY_COLORS.length; k++) if (DUTY_COLORS[k][0].test(title || "")) return DUTY_COLORS[k][1];
+    return DUTY_FALLBACK[hashStr(String(title || "").toLowerCase()) % DUTY_FALLBACK.length];
+  }
+
+  function badgeClass(f, o) {
+    if (o && o.cancelled) return "b-cancel";
+    if (f.running) return "b-now";
+    if (f.relative === "Heute") return "b-today";
+    if (f.relative === "Morgen") return "b-tomorrow";
+    return "";
+  }
+
+  // Name aus dem Dienstplan ohne angehängte Titel ("Muster Max, Mag." -> "Muster Max")
+  function plainName(name) {
+    return String(name || "").split(",")[0].trim();
+  }
+
   function dpColleaguesHtml(o, matchContacts) {
     var names = o.colleagues || [];
     if (!names.length) return "";
@@ -2924,11 +3221,14 @@
       var matches = matchContacts(name);
       if (!matches.length) {
         rows.push(
-          '<div class="dp-colleague"><span class="avatar unknown">' + escHtml(initials(name)) + "</span>" +
+          '<div class="dp-colleague tappable" data-new-contact="' + escHtml(plainName(name)) + '" role="button" aria-label="' + escHtml(plainName(name)) + ' als Kontakt anlegen">' +
+          '<span class="avatar unknown">' + escHtml(initials(plainName(name))) + "</span>" +
           '<div class="dp-colleague-text">' +
           '<div class="dp-colleague-name">' + escHtml(name) + "</div>" +
           '<div class="dp-colleague-sub">Nicht im Telefonbuch</div>' +
-          "</div></div>"
+          "</div>" +
+          '<span class="add-chip">' + icon("plus") + "Anlegen</span>" +
+          "</div>"
         );
         return;
       }
@@ -2936,13 +3236,14 @@
         var phone = c.phones[0];
         var sub = phone + (matches.length > 1 ? " · " + c.name : "");
         rows.push(
-          '<div class="dp-colleague"><span class="avatar">' + escHtml(initials(name)) + "</span>" +
+          '<div class="dp-colleague tappable" data-open-contact="' + escHtml(c.id) + '" role="button" aria-label="Profil ' + escHtml(c.name) + ' öffnen">' +
+          avatarHtml(c.name) +
           '<div class="dp-colleague-text">' +
           '<div class="dp-colleague-name">' + escHtml(name) + "</div>" +
           '<div class="dp-colleague-sub">' + escHtml(sub) + "</div>" +
           "</div>" +
-          callBtnHtml(phone, name) +
           waBtnHtml(phone, name) +
+          callBtnHtml(phone, name) +
           "</div>"
         );
       });
@@ -2975,12 +3276,12 @@
     var cls = "dp-card" + (f.running ? " dp-running" : "") + (o.cancelled ? " dp-cancelled" : "");
     var badge = o.cancelled ? "Abgesagt" : f.relative;
     return (
-      '<article class="' + cls + '">' +
+      '<article class="' + cls + '" style="--dp:' + dutyColor(o.title) + '">' +
       '<div class="dp-date"><span>' + escHtml(f.dateLabel) + "</span>" +
-      (badge ? '<span class="dp-badge">' + escHtml(badge) + "</span>" : "") +
+      (badge ? '<span class="dp-badge ' + badgeClass(f, o) + '">' + (f.running ? '<i class="live-dot"></i>' : "") + escHtml(badge) + "</span>" : "") +
       "</div>" +
       '<div class="dp-time">' + escHtml(f.timeLabel) + "</div>" +
-      '<div class="dp-title">' + escHtml(o.title) + "</div>" +
+      '<div class="dp-title"><span class="dp-chip">' + escHtml(o.title) + "</span></div>" +
       dpLocationHtml(o, matchDepartment) +
       (o.note ? '<div class="dp-note">' + escHtml(o.note) + "</div>" : "") +
       dpColleaguesHtml(o, matchContacts) +
@@ -3094,6 +3395,15 @@
   var dpUrlInput = document.getElementById("dpUrlInput");
 
   document.getElementById("dpRefreshBtn").addEventListener("click", dpManualRefresh);
+
+  // Kollegen antippen: Profil öffnen bzw. neuen Kontakt mit dem Namen anlegen
+  document.getElementById("dpList").addEventListener("click", function (e) {
+    if (e.target.closest("a")) return; // Anrufen/WhatsApp/Dienstplan-Link direkt
+    var known = e.target.closest("[data-open-contact]");
+    if (known) { openContact(known.dataset.openContact); return; }
+    var unknown = e.target.closest("[data-new-contact]");
+    if (unknown) openDialog(null, { name: unknown.dataset.newContact });
+  });
 
   document.getElementById("dpBanner").addEventListener("click", function (e) {
     if (e.target.closest('[data-action="dp-settings"]')) dpOpenSettings();

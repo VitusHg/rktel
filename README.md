@@ -47,8 +47,8 @@ Kommt die Meldung „Keine Kontakte erkannt“, stammt das PDF nicht aus diesem 
 ## 3. Im Alltag
 
 - **Suchen** nach Name, Nummer oder Dienststelle; 📞 ruft an, 💬 öffnet WhatsApp.
-- **Kontakt öffnen:** Tippen auf einen Namen öffnet die Kontaktkarte mit Anrufen, WhatsApp und allen Nummern; der grüne Hörer in der Liste ruft direkt an.
-- **Favoriten:** in der Kontaktkarte „Zu Favoriten“ tippen. Favoriten stehen als Kacheln ganz oben.
+- **Kontakt öffnen:** Tippen auf einen Namen öffnet die Kontaktkarte: farbiges Profilbild, Schnellaktionen (Anrufen, SMS, WhatsApp, Favorit), alle Nummern, Dienststellen, Notiz und – mit verbundenem Dienstplan – die **gemeinsamen nächsten Dienste**. Der grüne Hörer in der Liste ruft direkt an.
+- **Favoriten:** in der Kontaktkarte auf den Stern „Favorit“ tippen. Favoriten stehen als Kacheln ganz oben.
 - **Bedienung wie bei iOS:** nach rechts wischen führt zur vorherigen Seite zurück; erneutes Tippen auf den aktiven Tab bringt dich zur Startseite des Tabs bzw. ganz nach oben (auf „Kontakte“ danach in die Suche). Formulare schließt du mit „Abbrechen“ oder durch Herunterwischen. Die iOS-Textgröße wird übernommen.
 - **Design:** unter *Einstellungen → Darstellung* zwischen **Klassisch** (Standard, dunkel mit roten Akzenten) und dem **iPhone-Design** wählen – wie System, hell oder dunkel. Bedienung und Funktionen sind überall gleich.
 - **Kontakte** lassen sich auch von Hand anlegen, bearbeiten und löschen; *Einstellungen → Daten & Datenschutz* exportiert alles als JSON-Sicherung.
@@ -61,6 +61,8 @@ Wer nur das Telefonbuch nutzt, kann hier aufhören. Ohne verbundenen Kalender is
 ### Was du bekommst
 
 Ein Tab **„Dienste“** mit deinen kommenden Diensten aus dem Online Dienstplan: Datum, Zeit, Fahrzeug/Titel, Ort und die **eingeteilten Kollegen** – direkt mit 📞- und 💬-Button, sofern sie im Telefonbuch stehen. Die Kollegen werden unabhängig von Namensreihenfolge, Groß-/Kleinschreibung, Umlautschreibweise (ä/ae) und Titeln (Mag., Ing., …) gefunden. Ist der Dienstplan verbunden, startet die App direkt in diesem Tab.
+
+Dienste sind nach Fahrzeug farbig markiert (z. B. RTW rot, KTW blau, NEF orange), „Heute“, „Morgen“ und „Läuft gerade“ heben sich farbig ab. **Kollegen antippen** öffnet ihr Profil. Steht jemand noch nicht im Telefonbuch, legt **„+ Anlegen“** den Kontakt mit dem Namen aus dem Dienstplan an – nur noch die Nummer eintragen, und die Person erscheint sofort mit Anruf- und WhatsApp-Button.
 
 Optional öffnet ein Button **„Dienstplan ↗“** in jeder Dienstkarte den Tag im Online Dienstplan (siehe [Dienststellen](#dienststellen--links-ins-online-dienstplan)).
 
