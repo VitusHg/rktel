@@ -18,6 +18,8 @@ RKTel läuft als Web-App (PWA) im Browser und lässt sich auf iPhone und Android
 
 ## 1. App installieren
 
+RKTel ist unter **[https://vitushg.github.io/rktel/](https://vitushg.github.io/rktel/)** erreichbar. Diese Adresse im Browser des Handys öffnen (iPhone: Safari, Android: Chrome) und dann zum Home-Bildschirm hinzufügen:
+
 - **iPhone (Safari):** RKTel öffnen → Teilen-Symbol → „Zum Home-Bildschirm“.
 - **Android (Chrome):** RKTel öffnen → Menü ⋮ → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“. Bietet Chrome die Installation an, erscheint unter *Einstellungen → Über RKTel* auch „Als App installieren“.
 
@@ -49,10 +51,11 @@ Kommt die Meldung „Keine Kontakte erkannt“, stammt das PDF nicht aus diesem 
 - **Suchen** nach Name, Nummer oder Dienststelle; 📞 ruft an, 💬 öffnet WhatsApp.
 - **Kontakt öffnen:** Tippen auf einen Namen öffnet die Kontaktkarte: farbiges Profilbild, Schnellaktionen (Anrufen, SMS, WhatsApp, Favorit), alle Nummern, Dienststellen, Notiz und – mit verbundenem Dienstplan – die **gemeinsamen nächsten Dienste**. Der grüne Hörer in der Liste ruft direkt an.
 - **Favoriten:** in der Kontaktkarte auf den Stern „Favorit“ tippen. Favoriten stehen als Kacheln ganz oben.
-- **Bedienung wie bei iOS:** nach rechts wischen führt zur vorherigen Seite zurück; erneutes Tippen auf den aktiven Tab bringt dich zur Startseite des Tabs bzw. ganz nach oben (auf „Kontakte“ danach in die Suche). Formulare schließt du mit „Abbrechen“ oder durch Herunterwischen. Die iOS-Textgröße wird übernommen.
+- **Bedienung wie bei iOS:** nach rechts wischen führt zur vorherigen Seite zurück; erneutes Tippen auf den aktiven Tab bringt dich zur Hauptansicht des Tabs bzw. ganz nach oben – eine aktive Suche wird dabei zurückgesetzt. „Abbrechen“ neben der Suche leert und schließt sie, Enter öffnet bei genau einem Treffer den Kontakt. Über die A–Z-Leiste am rechten Rand springst du in langen Listen direkt zum Buchstaben.
+- **Zu Gerätekontakten hinzufügen:** in der Kontaktkarte; erzeugt eine Kontaktdatei (vCard), die iPhone und Android direkt übernehmen. Formulare schließt du mit „Abbrechen“ oder durch Herunterwischen. Die iOS-Textgröße wird übernommen.
 - **Design:** unter *Einstellungen → Darstellung* zwischen **Klassisch** (Standard, dunkel mit roten Akzenten) und dem **iPhone-Design** wählen – wie System, hell oder dunkel. Bedienung und Funktionen sind überall gleich.
 - **Kontakte** lassen sich auch von Hand anlegen, bearbeiten und löschen; *Einstellungen → Daten & Datenschutz* exportiert alles als JSON-Sicherung.
-- *Nebenbei:* Wer Einsatzmittel häufig über eine gemeinsame Vorwahl anruft, kann unter *Einstellungen → Kurzwahl* eine Basisnummer hinterlegen. Dann erscheint neben den Favoriten eine Kachel „Einsatzmittel“, in die nur noch die Endnummer getippt wird (z. B. Basisnummer + 1825). Die eingetippte Nummer wird nicht gespeichert – nach dem Anruf oder beim Verlassen der App ist das Feld wieder leer.
+- *Nebenbei:* Wer Einsatzmittel häufig über eine gemeinsame Vorwahl anruft, kann unter *Einstellungen → Kurzwahl* eine Basisnummer hinterlegen. Dann erscheint neben den Favoriten eine Kachel, in die nur noch der Funkrufname getippt wird (Basisnummer + Funkrufname). Darunter lässt sich ein Beispiel-Funkrufname eintragen, der im leeren Wahlfeld als grauer Hinweis erscheint. Die eingetippte Nummer wird nicht gespeichert – nach dem Anruf oder beim Verlassen der App ist das Feld wieder leer.
 
 ## 4. Optional: Dienstplan verbinden
 

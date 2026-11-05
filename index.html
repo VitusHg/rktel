@@ -1299,6 +1299,43 @@
     0%, 25% { box-shadow: 0 0 0 2px var(--tint), 0 0 0 7px var(--tint-fill); }
     100% { box-shadow: 0 0 0 2px transparent, 0 0 0 7px transparent; }
   }
+
+  /* Suche: "Abbrechen" wie bei iOS, solange die Suche aktiv ist */
+  .search-wrap { display: flex; align-items: center; gap: 10px; }
+  .search-wrap .search-field { flex: 1; min-width: 0; }
+  .search-cancel {
+    display: none;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--tint);
+    font-size: 1rem;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .search-wrap.active .search-cancel { display: block; animation: fade-in .2s ease-out; }
+
+  /* A–Z-Leiste am rechten Rand */
+  .az-index {
+    position: fixed;
+    right: 1px;
+    top: 50%;
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 4px;
+    transform: translateY(-50%);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .az-index span { display: block; padding: 1px 4px; color: var(--tint); font-size: .66rem; font-weight: 600; line-height: 1.25; }
+  .az-index.touching { background: var(--fill); border-radius: 999px; }
+  .tab-root.covered .az-index { display: none; }
+
+  /* Buchstaben-Überschrift mit Hintergrund, damit nichts durchscheint */
+  .section-letter { background: var(--bg); margin: 0; padding: 14px 16px 6px; }
 </style>
 </head>
 <body>
@@ -1348,13 +1385,14 @@
         <input id="searchInput" type="search" inputmode="search" enterkeyhint="search" placeholder="Name, Nummer, Dienststelle" autocomplete="off" aria-label="Kontakte durchsuchen">
         <button type="button" class="search-clear" id="searchClear" aria-label="Suche löschen">✕</button>
       </label>
+      <button type="button" class="search-cancel" id="searchCancel">Abbrechen</button>
     </div>
     <div id="topArea" hidden>
       <div class="tiles-header">Favoriten</div>
       <div class="favoriten-list">
         <div id="quickDialCard" class="tile quickdial" hidden>
           <span class="sq-icon sq-orange"><svg class="ico"><use href="#i-keypad"/></svg></span>
-          <input id="quickDialSuffix" class="quickdial-suffix" type="text" inputmode="numeric" maxlength="8" placeholder="Einsatzmittel" aria-label="Einsatzmittel-Nummer" autocomplete="off" autocorrect="off" spellcheck="false" data-form-type="other">
+          <input id="quickDialSuffix" class="quickdial-suffix" type="text" inputmode="numeric" maxlength="12" placeholder="Funkrufname" aria-label="Funkrufname des Einsatzmittels" autocomplete="off" autocorrect="off" spellcheck="false" data-form-type="other">
           <div class="tile-actions">
             <a id="quickDialCallBtn" class="circle-btn call disabled" aria-label="Einsatzmittel anrufen"><svg class="ico"><use href="#i-phone"/></svg></a>
           </div>
@@ -1363,6 +1401,7 @@
       </div>
     </div>
     <div id="listContainer"></div>
+    <nav class="az-index" id="azIndex" aria-label="Zum Buchstaben springen" hidden></nav>
   </section>
 
   <!-- ===== Tab: Dienste ===== -->
@@ -1582,7 +1621,15 @@
       <input id="quickDialBaseInput" type="tel" inputmode="tel" placeholder="z. B. +43664XXXXXXX" autocomplete="off" aria-label="Basisnummer Einsatzmittel">
     </div>
   </div>
-  <p class="group-footer">Mit Basisnummer erscheint bei den Favoriten eine Kachel, in die nur noch die Endnummer getippt wird, z. B. Basisnummer + 1825. Leer lassen zum Ausblenden.</p>
+  <p class="group-footer">Mit Basisnummer erscheint bei den Favoriten eine Kachel: Basisnummer + Funkrufname. Leer lassen zum Ausblenden.</p>
+
+  <div class="group-header">Beispiel-Funkrufname</div>
+  <div class="group">
+    <div class="row-form">
+      <input id="quickDialExampleInput" type="text" placeholder="Funkrufname" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Beispiel-Funkrufname">
+    </div>
+  </div>
+  <p class="group-footer">Wird im leeren Wahlfeld als grauer Hinweis angezeigt, damit klar ist, was einzutippen ist.</p>
 </div>
 
 <!-- ===== Unterseite: Daten & Datenschutz ===== -->
@@ -1809,6 +1856,7 @@
   var STORAGE_KEY = "telefonbuchV1";
   var QUICKDIAL_BASE_KEY = "telefonbuchKurzwahlBasisV1";
   var QUICKDIAL_SUFFIX_KEY = "telefonbuchKurzwahlSuffixV1";
+  var QUICKDIAL_EXAMPLE_KEY = "telefonbuchKurzwahlBeispielV1";
 
   var state = {
     contacts: [],
@@ -1834,6 +1882,17 @@
     } catch (e) {
       showToast("Speichern fehlgeschlagen – Gerätespeicher voll oder privater Modus?");
     }
+  }
+
+  // Beispiel-Funkrufname als Hinweis im leeren Wahlfeld
+  function applyQuickDialExample() {
+    var ex = "";
+    try { ex = localStorage.getItem(QUICKDIAL_EXAMPLE_KEY) || ""; } catch (e) { /* ignorieren */ }
+    var field = document.getElementById("quickDialSuffix");
+    field.placeholder = ex || "Funkrufname";
+    // reine Ziffern -> Zifferntastatur, sonst normale Tastatur
+    field.setAttribute("inputmode", !ex || /^\d+$/.test(ex) ? "numeric" : "text");
+    document.getElementById("quickDialExampleInput").value = ex;
   }
 
   function loadQuickDialBase() {
@@ -1934,7 +1993,9 @@
       return false;
     });
 
+    state.results = filtered;
     var html;
+    var letters = [];
     if (!filtered.length) {
       html = term
         ? '<p class="empty-state">Keine Treffer für „' + escHtml(state.search) + '“.</p>'
@@ -1950,11 +2011,17 @@
         else last.items.push(c);
       });
       html = sections.map(function (s) {
-        return '<div class="section-letter">' + s.letter + '</div><ul class="group">' + s.items.map(contactRowHtml).join("") + "</ul>";
+        // eigener Abschnitt je Buchstabe: die Überschrift klebt nur innerhalb ihres Abschnitts
+        return '<section class="contact-section"><div class="section-letter" data-letter="' + s.letter + '">' + s.letter + '</div><ul class="group">' + s.items.map(contactRowHtml).join("") + "</ul></section>";
       }).join("");
+      letters = sections.map(function (s) { return s.letter; });
     }
 
     document.getElementById("listContainer").innerHTML = html;
+    // A–Z-Leiste nur bei längeren Listen ohne Suche
+    var az = document.getElementById("azIndex");
+    az.innerHTML = letters.map(function (l) { return '<span data-az="' + l + '">' + l + "</span>"; }).join("");
+    az.hidden = !!term || letters.length < 5;
     var countLine = document.getElementById("contactCountLine");
     if (countLine) countLine.textContent = state.contacts.length + " Kontakt(e) auf diesem Gerät gespeichert.";
     if (state.openContactId) renderContactDetail();
@@ -2044,8 +2111,33 @@
       (c.note ? '<div class="group-header">Notiz</div><div class="group"><div class="row"><span class="row-text" style="white-space:pre-line">' + escHtml(c.note) + "</span></div></div>" : "") +
       '<div class="group" style="margin-top:22px">' +
       '<button type="button" class="row action" data-action="edit"><span class="row-text">Kontakt bearbeiten</span></button>' +
+      '<button type="button" class="row action" data-action="vcard"><span class="row-text">Zu Gerätekontakten hinzufügen</span></button>' +
       '<button type="button" class="row destructive" data-action="delete-contact"><span class="row-text">Kontakt löschen</span></button>' +
       "</div>";
+  }
+
+  // Kontakt als vCard ausgeben: iOS/Android bieten dann "Kontakt erstellen" an
+  function vcardEscape(v) {
+    return String(v || "").replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/([,;])/g, "\\$1");
+  }
+
+  function downloadVCard(c) {
+    var lines = ["BEGIN:VCARD", "VERSION:3.0", "N:" + vcardEscape(c.name) + ";;;;", "FN:" + vcardEscape(c.name)];
+    if (c.dienststelle) lines.push("ORG:" + vcardEscape(c.dienststelle));
+    (c.phones || []).forEach(function (p, i) {
+      lines.push("TEL;TYPE=" + (i === 0 ? "CELL" : "VOICE") + ":" + String(p).replace(/\s+/g, ""));
+    });
+    if (c.note) lines.push("NOTE:" + vcardEscape(c.note));
+    lines.push("END:VCARD");
+    var blob = new Blob([lines.join("\r\n") + "\r\n"], { type: "text/vcard;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = (c.name.replace(/[^\wäöüÄÖÜß .-]+/g, "").trim() || "kontakt") + ".vcf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
   }
 
   // Die Kontaktkarte kann in jedem Tab geöffnet werden (Kontakte, Dienste)
@@ -2089,6 +2181,8 @@
       showToast("Kontakt gelöscht.");
     } else if (action.dataset.action === "edit") {
       openDialog(c);
+    } else if (action.dataset.action === "vcard") {
+      downloadVCard(c);
     } else if (action.dataset.action === "show-dienste") {
       if (state.activeTab === "dienste") goBack();
       else setActiveTab("dienste");
@@ -2216,18 +2310,30 @@
     syncBackHandler();
   }
 
+  // Ob die Suche aktiv war, schon beim Berühren merken: beim Tippen verliert
+  // das Suchfeld den Fokus, bevor der Klick ankommt
+  var searchWasActive = false;
+  ["pointerdown", "touchstart", "mousedown"].forEach(function (evt) {
+    document.getElementById("bottomNav").addEventListener(evt, function () {
+      searchWasActive = searchIsActive();
+    }, { passive: true });
+  });
+
   document.getElementById("bottomNav").addEventListener("click", function (e) {
     var btn = e.target.closest("button[data-tab]");
     if (!btn) return;
     var tab = btn.dataset.tab;
     if (tab !== state.activeTab) { setActiveTab(tab); return; }
-    // Erneutes Tippen auf den aktiven Tab: zurück zur Startseite bzw. nach oben
-    if (currentStack().length) { popToRoot(); return; }
-    if (window.scrollY > 0) {
+    // Erneutes Tippen auf den aktiven Tab: zurück zur Hauptansicht des Tabs
+    if (tab === "kontakte" && (searchWasActive || searchIsActive())) {
+      // aktive Suche wird zurückgesetzt (wie bei iOS)
+      resetSearch();
+      if (currentStack().length) popToRoot();
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } else if (tab === "kontakte") {
-      document.getElementById("searchInput").focus();
+      return;
     }
+    if (currentStack().length) { popToRoot(); return; }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
   document.addEventListener("click", function (e) {
@@ -2526,15 +2632,49 @@
     else if (darkQuery.addListener) darkQuery.addListener(onSchemeChange);
   }
 
+  document.getElementById("quickDialExampleInput").addEventListener("change", function (e) {
+    try { localStorage.setItem(QUICKDIAL_EXAMPLE_KEY, e.target.value.trim()); } catch (err) { /* ignorieren */ }
+    applyQuickDialExample();
+    showToast("Gespeichert.");
+  });
+
   // ---------- Suche ----------
 
   var searchInputEl = document.getElementById("searchInput");
 
+  var searchWrapEl = searchInputEl.closest(".search-wrap");
+
+  function updateSearchActive() {
+    searchWrapEl.classList.toggle("active", !!searchInputEl.value || document.activeElement === searchInputEl);
+  }
+
   function onSearchChanged() {
     state.search = searchInputEl.value;
     document.getElementById("searchField").classList.toggle("has-text", !!searchInputEl.value);
+    updateSearchActive();
     renderList();
   }
+
+  // Suche leeren und schließen (Abbrechen, erneutes Tippen auf den Tab)
+  function resetSearch() {
+    if (searchInputEl.value) {
+      searchInputEl.value = "";
+      onSearchChanged();
+    }
+    searchInputEl.blur();
+    updateSearchActive();
+  }
+
+  function searchIsActive() {
+    return !!searchInputEl.value || document.activeElement === searchInputEl;
+  }
+
+  searchInputEl.addEventListener("focus", updateSearchActive);
+  searchInputEl.addEventListener("blur", function () { setTimeout(updateSearchActive, 150); });
+  document.getElementById("searchCancel").addEventListener("click", function () {
+    resetSearch();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
 
   searchInputEl.addEventListener("input", onSearchChanged);
   document.getElementById("searchClear").addEventListener("click", function (e) {
@@ -2544,8 +2684,33 @@
     searchInputEl.focus();
   });
   searchInputEl.addEventListener("keydown", function (e) {
-    if (e.key === "Enter") searchInputEl.blur(); // Tastatur schließen
+    if (e.key !== "Enter") return;
+    searchInputEl.blur(); // Tastatur schließen
+    // genau ein Treffer: gleich öffnen
+    if (state.search.trim() && state.results && state.results.length === 1) openContact(state.results[0].id);
   });
+
+  // A–Z-Leiste: tippen oder darüberziehen springt zum Buchstaben
+  (function setupAzIndex() {
+    var az = document.getElementById("azIndex");
+    var last = null;
+    function jump(clientY) {
+      var el = document.elementFromPoint(az.getBoundingClientRect().left + az.offsetWidth / 2, clientY);
+      var letter = el && el.dataset ? el.dataset.az : null;
+      if (!letter || letter === last) return;
+      last = letter;
+      var head = document.querySelector('#listContainer [data-letter="' + letter + '"]');
+      if (!head) return;
+      var bar = document.querySelector("#kontakteView > .nav-bar");
+      var offset = (bar ? bar.offsetHeight : 52) + (searchWrapEl ? searchWrapEl.offsetHeight : 48);
+      window.scrollTo(0, head.getBoundingClientRect().top + window.scrollY - offset);
+    }
+    az.addEventListener("touchstart", function (e) { last = null; az.classList.add("touching"); jump(e.touches[0].clientY); }, { passive: true });
+    az.addEventListener("touchmove", function (e) { if (e.cancelable) e.preventDefault(); jump(e.touches[0].clientY); }, { passive: false });
+    az.addEventListener("touchend", function () { az.classList.remove("touching"); });
+    az.addEventListener("touchcancel", function () { az.classList.remove("touching"); });
+    az.addEventListener("click", function (e) { last = null; jump(e.clientY); });
+  })();
 
   // ---------- Toast ----------
 
@@ -3718,6 +3883,7 @@
   loadContacts();
   loadQuickDialBase();
   document.getElementById("quickDialBaseInput").value = state.quickDialBase;
+  applyQuickDialExample();
   updateThemeColor();
   renderThemeChoices();
 
